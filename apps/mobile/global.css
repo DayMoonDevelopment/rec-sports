@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Sport Colors */
+        --color-sport-baseball: rgb(230, 57, 70);
+        --color-sport-kickball: rgb(252, 96, 81);
+        --color-sport-basketball: rgb(255, 140, 0);
+        --color-sport-pickleball: rgb(248, 181, 0);
+        --color-sport-tennis: rgb(150, 221, 33);
+        --color-sport-golf: rgb(0, 200, 83);
+        --color-sport-disc-golf: rgb(0, 181, 139);
+        --color-sport-hockey: rgb(0, 128, 128);
+        --color-sport-softball: rgb(0, 218, 192);
+        --color-sport-soccer: rgb(0, 187, 249);
+        --color-sport-football: rgb(0, 123, 255);
+        --color-sport-volleyball: rgb(155, 93, 229);
+        --color-sport-ultimate: rgb(241, 91, 181);
+
+        /* Red Color Palette */
+        --color-red-50: rgb(254, 242, 243);
+        --color-red-100: rgb(253, 227, 229);
+        --color-red-200: rgb(252, 204, 208);
+        --color-red-300: rgb(249, 168, 174);
+        --color-red-400: rgb(243, 118, 127);
+        --color-red-500: rgb(230, 57, 70);
+        --color-red-600: rgb(213, 45, 58);
+        --color-red-700: rgb(179, 34, 45);
+        --color-red-800: rgb(148, 32, 41);
+        --color-red-900: rgb(123, 33, 40);
+        --color-red-950: rgb(67, 12, 16);
+
+        /* Crimson Color Palette */
+        --color-crimson-50: rgb(255, 242, 241);
+        --color-crimson-100: rgb(255, 227, 224);
+        --color-crimson-200: rgb(255, 203, 198);
+        --color-crimson-300: rgb(255, 167, 159);
+        --color-crimson-400: rgb(255, 116, 103);
+        --color-crimson-500: rgb(252, 96, 81);
+        --color-crimson-600: rgb(233, 43, 25);
+        --color-crimson-700: rgb(197, 32, 16);
+        --color-crimson-800: rgb(162, 31, 18);
+        --color-crimson-900: rgb(134, 32, 22);
+        --color-crimson-950: rgb(73, 12, 6);
+
+        /* Amber Color Palette */
+        --color-amber-50: rgb(255, 251, 236);
+        --color-amber-100: rgb(255, 246, 211);
+        --color-amber-200: rgb(255, 234, 165);
+        --color-amber-300: rgb(255, 216, 109);
+        --color-amber-400: rgb(255, 187, 50);
+        --color-amber-500: rgb(255, 164, 10);
+        --color-amber-600: rgb(255, 140, 0);
+        --color-amber-700: rgb(204, 103, 2);
+        --color-amber-800: rgb(161, 79, 11);
+        --color-amber-900: rgb(130, 66, 12);
+        --color-amber-950: rgb(70, 32, 4);
+
+        /* Yellow Color Palette */
+        --color-yellow-50: rgb(255, 254, 234);
+        --color-yellow-100: rgb(255, 250, 197);
+        --color-yellow-200: rgb(255, 245, 133);
+        --color-yellow-300: rgb(255, 234, 70);
+        --color-yellow-400: rgb(255, 218, 27);
+        --color-yellow-500: rgb(248, 181, 0);
+        --color-yellow-600: rgb(226, 143, 0);
+        --color-yellow-700: rgb(187, 101, 2);
+        --color-yellow-800: rgb(152, 78, 8);
+        --color-yellow-900: rgb(124, 63, 11);
+        --color-yellow-950: rgb(72, 32, 0);
+
+        /* Lime Color Palette */
+        --color-lime-50: rgb(247, 253, 232);
+        --color-lime-100: rgb(236, 250, 205);
+        --color-lime-200: rgb(218, 245, 161);
+        --color-lime-300: rgb(190, 236, 106);
+        --color-lime-400: rgb(164, 223, 60);
+        --color-lime-500: rgb(150, 221, 33);
+        --color-lime-600: rgb(102, 157, 19);
+        --color-lime-700: rgb(78, 120, 19);
+        --color-lime-800: rgb(64, 95, 21);
+        --color-lime-900: rgb(55, 80, 23);
+        --color-lime-950: rgb(27, 44, 7);
+
+        /* Green Color Palette */
+        --color-green-50: rgb(238, 255, 244);
+        --color-green-100: rgb(215, 255, 231);
+        --color-green-200: rgb(178, 255, 209);
+        --color-green-300: rgb(118, 255, 173);
+        --color-green-400: rgb(51, 245, 131);
+        --color-green-500: rgb(9, 222, 97);
+        --color-green-600: rgb(0, 200, 83);
+        --color-green-700: rgb(4, 145, 64);
+        --color-green-800: rgb(10, 113, 54);
+        --color-green-900: rgb(10, 93, 47);
+        --color-green-950: rgb(0, 52, 23);
+
+        /* Mint Color Palette */
+        --color-mint-50: rgb(238, 255, 251);
+        --color-mint-100: rgb(198, 255, 243);
+        --color-mint-200: rgb(142, 255, 234);
+        --color-mint-300: rgb(77, 251, 222);
+        --color-mint-400: rgb(25, 232, 204);
+        --color-mint-500: rgb(0, 218, 192);
+        --color-mint-600: rgb(0, 164, 148);
+        --color-mint-700: rgb(2, 131, 120);
+        --color-mint-800: rgb(8, 103, 96);
+        --color-mint-900: rgb(12, 85, 79);
+        --color-mint-950: rgb(0, 52, 51);
+
+        /* Emerald Color Palette */
+        --color-emerald-50: rgb(234, 255, 247);
+        --color-emerald-100: rgb(205, 254, 234);
+        --color-emerald-200: rgb(160, 250, 218);
+        --color-emerald-300: rgb(99, 242, 199);
+        --color-emerald-400: rgb(37, 226, 176);
+        --color-emerald-500: rgb(0, 181, 139);
+        --color-emerald-600: rgb(0, 164, 126);
+        --color-emerald-700: rgb(0, 131, 105);
+        --color-emerald-800: rgb(0, 103, 84);
+        --color-emerald-900: rgb(0, 85, 70);
+        --color-emerald-950: rgb(0, 48, 41);
+
+        /* Cyan Color Palette */
+        --color-cyan-50: rgb(239, 250, 255);
+        --color-cyan-100: rgb(222, 244, 255);
+        --color-cyan-200: rgb(182, 235, 255);
+        --color-cyan-300: rgb(117, 222, 255);
+        --color-cyan-400: rgb(44, 207, 255);
+        --color-cyan-500: rgb(0, 187, 249);
+        --color-cyan-600: rgb(0, 149, 212);
+        --color-cyan-700: rgb(0, 119, 171);
+        --color-cyan-800: rgb(0, 100, 141);
+        --color-cyan-900: rgb(6, 83, 116);
+        --color-cyan-950: rgb(4, 52, 77);
+
+        /* Blue Color Palette */
+        --color-blue-50: rgb(237, 250, 255);
+        --color-blue-100: rgb(214, 242, 255);
+        --color-blue-200: rgb(181, 234, 255);
+        --color-blue-300: rgb(131, 223, 255);
+        --color-blue-400: rgb(72, 203, 255);
+        --color-blue-500: rgb(30, 173, 255);
+        --color-blue-600: rgb(6, 143, 255);
+        --color-blue-700: rgb(0, 123, 255);
+        --color-blue-800: rgb(8, 94, 197);
+        --color-blue-900: rgb(13, 81, 155);
+        --color-blue-950: rgb(14, 49, 93);
+
+        /* Indigo Color Palette */
+        --color-indigo-50: rgb(235, 242, 255);
+        --color-indigo-100: rgb(218, 231, 255);
+        --color-indigo-200: rgb(189, 209, 255);
+        --color-indigo-300: rgb(149, 178, 255);
+        --color-indigo-400: rgb(107, 133, 255);
+        --color-indigo-500: rgb(73, 91, 255);
+        --color-indigo-600: rgb(41, 45, 255);
+        --color-indigo-700: rgb(26, 26, 223);
+        --color-indigo-800: rgb(27, 29, 184);
+        --color-indigo-900: rgb(31, 36, 144);
+        --color-indigo-950: rgb(18, 19, 84);
+
+        /* Purple Color Palette */
+        --color-purple-50: rgb(250, 246, 254);
+        --color-purple-100: rgb(242, 234, 253);
+        --color-purple-200: rgb(231, 217, 251);
+        --color-purple-300: rgb(213, 188, 246);
+        --color-purple-400: rgb(187, 144, 240);
+        --color-purple-500: rgb(155, 93, 229);
+        --color-purple-600: rgb(138, 70, 215);
+        --color-purple-700: rgb(117, 52, 188);
+        --color-purple-800: rgb(100, 47, 154);
+        --color-purple-900: rgb(82, 39, 124);
+        --color-purple-950: rgb(54, 17, 90);
+
+        /* Pink Color Palette */
+        --color-pink-50: rgb(253, 242, 249);
+        --color-pink-100: rgb(252, 231, 245);
+        --color-pink-200: rgb(252, 206, 237);
+        --color-pink-300: rgb(251, 166, 221);
+        --color-pink-400: rgb(246, 112, 196);
+        --color-pink-500: rgb(241, 91, 181);
+        --color-pink-600: rgb(222, 36, 139);
+        --color-pink-700: rgb(193, 21, 110);
+        --color-pink-800: rgb(160, 20, 92);
+        --color-pink-900: rgb(133, 22, 79);
+        --color-pink-950: rgb(81, 6, 44);
+
+        /* Neutral Color Palette */
+        --color-neutral-50: rgb(249, 250, 251);
+        --color-neutral-100: rgb(243, 244, 246);
+        --color-neutral-200: rgb(229, 231, 235);
+        --color-neutral-300: rgb(209, 213, 219);
+        --color-neutral-400: rgb(156, 163, 175);
+        --color-neutral-500: rgb(107, 114, 128);
+        --color-neutral-600: rgb(75, 85, 99);
+        --color-neutral-700: rgb(55, 65, 81);
+        --color-neutral-800: rgb(31, 41, 55);
+        --color-neutral-900: rgb(17, 24, 39);
+        --color-neutral-950: rgb(3, 7, 18);
+
+        /* Theme Colors - Light Mode */
+        --background: rgb(251, 251, 251);
+        --foreground: rgb(23, 23, 23);
+        --card: rgb(255, 255, 255);
+        --card-foreground: rgb(23, 23, 23);
+        --popover: rgb(255, 255, 255);
+        --popover-foreground: rgb(23, 23, 23);
+        --primary: rgb(23, 23, 23);
+        --primary-foreground: rgb(251, 251, 251);
+        --secondary: rgb(245, 245, 245);
+        --secondary-foreground: rgb(23, 23, 23);
+        --muted: rgb(245, 245, 245);
+        --muted-foreground: rgb(107, 114, 128);
+        --accent: rgb(245, 245, 245);
+        --accent-foreground: rgb(23, 23, 23);
+        --destructive: rgb(239, 68, 68);
+        --destructive-foreground: rgb(248, 250, 252);
+        --affirmative: rgb(34, 197, 94);
+        --border: rgb(229, 229, 229);
+        --input: rgb(229, 229, 229);
+        --ring: rgb(59, 130, 246);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            /* Theme Colors - Dark Mode */
+            --background: rgb(23, 23, 23);
+            --foreground: rgb(251, 251, 251);
+            --card: rgb(23, 23, 23);
+            --card-foreground: rgb(251, 251, 251);
+            --popover: rgb(23, 23, 23);
+            --popover-foreground: rgb(251, 251, 251);
+            --primary: rgb(251, 251, 251);
+            --primary-foreground: rgb(23, 23, 23);
+            --secondary: rgb(39, 39, 42);
+            --secondary-foreground: rgb(251, 251, 251);
+            --muted: rgb(39, 39, 42);
+            --muted-foreground: rgb(161, 161, 170);
+            --accent: rgb(39, 39, 42);
+            --accent-foreground: rgb(251, 251, 251);
+            --destructive: rgb(220, 38, 38);
+            --destructive-foreground: rgb(251, 251, 251);
+            --affirmative: rgb(34, 197, 94);
+            --border: rgb(39, 39, 42);
+            --input: rgb(39, 39, 42);
+            --ring: rgb(212, 212, 216);
+        }
+    }
+}

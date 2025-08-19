@@ -1,0 +1,57 @@
+.root-solution {
+  .root-solution-bento {
+    --root-solution-bento-columns: repeat(1, 1fr);
+    --root-solution-bento-rows: auto;
+    --root-solution-bento-template-areas: "l" "p" "r" "t" "n" "a";
+    --root-solution-bento-gap: 0.5rem;
+    --testing: var(--breakpoint-sm);
+
+    display: grid;
+
+    gap: var(--root-solution-bento-gap);
+
+    grid-template-columns: var(--root-solution-bento-columns);
+    grid-template-rows: var(--root-solution-bento-rows);
+    grid-template-areas: var(--root-solution-bento-template-areas);
+
+    @media (min-width: 40rem) {
+      --root-solution-bento-columns: repeat(2, 1fr);
+      --root-solution-bento-template-areas: "l t" "l a" "r p" "n p";
+    }
+
+    @media (min-width: 64rem) {
+      --root-solution-bento-columns: repeat(3, 1fr);
+      --root-solution-bento-template-areas: "l p a" "l n r" "l n t";
+    }
+
+    @media (min-width: 80rem) {
+      --root-solution-bento-columns: repeat(12, 1fr);
+      --root-solution-bento-rows: repeat(3, 1fr);
+      --root-solution-bento-template-areas: "t t p p p p p p p a a a"
+        "t t l l l l l l l a a a" "s s l l l l l l l a a a"
+        "s s r r r n n n n n n n";
+      --root-solution-bento-gap: 1.5rem;
+    }
+  }
+}
+
+.root-founder {
+  --root-founder-columns: repeat(4, 1fr);
+  --root-founder-template-areas: ". img img ."
+    "headline headline headline headline" "deck deck deck deck";
+  --root-founder-row-gap: 1rem;
+
+  display: grid;
+
+  column-gap: 3rem;
+  row-gap: var(--root-founder-row-gap);
+
+  grid-template-columns: var(--root-founder-columns);
+  grid-template-areas: var(--root-founder-template-areas);
+
+  @media (min-width: 40rem) {
+    --root-founder-template-areas: "img headline headline headline"
+      "img deck deck deck";
+    --root-founder-row-gap: 0.5rem;
+  }
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "objectID": "loc_001",
+    "name": "Okeeheelee Park",
+    "address": "7715 Forest Hill Blvd, West Palm Beach, FL 33413",
+    "geoloc": { "lat": 26.6632, "lng": -80.1467 },
+    "sports": ["baseball", "soccer", "volleyball", "tennis"],
+    "facilityCount": 4,
+    "description": "Large county park with multiple sports fields and courts, ideal for community games.",
+    "rating": 4.8,
+    "condition": "excellent",
+    "images": ["https://example.com/okeeheelee.jpg"],
+    "updatedAt": 1723564800
+  },
+  {
+    "objectID": "loc_002",
+    "name": "Caloosa Park",
+    "address": "1300 SW 35th Ave, Boynton Beach, FL 33426",
+    "geoloc": { "lat": 26.5123, "lng": -80.0995 },
+    "sports": ["basketball", "tennis", "soccer"],
+    "facilityCount": 3,
+    "description": "Community park with courts and fields, popular for youth sports.",
+    "rating": 4.2,
+    "condition": "good",
+    "images": ["https://example.com/caloosa.jpg"],
+    "updatedAt": 1723564800
+  },
+  {
+    "objectID": "loc_003",
+    "name": "Dyer Park",
+    "address": "7301 Haverhill Rd, West Palm Beach, FL 33412",
+    "geoloc": { "lat": 26.7854, "lng": -80.1256 },
+    "sports": ["baseball", "soccer", "disc_golf"],
+    "facilityCount": 2,
+    "description": "Sprawling park with baseball diamonds and disc golf course.",
+    "rating": 4.5,
+    "condition": "good",
+    "images": ["https://example.com/dyer.jpg"],
+    "updatedAt": 1723564800
+  }
+]

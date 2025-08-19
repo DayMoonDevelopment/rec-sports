@@ -1,0 +1,12 @@
+{
+  "name": "@rec/database",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev:init": "supabase db reset && bun supabase:typegen",
+    "supabase:typegen": "supabase gen types typescript --local > ./supabase/+types.ts"
+  },
+  "devDependencies": {
+    "supabase": "^2.34.3"
+  }
+}

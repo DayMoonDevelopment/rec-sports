@@ -1,0 +1,27 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { GraphQLModule } from '@nestjs/graphql';
+
+import { DatabaseModule } from './database/database.module';
+import { LocationsModule } from './locations/locations.module';
+
+const configModule = ConfigModule.forRoot({
+  isGlobal: true,
+});
+
+@Module({
+  imports: [
+    DatabaseModule,
+    LocationsModule,
+    configModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql',
+      playground: true,
+      introspection: true,
+      sortSchema: true,
+    }),
+  ],
+})
+export class AppModule {}

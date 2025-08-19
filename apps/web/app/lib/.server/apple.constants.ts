@@ -1,0 +1,1 @@
+export const APPLE_MAPS_KEY = process.env.APPLE_MAPS_KEY || '';
