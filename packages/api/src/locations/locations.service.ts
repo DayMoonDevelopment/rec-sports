@@ -54,8 +54,8 @@ export class LocationsService {
 
   async findLocations(args: LocationsArgs): Promise<LocationsResponse> {
     const { client } = this.databaseService;
-    const offset = args.page?.offset ?? 0;
-    const limit = args.page?.limit ?? 20;
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? 20;
 
     let query = client
       .selectFrom('locations')
@@ -149,9 +149,9 @@ export class LocationsService {
     southWest: { latitude: number; longitude: number };
   }): Expression<SqlBool> {
     const { northEast, southWest } = boundingBox;
-    return sql<boolean>`ST_Within(
-      location,
-      ST_MakeEnvelope(${southWest.longitude}, ${southWest.latitude}, ${northEast.longitude}, ${northEast.latitude}, 4326)
+    return sql<boolean>`gis.ST_Within(
+      location::gis.geometry,
+      gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
     )`;
   }
 
@@ -162,10 +162,10 @@ export class LocationsService {
     const { point, radiusMiles } = centerPoint;
     // Convert miles to meters: 1 mile = 1609.344 meters
     const radiusMeters = radiusMiles * 1609.344;
-    return sql<boolean>`ST_DWithin(
-      location::geography,
-      ST_SetSRID(ST_MakePoint(${point.longitude}, ${point.latitude}), 4326)::geography,
-      ${radiusMeters}
+    return sql<boolean>`gis.ST_DWithin(
+      location::gis.geography,
+      gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
+      ${sql.literal(radiusMeters)}
     )`;
   }
 
@@ -220,8 +220,8 @@ export class LocationsService {
     args: LocationsArgs,
   ): Promise<LocationsResponse> {
     const { client } = this.databaseService;
-    const offset = args.page?.offset ?? 0;
-    const limit = args.page?.limit ?? 20;
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? 20;
 
     let query = client
       .selectFrom('locations')
@@ -235,8 +235,8 @@ export class LocationsService {
         'country',
         'postal_code',
         'sport_tags',
-        sql<number>`ST_X(location)`.as('longitude'),
-        sql<number>`ST_Y(location)`.as('latitude'),
+        sql<number>`gis.ST_X(location::gis.geometry)`.as('longitude'),
+        sql<number>`gis.ST_Y(location::gis.geometry)`.as('latitude'),
       ]);
 
     // Apply filters using composable approach

@@ -20,8 +20,7 @@ const config: CodegenConfig = {
       },
     },
     '../types/src/generated/gql.ts': {
-      plugins: ['typescript', 'gql-tag-operations'],
-      documents: [], // No documents needed for type-safe gql function
+      plugins: ['typescript'],
       config: {
         // Configure TypeScript generation
         scalars: {
@@ -31,8 +30,6 @@ const config: CodegenConfig = {
           Int: 'number',
           Float: 'number',
         },
-        // Enable the type-safe gql function
-        gqlImport: 'graphql-tag#gql',
         useTypeImports: true,
       },
     },

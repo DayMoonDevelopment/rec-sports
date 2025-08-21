@@ -1,19 +1,25 @@
-import { ArgsType, Field } from '@nestjs/graphql';
-import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArgsType, Field, Int } from '@nestjs/graphql';
+import { IsArray, IsInt, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { Sport } from '../enums/sport.enum';
-import { Page } from './page.input';
 import { Region } from './region.input';
 
 @ArgsType()
 export class LocationsArgs {
   // Pagination
-  @Field(() => Page, { nullable: true })
-  @ValidateNested()
-  @Type(() => Page)
+  @Field(() => Int, { nullable: true, defaultValue: 0 })
   @IsOptional()
-  page?: Page;
+  @IsInt()
+  @Min(0)
+  offset?: number = 0;
+
+  @Field(() => Int, { nullable: true, defaultValue: 20 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 20;
 
   // Geographic region filter
   @Field(() => Region, { nullable: true })

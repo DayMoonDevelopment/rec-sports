@@ -50,11 +50,6 @@ export type LocationsResponse = {
   totalCount: Scalars['Int']['output'];
 };
 
-export type Page = {
-  limit?: Scalars['Int']['input'];
-  offset?: Scalars['Int']['input'];
-};
-
 export type Point = {
   __typename?: 'Point';
   latitude: Scalars['Float']['output'];
@@ -79,7 +74,8 @@ export type QueryLocationArgs = {
 
 
 export type QueryLocationsArgs = {
-  page?: InputMaybe<Page>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   query?: InputMaybe<Scalars['String']['input']>;
   region?: InputMaybe<Region>;
   sports?: InputMaybe<Array<Sport>>;

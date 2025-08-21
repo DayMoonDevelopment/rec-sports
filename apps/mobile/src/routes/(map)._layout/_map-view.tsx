@@ -1,4 +1,4 @@
-import { useDeferredValue } from "react";
+import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClusteredMapView from "react-native-map-clustering";
@@ -7,28 +7,50 @@ import { useQuery } from "@apollo/client";
 
 import { useMap } from "~/components/map.context";
 import { MapMarker } from "./_map-marker";
+import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
 import { GET_MAP_LOCATIONS } from "./queries/get-map-locations";
 
-const BUFFER_MULTIPLIER = 2;
+import type { Region } from "react-native-maps";
 
 // Initial region to show the entire United States
 const US_INITIAL_REGION = {
-  latitude: 39.8283, // Center of the continental US
+  latitude: 39.8283, // Center of the continental US (near Lebanon, Kansas)
   longitude: -98.5795, // Center of the continental US
-  latitudeDelta: 25, // Covers from Canada border to Mexico border
-  longitudeDelta: 50, // Covers from Atlantic to Pacific
+  latitudeDelta: 20, // Covers roughly from southern Florida (~24.5°N) to northern US border (~49°N)
+  longitudeDelta: 40, // Covers from eastern Maine (~66.9°W) to western Washington (~124.7°W)
+};
+
+const US_INITIAL_BOUNDING_BOX_BUFFERED = regionToBoundingBoxWithBuffer(
+  US_INITIAL_REGION,
+  0.1,
+);
+
+const PAGE_PARAMS = {
+  limit: 100,
+  offset: 0,
 };
 
 export function MapViewComponent() {
   const { height: screenHeight } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const { mapRef } = useMap();
-  const { data, loading, error, client } = useQuery(GET_MAP_LOCATIONS, {
-    fetchPolicy: "network-only",
-  });
 
-  // Static placeholder - empty array for now
+  const { data, loading, error, refetch, variables } = useQuery(
+    GET_MAP_LOCATIONS,
+    {
+      fetchPolicy: "no-cache",
+      variables: {
+        ...PAGE_PARAMS,
+        region: {
+          boundingBox: US_INITIAL_BOUNDING_BOX_BUFFERED,
+        },
+      },
+    },
+  );
+
+  console.log(data, error, variables, US_INITIAL_BOUNDING_BOX_BUFFERED);
+
   const items = data?.locations.nodes || [];
 
   const mapBottomPadding =
@@ -36,9 +58,16 @@ export function MapViewComponent() {
       ? (screenHeight - topInset) * 0.5 - bottomInset
       : screenHeight * 0.5 + 16;
 
-  // Handle region change - no-op for now since we're using static data
-  const handleRegionChange = (region: any) => {
-    // Placeholder - no data fetching logic
+  // Handle region change - refetch data for the new region with buffer
+  const handleRegionChange = (region: Region) => {
+    const boundingBoxWithBuffer = regionToBoundingBoxWithBuffer(region, 0.1);
+
+    refetch({
+      ...PAGE_PARAMS,
+      region: {
+        boundingBox: boundingBoxWithBuffer,
+      },
+    });
   };
 
   return (
