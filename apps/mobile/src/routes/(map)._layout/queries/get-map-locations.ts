@@ -1,13 +1,18 @@
 import { gql } from "@rec/types";
 
-import type { LocationsResponse, Page, Region } from "@rec/types";
+import type { LocationsResponse, Region } from "@rec/types";
 
 export const GET_MAP_LOCATIONS = gql<
   { locations: LocationsResponse },
-  { query?: string; page?: Page; region?: Region }
+  { query?: string; offset?: number; limit?: number; region?: Region }
 >`
-  query SearchLocations($query: String, $page: Page, $region: Region) {
-    locations(query: $query, page: $page, region: $region) {
+  query SearchLocations(
+    $query: String
+    $region: Region
+    $offset: Int
+    $limit: Int
+  ) {
+    locations(query: $query, region: $region, offset: $offset, limit: $limit) {
       nodes {
         id
         name
