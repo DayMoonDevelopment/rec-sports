@@ -12,6 +12,8 @@ export enum Sport {
   DISC_GOLF = 'DISC_GOLF',
   HOCKEY = 'HOCKEY',
   PICKLEBALL = 'PICKLEBALL',
+  KICKBALL = 'KICKBALL',
+  SOFTBALL = 'SOFTBALL',
 }
 
 registerEnumType(Sport, {

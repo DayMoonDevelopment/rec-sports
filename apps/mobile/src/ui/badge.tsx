@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Text, View, type ViewProps, type TextProps } from "react-native";
+import { Sport } from "@rec/types";
 import { cn } from "~/lib/utils";
 
 // Badge Context
@@ -19,7 +20,7 @@ function useBadgeContext() {
 }
 
 const badgeVariants = cva(
-  "flex-row items-center justify-center rounded-full border px-2 py-1 self-start",
+  "flex-row items-center justify-center gap-1 rounded-full border px-2 py-1 self-start",
   {
     variants: {
       variant: {
@@ -27,20 +28,20 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary",
         destructive: "border-transparent bg-destructive",
         outline: "border-border bg-transparent",
-        // Sport-specific variants using theme colors
-        baseball: "border-sport-baseball bg-sport-baseball",
-        kickball: "border-sport-kickball bg-sport-kickball",
-        basketball: "border-sport-basketball bg-sport-basketball",
-        pickleball: "border-sport-pickleball bg-sport-pickleball",
-        tennis: "border-sport-tennis bg-sport-tennis",
-        golf: "border-sport-golf bg-sport-golf",
-        disc_golf: "border-sport-disc-golf bg-sport-disc-golf",
-        hockey: "border-sport-hockey bg-sport-hockey",
-        softball: "border-sport-softball bg-sport-softball",
-        soccer: "border-sport-soccer bg-sport-soccer",
-        football: "border-sport-football bg-sport-football",
-        volleyball: "border-sport-volleyball bg-sport-volleyball",
-        ultimate: "border-sport-ultimate bg-sport-ultimate",
+        // Sport-specific variants using Sport enum values
+        [Sport.Baseball]: "border-sport-baseball bg-sport-baseball",
+        [Sport.Kickball]: "border-sport-kickball bg-sport-kickball",
+        [Sport.Basketball]: "border-sport-basketball bg-sport-basketball",
+        [Sport.Pickleball]: "border-sport-pickleball bg-sport-pickleball",
+        [Sport.Tennis]: "border-sport-tennis bg-sport-tennis",
+        [Sport.Golf]: "border-sport-golf bg-sport-golf",
+        [Sport.DiscGolf]: "border-sport-disc-golf bg-sport-disc-golf",
+        [Sport.Hockey]: "border-sport-hockey bg-sport-hockey",
+        [Sport.Softball]: "border-sport-softball bg-sport-softball",
+        [Sport.Soccer]: "border-sport-soccer bg-sport-soccer",
+        [Sport.Football]: "border-sport-football bg-sport-football",
+        [Sport.Volleyball]: "border-sport-volleyball bg-sport-volleyball",
+        [Sport.Ultimate]: "border-sport-ultimate bg-sport-ultimate",
       },
       size: {
         sm: "px-2 py-0.5",
@@ -62,20 +63,20 @@ const badgeTextVariants = cva("text-white text-xs font-medium text-center", {
       secondary: "text-secondary-foreground",
       destructive: "text-destructive-foreground",
       outline: "text-foreground",
-      // Sport-specific text colors
-      baseball: "text-white",
-      kickball: "text-white",
-      basketball: "text-white",
-      pickleball: "text-white",
-      tennis: "text-white",
-      golf: "text-white",
-      disc_golf: "text-white",
-      hockey: "text-white",
-      softball: "text-white",
-      soccer: "text-white",
-      football: "text-white",
-      volleyball: "text-white",
-      ultimate: "text-white",
+      // Sport-specific text colors using Sport enum values
+      [Sport.Baseball]: "text-white",
+      [Sport.Kickball]: "text-white",
+      [Sport.Basketball]: "text-white",
+      [Sport.Pickleball]: "text-white",
+      [Sport.Tennis]: "text-white",
+      [Sport.Golf]: "text-white",
+      [Sport.DiscGolf]: "text-white",
+      [Sport.Hockey]: "text-white",
+      [Sport.Softball]: "text-white",
+      [Sport.Soccer]: "text-white",
+      [Sport.Football]: "text-white",
+      [Sport.Volleyball]: "text-white",
+      [Sport.Ultimate]: "text-white",
     },
     size: {
       sm: "text-xs",
@@ -89,10 +90,6 @@ const badgeTextVariants = cva("text-white text-xs font-medium text-center", {
   },
 });
 
-interface BadgeProviderProps extends VariantProps<typeof badgeVariants> {
-  children: React.ReactNode;
-}
-
 interface BadgeProps extends ViewProps {
   children: React.ReactNode;
   variant?: VariantProps<typeof badgeVariants>["variant"];
@@ -105,12 +102,12 @@ interface BadgeTextProps extends TextProps {
   size?: VariantProps<typeof badgeTextVariants>["size"];
 }
 
-function BadgeProvider({ variant, size, children }: BadgeProviderProps) {
-  return (
-    <BadgeContext.Provider value={{ variant, size }}>
-      {children}
-    </BadgeContext.Provider>
-  );
+// todo : come back to this and have the props extend the props of Icon
+interface BadgeIconProps {
+  Icon: React.ComponentType<any>;
+  variant?: VariantProps<typeof badgeVariants>["variant"];
+  size?: VariantProps<typeof badgeVariants>["size"];
+  [key: string]: any;
 }
 
 function Badge({
@@ -121,11 +118,14 @@ function Badge({
   ...props
 }: BadgeProps) {
   const contextValue = { variant: propVariant, size: propSize };
-  
+
   return (
     <BadgeContext.Provider value={contextValue}>
       <View
-        className={cn(badgeVariants({ variant: propVariant, size: propSize }), className)}
+        className={cn(
+          badgeVariants({ variant: propVariant, size: propSize }),
+          className,
+        )}
         {...props}
       >
         {children}
@@ -155,36 +155,31 @@ function BadgeText({
   );
 }
 
-// Helper function to get sport-specific badge variant
-function getSportBadgeVariant(
-  sport: string,
-): VariantProps<typeof badgeVariants>["variant"] {
-  const sportMap: Record<
-    string,
-    VariantProps<typeof badgeVariants>["variant"]
-  > = {
-    baseball: "baseball",
-    kickball: "kickball",
-    basketball: "basketball",
-    pickleball: "pickleball",
-    tennis: "tennis",
-    golf: "golf",
-    disc_golf: "disc_golf",
-    hockey: "hockey",
-    softball: "softball",
-    soccer: "soccer",
-    football: "football",
-    volleyball: "volleyball",
-    ultimate_frisbee: "ultimate",
-  };
+function BadgeIcon({
+  Icon,
+  variant: propVariant,
+  size: propSize,
+  ...iconProps
+}: BadgeIconProps) {
+  const context = useBadgeContext();
+  const size = propSize ?? context.size;
 
-  return sportMap[sport.toLowerCase()] || "default";
+  // Define icon sizes based on badge size
+  const iconSizes = {
+    sm: 12,
+    default: 14,
+    lg: 16,
+  } as const;
+
+  const iconSize = iconSizes[size || "default"];
+
+  return (
+    <View className="-ml-0.5">
+      <Icon width={iconSize} height={iconSize} {...iconProps} />
+    </View>
+  );
 }
 
-export {
-  Badge,
-  BadgeText,
-  badgeVariants,
-  badgeTextVariants,
-  getSportBadgeVariant,
-};
+export { Badge, BadgeText, BadgeIcon, badgeVariants, badgeTextVariants };
+
+export type { BadgeProps, BadgeTextProps, BadgeIconProps };
