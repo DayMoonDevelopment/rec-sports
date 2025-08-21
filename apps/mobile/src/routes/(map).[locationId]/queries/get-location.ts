@@ -12,6 +12,7 @@ export const GET_LOCATION = gql<{ location: Location | null }, { id: string }>`
         city
         county
         state
+        stateCode
         country
         postalCode
       }

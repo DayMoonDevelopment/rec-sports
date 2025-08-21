@@ -21,6 +21,7 @@ export type Address = {
   county?: Maybe<Scalars['String']['output']>;
   postalCode?: Maybe<Scalars['String']['output']>;
   state?: Maybe<Scalars['String']['output']>;
+  stateCode?: Maybe<Scalars['String']['output']>;
   street?: Maybe<Scalars['String']['output']>;
 };
 
@@ -94,8 +95,10 @@ export enum Sport {
   Football = 'FOOTBALL',
   Golf = 'GOLF',
   Hockey = 'HOCKEY',
+  Kickball = 'KICKBALL',
   Pickleball = 'PICKLEBALL',
   Soccer = 'SOCCER',
+  Softball = 'SOFTBALL',
   Tennis = 'TENNIS',
   Ultimate = 'ULTIMATE',
   Volleyball = 'VOLLEYBALL'

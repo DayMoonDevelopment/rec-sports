@@ -32,4 +32,7 @@ export class Address {
   @IsOptional()
   @IsString()
   postalCode?: string;
+
+  @Field({ nullable: true })
+  stateCode?: string;
 }

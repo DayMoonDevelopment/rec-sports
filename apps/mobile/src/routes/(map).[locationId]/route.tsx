@@ -1,21 +1,24 @@
-import { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@apollo/client";
 
+import { sportLabel } from "~/lib/utils";
+
 import { useMap } from "~/components/map.context";
+import { SportIcon } from "~/components/sport-icon";
 
 import { CrossIcon } from "~/icons/cross";
+import { TreeIcon } from "~/icons/tree";
+import { LoaderIcon } from "~/icons/loader";
 
-import { Badge, BadgeText, getSportBadgeVariant } from "~/ui/badge";
+import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
 import { GET_LOCATION } from "./queries/get-location";
 
 export function Component() {
-  const { locationId, locationData } = useLocalSearchParams<{
+  const { locationId } = useLocalSearchParams<{
     locationId: string;
-    locationData?: string;
   }>();
   const { setFocusedMarkerId, hideMarkerCallout, zoomOut } = useMap();
 
@@ -28,6 +31,7 @@ export function Component() {
   const location = data?.location;
 
   function handleClose() {
+    hideMarkerCallout(locationId);
     // Check if there are screens in the navigation stack to go back to
     if (router.canGoBack()) {
       router.back();
@@ -37,15 +41,23 @@ export function Component() {
     }
   }
 
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center py-8 px-4">
+        <Text className="text-foreground text-lg font-medium">
+          {"There was an error fetching the location"}
+        </Text>
+      </View>
+    );
+  }
+
   if (error || !location) {
     return (
-      <BottomSheetScrollView className="px-4">
-        <View className="flex-1 justify-center items-center py-8">
-          <Text className="text-foreground text-lg font-medium">
-            {"There was an error fetching the location"}
-          </Text>
+      <View className="justify-center items-center py-8 px-4 min-h-48">
+        <View className="animate-spin">
+          <LoaderIcon height={24} width={24} />
         </View>
-      </BottomSheetScrollView>
+      </View>
     );
   }
 
@@ -53,9 +65,15 @@ export function Component() {
     <BottomSheetScrollView className="px-4">
       <View className="py-4">
         <View className="flex flex-row items-start justify-between gap-2">
-          <Text className="flex-1 text-3xl font-bold text-foreground pt-3">
-            {location.name}
-          </Text>
+          <View className="flex-1 flex flex-col gap-1">
+            <View className="bg-green-100 p-2 rounded-xl self-start">
+              <TreeIcon height={32} width={32} />
+            </View>
+
+            <Text className="flex-1 text-3xl font-bold text-foreground pt-3">
+              {location.name}
+            </Text>
+          </View>
 
           <Pressable
             className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
@@ -66,9 +84,14 @@ export function Component() {
         </View>
 
         {location.address ? (
-          <Text className="text-foreground/70 text-base mb-4">
-            {`${location.address.street} ${location.address.city}, ${location.address.state} ${location.address.zip}`}
-          </Text>
+          <View className="flex-1 mb-4">
+            <Text className="text-muted-foreground text-base">
+              {location.address.street}
+            </Text>
+            <Text className="text-muted-foreground text-base">
+              {`${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`}
+            </Text>
+          </View>
         ) : null}
 
         {location.sports && location.sports.length > 0 && (
@@ -77,30 +100,15 @@ export function Component() {
               Sports Available
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {location.sports.map((sport, index) => (
-                <Badge
-                  key={index}
-                  variant={getSportBadgeVariant(sport)}
-                  size="default"
-                >
-                  <BadgeText>{sport}</BadgeText>
-                </Badge>
-              ))}
+              {location.sports.map((sport, index) => {
+                return (
+                  <Badge key={index} variant={sport} size="default">
+                    <BadgeIcon Icon={SportIcon} sport={sport} />
+                    <BadgeText>{sportLabel(sport)}</BadgeText>
+                  </Badge>
+                );
+              })}
             </View>
-          </View>
-        )}
-
-        {location.geo && (
-          <View className="mb-4">
-            <Text className="text-lg font-semibold text-foreground mb-2">
-              Location
-            </Text>
-            <Text className="text-foreground/70 text-sm">
-              Latitude: {location.geo.latitude.toFixed(6)}
-            </Text>
-            <Text className="text-foreground/70 text-sm">
-              Longitude: {location.geo.longitude.toFixed(6)}
-            </Text>
           </View>
         )}
       </View>
