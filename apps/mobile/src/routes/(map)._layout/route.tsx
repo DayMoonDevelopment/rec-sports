@@ -3,15 +3,43 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
-import { cssInterop } from "nativewind";
+import { cssInterop, remapProps } from "nativewind";
 
 import { MapProvider } from "~/components/map.context";
-import { BottomSheetBackground } from "./_bottom-sheet-background";
+
 import { MapViewComponent } from "./_map-view";
+import { BottomSheetHandle } from "./_bottom-sheet-handle";
 
 import type { TextStyle, ViewStyle } from "react-native";
 
 const snapPoints = ["50%", "100%"];
+
+const StyledBottomSheet = remapProps(BottomSheet, {
+  backgroundClassName: "backgroundStyle",
+});
+
+interface StackProps extends React.ComponentProps<typeof Stack> {
+  contentStyle?: ViewStyle;
+  headerStyle?: TextStyle;
+}
+
+function StackImpl({ contentStyle, ...props }: StackProps) {
+  return (
+    <Stack
+      {...props}
+      screenOptions={{
+        ...props.screenOptions,
+        contentStyle,
+        navigationBarColor: contentStyle?.backgroundColor?.toString(),
+      }}
+    />
+  );
+}
+
+// Changing this requires reloading the app
+const StyledStack = cssInterop(StackImpl, {
+  contentClassName: "contentStyle",
+});
 
 export function Component() {
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -22,7 +50,7 @@ export function Component() {
       <GestureHandlerRootView className="flex-1">
         <MapViewComponent />
 
-        <BottomSheet
+        <StyledBottomSheet
           ref={bottomSheetRef}
           index={0}
           enableDynamicSizing={false}
@@ -30,8 +58,9 @@ export function Component() {
           topInset={topInset}
           enableBlurKeyboardOnGesture
           enablePanDownToClose={false}
-          backgroundComponent={BottomSheetBackground}
           enableOverDrag={false}
+          backgroundClassName="bg-background"
+          handleComponent={BottomSheetHandle}
         >
           <StyledStack
             contentClassName="bg-background"
@@ -40,36 +69,8 @@ export function Component() {
               animation: "slide_from_bottom",
             }}
           />
-        </BottomSheet>
+        </StyledBottomSheet>
       </GestureHandlerRootView>
     </MapProvider>
   );
 }
-
-interface StackProps extends React.ComponentProps<typeof Stack> {
-  contentStyle?: ViewStyle;
-  headerStyle?: TextStyle;
-}
-
-function StackImpl({ contentStyle, headerStyle, ...props }: StackProps) {
-  return (
-    <Stack
-      {...props}
-      screenOptions={{
-        ...props.screenOptions,
-        contentStyle,
-        headerStyle: {
-          backgroundColor: headerStyle?.backgroundColor?.toString(),
-        },
-        navigationBarColor: contentStyle?.backgroundColor?.toString(),
-        headerTintColor: headerStyle?.color?.toString(),
-      }}
-    />
-  );
-}
-
-// Changing this requires reloading the app
-const StyledStack = cssInterop(StackImpl, {
-  contentClassName: "contentStyle",
-  headerClassName: "headerStyle",
-});
