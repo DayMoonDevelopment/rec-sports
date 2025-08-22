@@ -21,6 +21,7 @@ export const GET_MAP_LOCATIONS = gql<
           city
           county
           state
+          stateCode
           postalCode
         }
         geo {
