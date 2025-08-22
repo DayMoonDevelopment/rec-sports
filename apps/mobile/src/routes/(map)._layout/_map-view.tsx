@@ -36,20 +36,15 @@ export function MapViewComponent() {
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const { mapRef } = useMap();
 
-  const { data, loading, error, refetch, variables } = useQuery(
-    GET_MAP_LOCATIONS,
-    {
-      fetchPolicy: "no-cache",
-      variables: {
-        ...PAGE_PARAMS,
-        region: {
-          boundingBox: US_INITIAL_BOUNDING_BOX_BUFFERED,
-        },
+  const { data, refetch } = useQuery(GET_MAP_LOCATIONS, {
+    fetchPolicy: "no-cache",
+    variables: {
+      ...PAGE_PARAMS,
+      region: {
+        boundingBox: US_INITIAL_BOUNDING_BOX_BUFFERED,
       },
     },
-  );
-
-  console.log(data, error, variables, US_INITIAL_BOUNDING_BOX_BUFFERED);
+  });
 
   const items = data?.locations.nodes || [];
 

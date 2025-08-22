@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -7,17 +7,15 @@ import { cssInterop } from "nativewind";
 
 import { MapProvider } from "~/components/map.context";
 import { BottomSheetBackground } from "./_bottom-sheet-background";
-import { BottomSheetHandle } from "./_bottom-sheet-handle";
 import { MapViewComponent } from "./_map-view";
 
 import type { TextStyle, ViewStyle } from "react-native";
 
+const snapPoints = ["50%", "100%"];
+
 export function Component() {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-
-  // Define snap points for the bottom sheet
-  const snapPoints = useMemo(() => ["50%", "100%"], [bottomInset]);
+  const { top: topInset } = useSafeAreaInsets();
 
   return (
     <MapProvider>

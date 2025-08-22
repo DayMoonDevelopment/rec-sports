@@ -2,6 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@apollo/client";
+import { useEffect } from "react";
 
 import { sportLabel } from "~/lib/utils";
 
@@ -20,7 +21,8 @@ export function Component() {
   const { locationId } = useLocalSearchParams<{
     locationId: string;
   }>();
-  const { setFocusedMarkerId, hideMarkerCallout, zoomOut } = useMap();
+  const { setFocusedMarkerId, hideMarkerCallout, zoomOut, animateToLocation } =
+    useMap();
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GET_LOCATION, {
@@ -30,8 +32,19 @@ export function Component() {
 
   const location = data?.location;
 
+  // Focus on the location when it loads
+  useEffect(() => {
+    if (location && locationId) {
+      setFocusedMarkerId(locationId);
+      animateToLocation(location.geo.latitude, location.geo.longitude);
+    }
+  }, [location, locationId, setFocusedMarkerId, animateToLocation]);
+
   function handleClose() {
     hideMarkerCallout(locationId);
+    setFocusedMarkerId(null);
+    zoomOut(5);
+
     // Check if there are screens in the navigation stack to go back to
     if (router.canGoBack()) {
       router.back();
