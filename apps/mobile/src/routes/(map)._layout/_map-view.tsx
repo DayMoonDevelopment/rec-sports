@@ -1,6 +1,7 @@
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClusteredMapView from "react-native-map-clustering";
+import { router } from "expo-router";
 
 import { useQuery } from "@apollo/client";
 
@@ -33,7 +34,7 @@ const PAGE_PARAMS = {
 export function MapViewComponent() {
   const { height: screenHeight } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const { mapRef } = useMap();
+  const { mapRef, focusedMarkerId, setFocusedMarkerId, hideMarkerCallout, zoomOut } = useMap();
 
   const { data, refetch } = useQuery(GET_MAP_LOCATIONS, {
     fetchPolicy: "no-cache",
@@ -64,6 +65,23 @@ export function MapViewComponent() {
     });
   };
 
+  // Handle map press - unfocus any focused location and navigate back
+  const handleMapPress = () => {
+    if (focusedMarkerId) {
+      hideMarkerCallout(focusedMarkerId);
+      setFocusedMarkerId(null);
+      zoomOut(5);
+
+      // Check if there are screens in the navigation stack to go back to
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // If no screens in stack, reset to the index route
+        router.replace("/(map)");
+      }
+    }
+  };
+
   return (
     <ClusteredMapView
       ref={mapRef}
@@ -77,6 +95,7 @@ export function MapViewComponent() {
       }}
       clusteringEnabled={true}
       onRegionChangeComplete={handleRegionChange}
+      onPress={handleMapPress}
     >
       {items.map((location) => {
         return <MapMarker key={location.id} location={location} />;
