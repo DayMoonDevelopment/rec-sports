@@ -37,6 +37,7 @@ export function Component() {
             contentClassName="bg-background"
             screenOptions={{
               headerShown: false,
+              animation: "slide_from_bottom",
             }}
           />
         </BottomSheet>
