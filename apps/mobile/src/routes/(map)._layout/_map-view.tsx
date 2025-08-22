@@ -1,6 +1,6 @@
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ClusteredMapView from "react-native-map-clustering";
+import MapView from "react-native-maps";
 import { router } from "expo-router";
 
 import { useQuery } from "@apollo/client";
@@ -34,7 +34,13 @@ const PAGE_PARAMS = {
 export function MapViewComponent() {
   const { height: screenHeight } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const { mapRef, focusedMarkerId, setFocusedMarkerId, hideMarkerCallout, zoomOut } = useMap();
+  const {
+    mapRef,
+    focusedMarkerId,
+    setFocusedMarkerId,
+    hideMarkerCallout,
+    zoomOut,
+  } = useMap();
 
   const { data, refetch } = useQuery(GET_MAP_LOCATIONS, {
     fetchPolicy: "no-cache",
@@ -55,7 +61,7 @@ export function MapViewComponent() {
 
   // Handle region change - refetch data for the new region with buffer
   const handleRegionChange = (region: Region) => {
-    const boundingBoxWithBuffer = regionToBoundingBoxWithBuffer(region, 0.1);
+    const boundingBoxWithBuffer = regionToBoundingBoxWithBuffer(region, 1);
 
     refetch({
       ...PAGE_PARAMS,
@@ -77,29 +83,28 @@ export function MapViewComponent() {
         router.back();
       } else {
         // If no screens in stack, reset to the index route
-        router.replace("/(map)");
+        router.replace("/");
       }
     }
   };
 
   return (
-    <ClusteredMapView
+    <MapView
       ref={mapRef}
       style={StyleSheet.absoluteFillObject}
       initialRegion={US_INITIAL_REGION}
       mapPadding={{
         bottom: mapBottomPadding,
-        left: 20,
-        right: 20,
-        top: 20,
+        top: 0,
+        left: 0,
+        right: 0,
       }}
-      clusteringEnabled={true}
       onRegionChangeComplete={handleRegionChange}
       onPress={handleMapPress}
     >
       {items.map((location) => {
         return <MapMarker key={location.id} location={location} />;
       })}
-    </ClusteredMapView>
+    </MapView>
   );
 }
