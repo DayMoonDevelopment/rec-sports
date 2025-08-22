@@ -1,27 +1,15 @@
-import { forwardRef } from "react";
-import Svg, { Path, type SvgProps as RNSvgProps, type PathProps as RNPathProps } from "react-native-svg";
+import CoreSvg, { Path as CorePath } from "react-native-svg";
 
 import { cn } from "~/lib/utils";
 
-// Extend SvgProps to include className
-export interface SvgProps extends RNSvgProps {
-  className?: string;
+import type { SvgProps, PathProps } from "react-native-svg";
+
+export function Svg(props: SvgProps) {
+  return <CoreSvg {...props} className={cn("size-6", props.className)} />;
 }
 
-// Extend PathProps to include className
-export interface PathProps extends RNPathProps {
-  className?: string;
+export function Path(props: PathProps) {
+  return (
+    <CorePath {...props} className={cn("text-foreground", props.className)} />
+  );
 }
-
-// Custom Svg component that handles className
-export const CustomSvg = forwardRef<any, SvgProps>(({ className, ...props }, ref) => (
-  <Svg ref={ref} {...props} className={cn(className)} />
-));
-
-// Custom Path component that handles className
-export const CustomPath = forwardRef<any, PathProps>(({ className, ...props }, ref) => (
-  <Path ref={ref} {...props} className={cn(className)} />
-));
-
-CustomSvg.displayName = "CustomSvg";
-CustomPath.displayName = "CustomPath";

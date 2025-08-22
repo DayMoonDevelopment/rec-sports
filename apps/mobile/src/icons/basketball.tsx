@@ -1,17 +1,11 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
-import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const BasketballIcon = (props: SvgProps & { filled?: boolean }) => {
   if (props?.filled) {
     return (
-      <Svg
-        viewBox="0 0 24 24"
-        fill="none"
-        {...props}
-        className={cn("size-6 text-black dark:text-white", props?.className)}
-      >
+      <Svg viewBox="0 0 24 24" fill="none" {...props}>
         <Path
           {...props}
           d="M4.11266 5.84914C2.98013 7.29878 2.23866 9.06875 2.04688 11.0004H6.93561C6.67815 8.93588 5.63404 7.11564 4.11266 5.84914Z"
@@ -49,12 +43,7 @@ export const BasketballIcon = (props: SvgProps & { filled?: boolean }) => {
   }
 
   return (
-    <Svg
-      viewBox="0 0 24 24"
-      fill="none"
-      {...props}
-      className={cn("size-6 text-black dark:text-white", props?.className)}
-    >
+    <Svg viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         {...props}
         fillRule="evenodd"

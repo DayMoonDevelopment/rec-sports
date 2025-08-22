@@ -1,17 +1,12 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
 import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const VolleyballIcon = (props: SvgProps & { filled?: boolean }) => {
   if (props?.filled) {
     return (
-      <Svg
-        viewBox="0 0 24 24"
-        fill="none"
-        {...props}
-        className={cn("size-6 text-black dark:text-white", props?.className)}
-      >
+      <Svg viewBox="0 0 24 24" fill="none" {...props}>
         <Path
           {...props}
           d="M11.3862 2.01855C7.25575 2.26865 3.80193 5.026 2.52682 8.78857C5.56012 6.96924 8.99012 5.71326 12.1944 5.42216C12.0934 4.18074 11.8183 3.00218 11.3862 2.01855Z"
@@ -41,12 +36,7 @@ export const VolleyballIcon = (props: SvgProps & { filled?: boolean }) => {
   }
 
   return (
-    <Svg
-      viewBox="0 0 24 24"
-      fill="none"
-      {...props}
-      className={cn("size-6 text-black dark:text-white", props?.className)}
-    >
+    <Svg viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         {...props}
         fillRule="evenodd"

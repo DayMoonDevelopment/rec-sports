@@ -1,17 +1,12 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
 import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const KickballIcon = (props: SvgProps & { filled?: boolean }) => {
   if (props?.filled) {
     return (
-      <Svg
-        viewBox="0 0 24 24"
-        fill="none"
-        {...props}
-        className={cn("size-6 text-black dark:text-white", props?.className)}
-      >
+      <Svg viewBox="0 0 24 24" fill="none" {...props}>
         <Path
           {...props}
           fillRule="evenodd"
@@ -23,12 +18,7 @@ export const KickballIcon = (props: SvgProps & { filled?: boolean }) => {
   }
 
   return (
-    <Svg
-      viewBox="0 0 24 24"
-      fill="none"
-      {...props}
-      className={cn("size-6 text-black dark:text-white", props?.className)}
-    >
+    <Svg viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         {...props}
         d="M20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12ZM22 12C22 17.5229 17.5229 22 12 22C6.47716 22 2 17.5229 2 12C2 6.47716 6.47716 2 12 2C17.5229 2 22 6.47716 22 12Z"

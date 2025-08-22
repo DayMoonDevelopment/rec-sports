@@ -1,17 +1,11 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
-import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const DiscIcon = (props: SvgProps & { filled?: boolean }) => {
   if (props?.filled) {
     return (
-      <Svg
-        viewBox="0 0 24 24"
-        fill="none"
-        {...props}
-        className={cn("size-6 text-black dark:text-white", props?.className)}
-      >
+      <Svg viewBox="0 0 24 24" fill="none" {...props}>
         <Path
           {...props}
           d="M11.0468 4.52224C11.5984 4.49642 12.0247 4.02826 11.9989 3.47658C11.9731 2.9249 11.5049 2.49861 10.9532 2.52443C7.71918 2.67583 4.76272 3.52483 2.49147 4.86613C2.01592 5.14696 1.85807 5.76014 2.13891 6.23569C2.41975 6.71124 3.03292 6.86909 3.50847 6.58825C5.4588 5.43648 8.08838 4.66073 11.0468 4.52224Z"
@@ -33,12 +27,7 @@ export const DiscIcon = (props: SvgProps & { filled?: boolean }) => {
   }
 
   return (
-    <Svg
-      viewBox="0 0 24 24"
-      fill="none"
-      {...props}
-      className={cn("size-6 text-black dark:text-white", props?.className)}
-    >
+    <Svg viewBox="0 0 24 24" fill="none" {...props}>
       <Path
         {...props}
         d="M21 11.9999C21 11.2021 20.3272 10.2109 18.6241 9.35925C16.9805 8.53749 14.6398 7.99988 12 7.99988C9.36019 7.99988 7.01953 8.53749 5.37601 9.35925C3.67291 10.2109 3.00003 11.202 3.00003 11.9999C3.00003 12.7977 3.6729 13.7889 5.37601 14.6405C7.01953 15.4623 9.36019 15.9999 12 15.9999C14.6398 15.9999 16.9805 15.4623 18.6241 14.6405C20.3272 13.7889 21 12.7977 21 11.9999ZM23 11.9999C23 13.9633 21.4344 15.4716 19.5186 16.4296C17.5428 17.4174 14.883 17.9999 12 17.9999C9.11702 17.9999 6.45724 17.4174 4.48148 16.4296C2.56568 15.4716 1.00003 13.9633 1.00003 11.9999C1.00003 10.0365 2.56568 8.52817 4.48148 7.57019C6.45724 6.58231 9.11702 5.99988 12 5.99988C14.883 5.99988 17.5428 6.58231 19.5186 7.57019C21.4344 8.52817 23 10.0365 23 11.9999Z"

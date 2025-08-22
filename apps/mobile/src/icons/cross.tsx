@@ -1,15 +1,9 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
-import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const CrossIcon = (props: SvgProps) => (
-  <Svg
-    viewBox="0 0 24 24"
-    fill="none"
-    {...props}
-    className={cn("size-6 text-black dark:text-white", props?.className)}
-  >
+  <Svg viewBox="0 0 24 24" fill="none" {...props}>
     <Path
       {...props}
       fillRule="evenodd"

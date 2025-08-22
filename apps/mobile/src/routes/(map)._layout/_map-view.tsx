@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClusteredMapView from "react-native-map-clustering";

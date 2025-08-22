@@ -1,15 +1,9 @@
-import Svg, { Path } from "react-native-svg";
+import { Svg, Path } from "~/ui/svg";
 
-import { cn } from "~/lib/utils";
-import type { SvgProps } from "~/ui/svg";
+import type { SvgProps } from "react-native-svg";
 
 export const TreeIcon = (props: SvgProps) => (
-  <Svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    {...props}
-    className={cn("size-6 text-black dark:text-white", props?.className)}
-  >
+  <Svg viewBox="0 0 24 24" fill="none" {...props}>
     <Path
       {...props}
       d="M19 11a7 7 0 1 0-14 0 7 7 0 0 0 14 0m2 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0"
