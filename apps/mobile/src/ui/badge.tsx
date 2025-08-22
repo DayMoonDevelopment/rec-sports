@@ -56,39 +56,79 @@ const badgeVariants = cva(
   },
 );
 
-const badgeTextVariants = cva("text-white text-xs font-medium text-center", {
-  variants: {
-    variant: {
-      default: "text-primary-foreground",
-      secondary: "text-secondary-foreground",
-      destructive: "text-destructive-foreground",
-      outline: "text-foreground",
-      // Sport-specific text colors using Sport enum values
-      [Sport.Baseball]: "text-white",
-      [Sport.Kickball]: "text-white",
-      [Sport.Basketball]: "text-white",
-      [Sport.Pickleball]: "text-white",
-      [Sport.Tennis]: "text-white",
-      [Sport.Golf]: "text-white",
-      [Sport.DiscGolf]: "text-white",
-      [Sport.Hockey]: "text-white",
-      [Sport.Softball]: "text-white",
-      [Sport.Soccer]: "text-white",
-      [Sport.Football]: "text-white",
-      [Sport.Volleyball]: "text-white",
-      [Sport.Ultimate]: "text-white",
+const badgeTextVariants = cva(
+  "text-white text-xs font-medium leading-0 text-center",
+  {
+    variants: {
+      variant: {
+        default: "text-primary-foreground",
+        secondary: "text-secondary-foreground",
+        destructive: "text-destructive-foreground",
+        outline: "text-foreground",
+        // Sport-specific text colors using Sport enum values
+        [Sport.Baseball]: "text-white",
+        [Sport.Kickball]: "text-white",
+        [Sport.Basketball]: "text-white",
+        [Sport.Pickleball]: "text-white",
+        [Sport.Tennis]: "text-white",
+        [Sport.Golf]: "text-white",
+        [Sport.DiscGolf]: "text-white",
+        [Sport.Hockey]: "text-white",
+        [Sport.Softball]: "text-white",
+        [Sport.Soccer]: "text-white",
+        [Sport.Football]: "text-white",
+        [Sport.Volleyball]: "text-white",
+        [Sport.Ultimate]: "text-white",
+      },
+      size: {
+        sm: "text-xs",
+        default: "text-xs",
+        lg: "text-sm",
+      },
     },
-    size: {
-      sm: "text-xs",
-      default: "text-xs",
-      lg: "text-sm",
+    defaultVariants: {
+      variant: "default",
+      size: "default",
     },
   },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
+);
+
+const badgeIconVariants = cva(
+  "text-white text-xs font-medium leading-0 text-center",
+  {
+    variants: {
+      variant: {
+        default: "text-primary-foreground",
+        secondary: "text-secondary-foreground",
+        destructive: "text-destructive-foreground",
+        outline: "text-foreground",
+        // Sport-specific text colors using Sport enum values
+        [Sport.Baseball]: "text-white",
+        [Sport.Kickball]: "text-white",
+        [Sport.Basketball]: "text-white",
+        [Sport.Pickleball]: "text-white",
+        [Sport.Tennis]: "text-white",
+        [Sport.Golf]: "text-white",
+        [Sport.DiscGolf]: "text-white",
+        [Sport.Hockey]: "text-white",
+        [Sport.Softball]: "text-white",
+        [Sport.Soccer]: "text-white",
+        [Sport.Football]: "text-white",
+        [Sport.Volleyball]: "text-white",
+        [Sport.Ultimate]: "text-white",
+      },
+      size: {
+        sm: "size-4",
+        default: "size-4",
+        lg: "size-4",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
   },
-});
+);
 
 interface BadgeProps extends ViewProps {
   children: React.ReactNode;
@@ -105,8 +145,8 @@ interface BadgeTextProps extends TextProps {
 // todo : come back to this and have the props extend the props of Icon
 interface BadgeIconProps {
   Icon: React.ComponentType<any>;
-  variant?: VariantProps<typeof badgeVariants>["variant"];
-  size?: VariantProps<typeof badgeVariants>["size"];
+  variant?: VariantProps<typeof badgeIconVariants>["variant"];
+  size?: VariantProps<typeof badgeIconVariants>["size"];
   [key: string]: any;
 }
 
@@ -162,20 +202,15 @@ function BadgeIcon({
   ...iconProps
 }: BadgeIconProps) {
   const context = useBadgeContext();
+  const variant = propVariant ?? context.variant;
   const size = propSize ?? context.size;
-
-  // Define icon sizes based on badge size
-  const iconSizes = {
-    sm: 12,
-    default: 14,
-    lg: 16,
-  } as const;
-
-  const iconSize = iconSizes[size || "default"];
 
   return (
     <View className="-ml-0.5">
-      <Icon width={iconSize} height={iconSize} {...iconProps} />
+      <Icon
+        {...iconProps}
+        className={cn(badgeIconVariants({ variant, size }))}
+      />
     </View>
   );
 }

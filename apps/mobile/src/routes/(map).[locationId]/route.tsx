@@ -80,7 +80,7 @@ export function Component() {
         <View className="flex flex-row items-start justify-between gap-2">
           <View className="flex-1 flex flex-col gap-1">
             <View className="bg-green-100 p-2 rounded-xl self-start">
-              <TreeIcon height={32} width={32} />
+              <TreeIcon className="size-8 text-green-700" />
             </View>
 
             <Text className="flex-1 text-3xl font-bold text-foreground pt-3">
