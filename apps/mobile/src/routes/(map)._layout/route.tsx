@@ -1,69 +1,36 @@
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
-import { cssInterop } from "nativewind";
+import { cssInterop, remapProps } from "nativewind";
 
 import { MapProvider } from "~/components/map.context";
-import { BottomSheetBackground } from "./_bottom-sheet-background";
-import { BottomSheetHandle } from "./_bottom-sheet-handle";
+
 import { MapViewComponent } from "./_map-view";
+import { BottomSheetHandle } from "./_bottom-sheet-handle";
 
 import type { TextStyle, ViewStyle } from "react-native";
 
-export function Component() {
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
+const snapPoints = ["50%", "100%"];
 
-  // Define snap points for the bottom sheet
-  const snapPoints = useMemo(() => ["50%", "100%"], [bottomInset]);
-
-  return (
-    <MapProvider>
-      <GestureHandlerRootView className="flex-1">
-        <MapViewComponent />
-
-        <BottomSheet
-          ref={bottomSheetRef}
-          index={0}
-          enableDynamicSizing={false}
-          snapPoints={snapPoints}
-          topInset={topInset}
-          enableBlurKeyboardOnGesture
-          enablePanDownToClose={false}
-          backgroundComponent={BottomSheetBackground}
-          enableOverDrag={false}
-        >
-          <StyledStack
-            contentClassName="bg-background"
-            screenOptions={{
-              headerShown: false,
-            }}
-          />
-        </BottomSheet>
-      </GestureHandlerRootView>
-    </MapProvider>
-  );
-}
+const StyledBottomSheet = remapProps(BottomSheet, {
+  backgroundClassName: "backgroundStyle",
+});
 
 interface StackProps extends React.ComponentProps<typeof Stack> {
   contentStyle?: ViewStyle;
   headerStyle?: TextStyle;
 }
 
-function StackImpl({ contentStyle, headerStyle, ...props }: StackProps) {
+function StackImpl({ contentStyle, ...props }: StackProps) {
   return (
     <Stack
       {...props}
       screenOptions={{
         ...props.screenOptions,
         contentStyle,
-        headerStyle: {
-          backgroundColor: headerStyle?.backgroundColor?.toString(),
-        },
         navigationBarColor: contentStyle?.backgroundColor?.toString(),
-        headerTintColor: headerStyle?.color?.toString(),
       }}
     />
   );
@@ -72,5 +39,38 @@ function StackImpl({ contentStyle, headerStyle, ...props }: StackProps) {
 // Changing this requires reloading the app
 const StyledStack = cssInterop(StackImpl, {
   contentClassName: "contentStyle",
-  headerClassName: "headerStyle",
 });
+
+export function Component() {
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const { top: topInset } = useSafeAreaInsets();
+
+  return (
+    <MapProvider>
+      <GestureHandlerRootView className="flex-1">
+        <MapViewComponent />
+
+        <StyledBottomSheet
+          ref={bottomSheetRef}
+          index={0}
+          enableDynamicSizing={false}
+          snapPoints={snapPoints}
+          topInset={topInset}
+          enableBlurKeyboardOnGesture
+          enablePanDownToClose={false}
+          enableOverDrag={false}
+          backgroundClassName="bg-background"
+          handleComponent={BottomSheetHandle}
+        >
+          <StyledStack
+            contentClassName="bg-background"
+            screenOptions={{
+              headerShown: false,
+              animation: "slide_from_bottom",
+            }}
+          />
+        </StyledBottomSheet>
+      </GestureHandlerRootView>
+    </MapProvider>
+  );
+}

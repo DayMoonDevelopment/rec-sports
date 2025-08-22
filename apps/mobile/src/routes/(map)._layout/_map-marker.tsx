@@ -11,7 +11,20 @@ interface MapMarkerProps {
 
 export function MapMarker({ location }: MapMarkerProps) {
   const markerRef = useRef<typeof Marker>(null);
-  const { addMarkerRef, removeMarkerRef } = useMap();
+  const { addMarkerRef, removeMarkerRef, focusedMarkerId } = useMap();
+
+  const title = location.name;
+  const description = location.address
+    ? `${location.address.street}, ${location.address.city} ${location.address.stateCode} ${location.address.postalCode}`
+    : undefined;
+
+  // Hide this marker if another marker is focused
+  const isHidden = focusedMarkerId && focusedMarkerId !== location.id;
+
+  const handleMarkerPress = () => {
+    // Navigate to the location detail route with location data
+    router.push(`/(map)/${location.id}`);
+  };
 
   useEffect(() => {
     // Add the ref when component mounts
@@ -23,10 +36,10 @@ export function MapMarker({ location }: MapMarkerProps) {
     };
   }, [location.id, addMarkerRef, removeMarkerRef]);
 
-  const handleMarkerPress = () => {
-    // Navigate to the location detail route with location data
-    router.push(`/(map)/${location.id}`);
-  };
+  // Don't render the marker if it should be hidden
+  if (isHidden) {
+    return null;
+  }
 
   return (
     <Marker
@@ -35,8 +48,8 @@ export function MapMarker({ location }: MapMarkerProps) {
         latitude: location.geo.latitude,
         longitude: location.geo.longitude,
       }}
-      title={location.name}
-      description={`${location.address.street}, ${location.address.city} ${location.address.state} ${location.address.postalCode}`}
+      title={title}
+      description={description}
       onPress={handleMarkerPress}
     />
   );

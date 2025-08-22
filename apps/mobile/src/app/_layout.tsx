@@ -8,7 +8,7 @@ import { AppProvider } from "~/context/app";
 import { ApolloProvider } from "~/context/apollo";
 
 import "~/lib/background-update";
-import "../../global.css";
+import "~/lib/nativewind";
 
 export default function RootLayout() {
   useEffect(() => {

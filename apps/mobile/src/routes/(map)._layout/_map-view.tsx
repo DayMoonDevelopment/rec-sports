@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClusteredMapView from "react-native-map-clustering";
@@ -36,20 +35,15 @@ export function MapViewComponent() {
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
   const { mapRef } = useMap();
 
-  const { data, loading, error, refetch, variables } = useQuery(
-    GET_MAP_LOCATIONS,
-    {
-      fetchPolicy: "no-cache",
-      variables: {
-        ...PAGE_PARAMS,
-        region: {
-          boundingBox: US_INITIAL_BOUNDING_BOX_BUFFERED,
-        },
+  const { data, refetch } = useQuery(GET_MAP_LOCATIONS, {
+    fetchPolicy: "no-cache",
+    variables: {
+      ...PAGE_PARAMS,
+      region: {
+        boundingBox: US_INITIAL_BOUNDING_BOX_BUFFERED,
       },
     },
-  );
-
-  console.log(data, error, variables, US_INITIAL_BOUNDING_BOX_BUFFERED);
+  });
 
   const items = data?.locations.nodes || [];
 
