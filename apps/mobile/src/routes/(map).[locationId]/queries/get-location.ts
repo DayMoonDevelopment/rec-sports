@@ -8,6 +8,7 @@ export const GET_LOCATION = gql<{ location: Location | null }, { id: string }>`
       id
       name
       address {
+        id
         street
         city
         state

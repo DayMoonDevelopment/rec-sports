@@ -12,9 +12,9 @@ export const GET_RECOMMENDED_LOCATIONS = gql<
         id
         name
         address {
+          id
           street
           city
-          county
           state
           stateCode
           postalCode

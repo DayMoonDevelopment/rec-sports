@@ -17,6 +17,7 @@ export const GET_MAP_LOCATIONS = gql<
         id
         name
         address {
+          id
           street
           city
           state

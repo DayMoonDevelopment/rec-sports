@@ -216,7 +216,6 @@ export class LocationsService {
         'name',
         'street',
         'city',
-        'county',
         'state',
         'country',
         'postal_code',
@@ -269,7 +268,7 @@ export class LocationsService {
     // Check if all required address fields are present
     const requiredFields = ['street', 'city', 'state', 'postal_code'];
     const hasAllRequiredFields = requiredFields.every(
-      (field) => row[field] && row[field].trim() !== ''
+      (field) => row[field] && row[field].trim() !== '',
     );
 
     if (!hasAllRequiredFields) {
@@ -296,7 +295,7 @@ export class LocationsService {
     }
 
     const normalizedState = stateName.trim();
-    
+
     // If it's already a 2-letter code, return it
     if (normalizedState.length === 2 && /^[A-Z]{2}$/.test(normalizedState)) {
       return normalizedState;
