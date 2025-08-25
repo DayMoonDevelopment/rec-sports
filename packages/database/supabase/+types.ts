@@ -42,8 +42,9 @@ export type Database = {
           created_at: string | null
           id: string
           location: unknown
-          name: string
+          name: string | null
           postal_code: string | null
+          search_vector: unknown | null
           sport_tags: string[] | null
           state: string | null
           street: string | null
@@ -56,8 +57,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           location: unknown
-          name: string
+          name?: string | null
           postal_code?: string | null
+          search_vector?: unknown | null
           sport_tags?: string[] | null
           state?: string | null
           street?: string | null
@@ -70,8 +72,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           location?: unknown
-          name?: string
+          name?: string | null
           postal_code?: string | null
+          search_vector?: unknown | null
           sport_tags?: string[] | null
           state?: string | null
           street?: string | null

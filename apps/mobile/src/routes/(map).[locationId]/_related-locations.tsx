@@ -89,7 +89,6 @@ export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
         showsHorizontalScrollIndicator={false}
         snapToInterval={CARD_WIDTH + CARD_MARGIN}
         snapToAlignment="start"
-        decelerationRate="fast"
         contentContainerStyle={{
           paddingHorizontal: 14,
         }}

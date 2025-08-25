@@ -33,7 +33,7 @@ export class LocationsService {
     // Transform database result to GraphQL type
     return {
       id: result.id,
-      name: result.name,
+      name: result.name || 'Unknown Location', // Handle nullable name
       address: this.buildAddress(result),
       geo: {
         latitude: result.latitude,
@@ -77,7 +77,7 @@ export class LocationsService {
     // Transform database results to GraphQL types
     const nodes = results.map((row) => ({
       id: row.id,
-      name: row.name,
+      name: row.name || 'Unknown Location', // Handle nullable name
       address: this.buildAddress(row),
       geo: {
         latitude: row.latitude,
@@ -248,7 +248,7 @@ export class LocationsService {
     // Transform database results to GraphQL types
     const nodes = results.map((row) => ({
       id: row.id,
-      name: row.name,
+      name: row.name || 'Unknown Location', // Handle nullable name
       address: this.buildAddress(row),
       geo: {
         latitude: row.latitude || 0,
