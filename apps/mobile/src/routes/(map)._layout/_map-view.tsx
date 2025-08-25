@@ -34,9 +34,16 @@ const PAGE_PARAMS = {
 export function MapViewComponent() {
   const { height: screenHeight } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const { mapRef, focusedMarkerId, setFocusedMarkerId, hideMarkerCallout, zoomOut } = useMap();
+  const {
+    mapRef,
+    focusedMarkerId,
+    setFocusedMarkerId,
+    hideMarkerCallout,
+    zoomOut,
+    onRegionChange,
+  } = useMap();
 
-  const { data, refetch } = useQuery(GET_MAP_LOCATIONS, {
+  const { data, refetch, error } = useQuery(GET_MAP_LOCATIONS, {
     fetchPolicy: "no-cache",
     variables: {
       ...PAGE_PARAMS,
@@ -45,6 +52,8 @@ export function MapViewComponent() {
       },
     },
   });
+
+  console.log(data, error);
 
   const items = data?.locations.nodes || [];
 
@@ -55,7 +64,10 @@ export function MapViewComponent() {
 
   // Handle region change - refetch data for the new region with buffer
   const handleRegionChange = (region: Region) => {
-    const boundingBoxWithBuffer = regionToBoundingBoxWithBuffer(region, 0.1);
+    // Update the map context with the new region
+    onRegionChange(region);
+
+    const boundingBoxWithBuffer = regionToBoundingBoxWithBuffer(region, 1);
 
     refetch({
       ...PAGE_PARAMS,

@@ -1,7 +1,9 @@
 import { createContext, useContext, useRef, useCallback, useState } from "react";
 import MapView, { Marker } from "react-native-maps";
+import { roundRegionForCaching } from "~/lib/region-utils";
 
 import type { ReactNode } from "react";
+import type { Region } from "react-native-maps";
 
 interface MarkerRef {
   id: string;
@@ -19,6 +21,8 @@ interface MapContextType {
   zoomOut: (multiplier?: number) => void;
   focusedMarkerId: string | null;
   setFocusedMarkerId: (id: string | null) => void;
+  currentRegion: Region | null;
+  onRegionChange: (region: Region) => void;
 }
 
 const MapContext = createContext<MapContextType | null>(null);
@@ -31,6 +35,7 @@ export function MapProvider({ children }: MapProviderProps) {
   const mapRef = useRef<MapView>(null);
   const markerRefs = useRef<MarkerRef[]>([]);
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
+  const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
 
   const addMarkerRef = useCallback(
     (id: string, ref: React.RefObject<typeof Marker>) => {
@@ -74,6 +79,11 @@ export function MapProvider({ children }: MapProviderProps) {
     }
   }, []);
 
+  const onRegionChange = useCallback((region: Region) => {
+    const roundedRegion = roundRegionForCaching(region);
+    setCurrentRegion(roundedRegion);
+  }, []);
+
   const zoomOut = useCallback(async (multiplier: number = 5) => {
     if (mapRef.current) {
       try {
@@ -94,7 +104,7 @@ export function MapProvider({ children }: MapProviderProps) {
           },
           1000,
         );
-      } catch (error) {
+      } catch {
         // Fallback: zoom out from current center with default deltas
         console.warn("Could not get current region, using fallback zoom out");
         mapRef.current.animateToRegion(
@@ -123,6 +133,8 @@ export function MapProvider({ children }: MapProviderProps) {
         zoomOut,
         focusedMarkerId,
         setFocusedMarkerId,
+        currentRegion,
+        onRegionChange,
       }}
     >
       {children}

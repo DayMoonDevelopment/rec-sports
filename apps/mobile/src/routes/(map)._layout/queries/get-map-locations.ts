@@ -19,7 +19,6 @@ export const GET_MAP_LOCATIONS = gql<
         address {
           street
           city
-          county
           state
           stateCode
           postalCode
