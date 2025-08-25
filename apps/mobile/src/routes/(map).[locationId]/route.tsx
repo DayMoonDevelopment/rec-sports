@@ -16,6 +16,7 @@ import { LoaderIcon } from "~/icons/loader";
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
 import { GET_LOCATION } from "./queries/get-location";
+import { RelatedLocations } from "./_related-locations";
 
 export function Component() {
   const { locationId } = useLocalSearchParams<{
@@ -28,6 +29,7 @@ export function Component() {
   const { data, loading, error } = useQuery(GET_LOCATION, {
     variables: { id: locationId },
     skip: !locationId,
+    fetchPolicy: "no-cache",
   });
 
   const location = data?.location;
@@ -75,8 +77,8 @@ export function Component() {
   }
 
   return (
-    <BottomSheetScrollView className="px-4">
-      <View className="py-4">
+    <BottomSheetScrollView>
+      <View className="py-4 px-4">
         <View className="flex flex-row items-start justify-between gap-2">
           <View className="flex-1 flex flex-col gap-1">
             <View className="bg-green-100 dark:bg-green-800 p-2 rounded-xl self-start">
@@ -127,6 +129,8 @@ export function Component() {
           </View>
         )}
       </View>
+
+      <RelatedLocations currentLocation={location} />
     </BottomSheetScrollView>
   );
 }

@@ -1,6 +1,6 @@
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ClusteredMapView from "react-native-map-clustering";
+import MapView from "react-native-maps";
 import { router } from "expo-router";
 
 import { useQuery } from "@apollo/client";
@@ -89,29 +89,28 @@ export function MapViewComponent() {
         router.back();
       } else {
         // If no screens in stack, reset to the index route
-        router.replace("/(map)");
+        router.replace("/");
       }
     }
   };
 
   return (
-    <ClusteredMapView
+    <MapView
       ref={mapRef}
       style={StyleSheet.absoluteFillObject}
       initialRegion={US_INITIAL_REGION}
       mapPadding={{
         bottom: mapBottomPadding,
-        left: 20,
-        right: 20,
-        top: 20,
+        top: 0,
+        left: 0,
+        right: 0,
       }}
-      clusteringEnabled={true}
       onRegionChangeComplete={handleRegionChange}
       onPress={handleMapPress}
     >
       {items.map((location) => {
         return <MapMarker key={location.id} location={location} />;
       })}
-    </ClusteredMapView>
+    </MapView>
   );
 }

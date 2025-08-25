@@ -21,9 +21,14 @@ export function MapMarker({ location }: MapMarkerProps) {
   // Hide this marker if another marker is focused
   const isHidden = focusedMarkerId && focusedMarkerId !== location.id;
 
+  // Check if this marker is currently focused
+  const isFocused = focusedMarkerId === location.id;
+
   const handleMarkerPress = () => {
-    // Navigate to the location detail route with location data
-    router.push(`/(map)/${location.id}`);
+    if (!isFocused) {
+      // If not focused, navigate to the location detail route
+      router.push(`/${location.id}`);
+    }
   };
 
   useEffect(() => {
