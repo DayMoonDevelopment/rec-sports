@@ -3,36 +3,32 @@ import { IsOptional, IsString } from 'class-validator';
 
 @ObjectType()
 export class Address {
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field({ nullable: false })
   @IsString()
-  street?: string;
+  id: string;
+
+  @Field({ nullable: false })
+  @IsString()
+  street: string;
 
   @Field({ nullable: true })
   @IsOptional()
   @IsString()
-  city?: string;
+  street2?: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field({ nullable: false })
   @IsString()
-  county?: string;
+  city: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field({ nullable: false })
   @IsString()
-  state?: string;
+  state: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field({ nullable: false })
   @IsString()
-  country?: string;
+  postalCode: string;
 
-  @Field({ nullable: true })
-  @IsOptional()
+  @Field({ nullable: false })
   @IsString()
-  postalCode?: string;
-
-  @Field({ nullable: true })
-  stateCode?: string;
+  stateCode: string;
 }

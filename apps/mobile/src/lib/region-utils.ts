@@ -75,3 +75,42 @@ export function boundingBoxToRegion(boundingBox: BoundingBox): Region {
     longitudeDelta,
   };
 }
+
+/**
+ * Rounds a region's coordinates to improve cache hit rates
+ * Uses adaptive precision based on zoom level (delta size)
+ */
+export function roundRegionForCaching(region: Region): Region {
+  const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
+  
+  // Determine precision based on delta (zoom level)
+  // Large deltas (zoomed out) = lower precision, small deltas (zoomed in) = higher precision
+  let precision: number;
+  const avgDelta = (latitudeDelta + longitudeDelta) / 2;
+  
+  if (avgDelta >= 10) {
+    // Very zoomed out (country/continent level)
+    precision = 0; // Round to whole degrees
+  } else if (avgDelta >= 1) {
+    // Zoomed out (state/region level)
+    precision = 1; // Round to 0.1 degrees (~11km)
+  } else if (avgDelta >= 0.1) {
+    // Medium zoom (city level)
+    precision = 2; // Round to 0.01 degrees (~1.1km)
+  } else if (avgDelta >= 0.01) {
+    // Zoomed in (neighborhood level)
+    precision = 3; // Round to 0.001 degrees (~110m)
+  } else {
+    // Very zoomed in (street level)
+    precision = 4; // Round to 0.0001 degrees (~11m)
+  }
+  
+  const multiplier = Math.pow(10, precision);
+  
+  return {
+    latitude: Math.round(latitude * multiplier) / multiplier,
+    longitude: Math.round(longitude * multiplier) / multiplier,
+    latitudeDelta: Math.round(latitudeDelta * multiplier) / multiplier,
+    longitudeDelta: Math.round(longitudeDelta * multiplier) / multiplier,
+  };
+}

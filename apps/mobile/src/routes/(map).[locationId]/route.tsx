@@ -103,9 +103,11 @@ export function Component() {
             <Text className="text-muted-foreground text-base">
               {location.address.street}
             </Text>
-            <Text className="text-muted-foreground text-base">
-              {`${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`}
-            </Text>
+            {location.address ? (
+              <Text className="text-muted-foreground text-base">
+                {`${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`}
+              </Text>
+            ) : null}
           </View>
         ) : null}
 

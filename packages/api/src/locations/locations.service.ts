@@ -34,14 +34,7 @@ export class LocationsService {
     return {
       id: result.id,
       name: result.name,
-      address: {
-        street: result.street,
-        city: result.city,
-        county: result.county,
-        state: result.state,
-        country: result.country,
-        postalCode: result.postal_code,
-      },
+      address: this.buildAddress(result),
       geo: {
         latitude: result.latitude,
         longitude: result.longitude,
@@ -85,14 +78,7 @@ export class LocationsService {
     const nodes = results.map((row) => ({
       id: row.id,
       name: row.name,
-      address: {
-        street: row.street,
-        city: row.city,
-        county: row.county,
-        state: row.state,
-        country: row.country,
-        postalCode: row.postal_code,
-      },
+      address: this.buildAddress(row),
       geo: {
         latitude: row.latitude,
         longitude: row.longitude,
@@ -264,14 +250,7 @@ export class LocationsService {
     const nodes = results.map((row) => ({
       id: row.id,
       name: row.name,
-      address: {
-        street: row.street,
-        city: row.city,
-        county: row.county,
-        state: row.state,
-        country: row.country,
-        postalCode: row.postal_code,
-      },
+      address: this.buildAddress(row),
       geo: {
         latitude: row.latitude || 0,
         longitude: row.longitude || 0,
@@ -284,5 +263,105 @@ export class LocationsService {
       totalCount,
       hasMore: offset + limit < totalCount,
     };
+  }
+
+  private buildAddress(row: any) {
+    // Check if all required address fields are present
+    const requiredFields = ['street', 'city', 'state', 'postal_code'];
+    const hasAllRequiredFields = requiredFields.every(
+      (field) => row[field] && row[field].trim() !== ''
+    );
+
+    if (!hasAllRequiredFields) {
+      return null;
+    }
+
+    // Generate state code from state name
+    const stateCode = this.getStateCode(row.state);
+
+    return {
+      id: row.id,
+      street: row.street,
+      street2: null, // Database doesn't have street2 field yet
+      city: row.city,
+      state: row.state,
+      postalCode: row.postal_code,
+      stateCode,
+    };
+  }
+
+  private getStateCode(stateName: string): string {
+    if (!stateName) {
+      return '';
+    }
+
+    const normalizedState = stateName.trim();
+    
+    // If it's already a 2-letter code, return it
+    if (normalizedState.length === 2 && /^[A-Z]{2}$/.test(normalizedState)) {
+      return normalizedState;
+    }
+
+    const STATE_NAME_TO_CODE: Record<string, string> = {
+      Alabama: 'AL',
+      Alaska: 'AK',
+      Arizona: 'AZ',
+      Arkansas: 'AR',
+      California: 'CA',
+      Colorado: 'CO',
+      Connecticut: 'CT',
+      Delaware: 'DE',
+      Florida: 'FL',
+      Georgia: 'GA',
+      Hawaii: 'HI',
+      Idaho: 'ID',
+      Illinois: 'IL',
+      Indiana: 'IN',
+      Iowa: 'IA',
+      Kansas: 'KS',
+      Kentucky: 'KY',
+      Louisiana: 'LA',
+      Maine: 'ME',
+      Maryland: 'MD',
+      Massachusetts: 'MA',
+      Michigan: 'MI',
+      Minnesota: 'MN',
+      Mississippi: 'MS',
+      Missouri: 'MO',
+      Montana: 'MT',
+      Nebraska: 'NE',
+      Nevada: 'NV',
+      'New Hampshire': 'NH',
+      'New Jersey': 'NJ',
+      'New Mexico': 'NM',
+      'New York': 'NY',
+      'North Carolina': 'NC',
+      'North Dakota': 'ND',
+      Ohio: 'OH',
+      Oklahoma: 'OK',
+      Oregon: 'OR',
+      Pennsylvania: 'PA',
+      'Rhode Island': 'RI',
+      'South Carolina': 'SC',
+      'South Dakota': 'SD',
+      Tennessee: 'TN',
+      Texas: 'TX',
+      Utah: 'UT',
+      Vermont: 'VT',
+      Virginia: 'VA',
+      Washington: 'WA',
+      'West Virginia': 'WV',
+      Wisconsin: 'WI',
+      Wyoming: 'WY',
+      'District of Columbia': 'DC',
+      'Puerto Rico': 'PR',
+      'U.S. Virgin Islands': 'VI',
+      Guam: 'GU',
+      'American Samoa': 'AS',
+      'Northern Mariana Islands': 'MP',
+    };
+
+    // Look up the state name in our mapping
+    return STATE_NAME_TO_CODE[normalizedState] || normalizedState;
   }
 }
