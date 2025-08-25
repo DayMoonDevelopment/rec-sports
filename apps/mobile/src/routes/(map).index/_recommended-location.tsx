@@ -5,33 +5,28 @@ import { useMap } from "~/components/map.context";
 
 import type { Location } from "@rec/types";
 
-interface SuggestedLocationProps {
+interface RecommendedLocationProps {
   location: Location;
   onPress?: (location: Location) => void;
 }
 
-export function SuggestedLocation({
+export function RecommendedLocation({
   location,
   onPress,
-}: SuggestedLocationProps) {
+}: RecommendedLocationProps) {
   const { showMarkerCallout, animateToLocation } = useMap();
 
   const handlePress = () => {
     // Animate to the location on the map
-    if (location._geoloc?.lat && location._geoloc?.lng) {
-      animateToLocation(location._geoloc.lat, location._geoloc.lng);
+    if (location.geo?.latitude && location.geo?.longitude) {
+      animateToLocation(location.geo.latitude, location.geo.longitude);
     }
 
     // Show the marker callout on the map
-    showMarkerCallout(location.objectID);
+    showMarkerCallout(location.id);
 
     // Navigate to the location detail route with location data
-    router.push({
-      pathname: `/(map)/${location.objectID}`,
-      params: {
-        locationData: JSON.stringify(location),
-      },
-    });
+    router.push(`/${location.id}`);
 
     // Call the optional onPress callback
     onPress?.(location);

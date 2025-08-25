@@ -7,55 +7,26 @@ import { CrossSmallIcon } from "~/icons/cross-small";
 import { useMap } from "~/components/map.context";
 import { CrossIcon } from "../../icons/cross";
 
-interface SearchHeaderProps {
-  onFocusChange: (focused: boolean) => void;
-  query: string;
-  onQueryChange: (query: string) => void;
-}
-
-export function SearchHeader({
-  onFocusChange,
-  query,
-  onQueryChange,
-}: SearchHeaderProps) {
+export function SearchHeader() {
   const inputRef = useRef<TextInput>(null);
   const { mapRef, animateToLocation } = useMap();
   const { snapToIndex } = useBottomSheet();
   const [focused, setFocused] = useState(false);
-  const [localQuery, setLocalQuery] = useState(query);
 
-  const isQuerying = localQuery.length > 0;
+  const isQuerying = false;
 
-  function handleBlur() {
-    onFocusChange(false);
-    setFocused(false);
-    if (!query) {
-      snapToIndex(1); // Standard
-    }
-  }
+  function handleBlur() {}
 
-  function handleSubmit() {
-    // Update the actual search query when user presses enter
-    onQueryChange(localQuery);
-  }
+  function handleSubmit() {}
 
-  function handleClear() {
-    setLocalQuery("");
-    onQueryChange("");
-  }
+  function handleClear() {}
 
   function handleCancel() {
     inputRef.current?.blur();
     handleClear();
   }
 
-  async function handleFocus() {
-    onFocusChange(true);
-    setFocused(true);
-
-    // Keep bottom sheet expanded for search
-    snapToIndex(2); // Expanded
-  }
+  async function handleFocus() {}
 
   return (
     <View className="flex flex-row items-center gap-2 p-4">
@@ -63,8 +34,6 @@ export function SearchHeader({
         <SearchIcon height={16} width={16} />
         <BottomSheetTextInput
           ref={inputRef}
-          value={localQuery}
-          onChangeText={setLocalQuery}
           placeholder="Find a place to play..."
           className="flex-1 text-foreground placeholder:text-muted-foreground"
           onBlur={handleBlur}
