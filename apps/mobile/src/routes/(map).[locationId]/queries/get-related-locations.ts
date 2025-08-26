@@ -20,9 +20,9 @@ export const GET_RELATED_LOCATIONS = gql<
         id
         name
         address {
+          id
           street
           city
-          county
           state
           stateCode
           postalCode

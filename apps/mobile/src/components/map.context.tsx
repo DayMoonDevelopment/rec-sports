@@ -23,6 +23,10 @@ interface MapContextType {
   setFocusedMarkerId: (id: string | null) => void;
   currentRegion: Region | null;
   onRegionChange: (region: Region) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isSearchMode: boolean;
+  setIsSearchMode: (isSearchMode: boolean) => void;
 }
 
 const MapContext = createContext<MapContextType | null>(null);
@@ -36,6 +40,8 @@ export function MapProvider({ children }: MapProviderProps) {
   const markerRefs = useRef<MarkerRef[]>([]);
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
 
   const addMarkerRef = useCallback(
     (id: string, ref: React.RefObject<typeof Marker>) => {
@@ -135,6 +141,10 @@ export function MapProvider({ children }: MapProviderProps) {
         setFocusedMarkerId,
         currentRegion,
         onRegionChange,
+        searchQuery,
+        setSearchQuery,
+        isSearchMode,
+        setIsSearchMode,
       }}
     >
       {children}

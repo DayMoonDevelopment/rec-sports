@@ -53,8 +53,6 @@ export function MapViewComponent() {
     },
   });
 
-  console.log(data, error);
-
   const items = data?.locations.nodes || [];
 
   const mapBottomPadding =

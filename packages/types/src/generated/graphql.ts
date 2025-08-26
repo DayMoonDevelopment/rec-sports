@@ -16,13 +16,13 @@ export type Scalars = {
 
 export type Address = {
   __typename?: 'Address';
-  city?: Maybe<Scalars['String']['output']>;
-  country?: Maybe<Scalars['String']['output']>;
-  county?: Maybe<Scalars['String']['output']>;
-  postalCode?: Maybe<Scalars['String']['output']>;
-  state?: Maybe<Scalars['String']['output']>;
-  stateCode?: Maybe<Scalars['String']['output']>;
-  street?: Maybe<Scalars['String']['output']>;
+  city: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  postalCode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+  stateCode: Scalars['String']['output'];
+  street: Scalars['String']['output'];
+  street2?: Maybe<Scalars['String']['output']>;
 };
 
 export type BoundingBox = {
@@ -79,6 +79,8 @@ export type QueryLocationsArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   query?: InputMaybe<Scalars['String']['input']>;
   region?: InputMaybe<Region>;
+  searchMode?: InputMaybe<Scalars['String']['input']>;
+  similarityThreshold?: InputMaybe<Scalars['Float']['input']>;
   sports?: InputMaybe<Array<Sport>>;
 };
 

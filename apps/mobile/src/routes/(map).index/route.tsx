@@ -1,16 +1,21 @@
 import { View } from "react-native";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 
+import { useMap } from "~/components/map.context";
 import { SearchHeader } from "./_search-header";
-import { RecommendedLocations } from "./_recommended-locations";
+import { Feed } from "./_feed";
+import { SearchFeed } from "./_search-feed";
 
 export function Component() {
+  const { isSearchMode, searchQuery } = useMap();
+  
   return (
     <View className="flex-1">
       <SearchHeader />
-      <BottomSheetScrollView className="px-4">
-        <RecommendedLocations hasSearchTerm={false} />
-      </BottomSheetScrollView>
+      {isSearchMode ? (
+        <SearchFeed searchQuery={searchQuery} />
+      ) : (
+        <Feed />
+      )}
     </View>
   );
 }

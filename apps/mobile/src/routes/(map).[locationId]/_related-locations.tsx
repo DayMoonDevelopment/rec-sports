@@ -1,12 +1,7 @@
-import {
-  View,
-  Text,
-  FlatList,
-  Dimensions,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, Dimensions, ActivityIndicator } from "react-native";
 import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { GET_RELATED_LOCATIONS } from "./queries/get-related-locations";
 import { RelatedLocationItem } from "./_related-locations-item";
@@ -83,7 +78,7 @@ export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
         Nearby locations
       </Text>
 
-      <FlatList
+      <BottomSheetFlatList
         horizontal
         data={relatedLocations}
         keyExtractor={(item) => item.id}
@@ -94,7 +89,6 @@ export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
         showsHorizontalScrollIndicator={false}
         snapToInterval={CARD_WIDTH + CARD_MARGIN}
         snapToAlignment="start"
-        decelerationRate="fast"
         contentContainerStyle={{
           paddingHorizontal: 14,
         }}

@@ -2,12 +2,12 @@ import { gql } from "@rec/types";
 
 import type { LocationsResponse, Region } from "@rec/types";
 
-export const GET_RECOMMENDED_LOCATIONS = gql<
+export const GET_SEARCH_LOCATIONS = gql<
   { locations: LocationsResponse },
-  { limit?: number; region?: Region }
+  { query: string; region?: Region; limit?: number }
 >`
-  query GetRecommendedLocations($region: Region, $limit: Int) {
-    locations(region: $region, limit: $limit) {
+  query GetSearchLocations($query: String!, $region: Region, $limit: Int) {
+    locations(query: $query, region: $region, limit: $limit) {
       nodes {
         id
         name
@@ -25,6 +25,8 @@ export const GET_RECOMMENDED_LOCATIONS = gql<
         }
         sports
       }
+      totalCount
+      hasMore
     }
   }
 `;
