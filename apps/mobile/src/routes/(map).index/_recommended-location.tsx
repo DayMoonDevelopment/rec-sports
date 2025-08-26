@@ -1,7 +1,9 @@
 import { Pressable } from "react-native";
 import { router } from "expo-router";
-import { Badge, BadgeText } from "~/ui/badge";
+import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 import { useMap } from "~/components/map.context";
+
+import { PinIcon } from "~/icons/pin";
 
 import type { Location } from "@rec/types";
 
@@ -38,6 +40,7 @@ export function RecommendedLocation({
       className="active:bg-opacity/50 transition-opacity"
     >
       <Badge variant="secondary" size="default">
+        <BadgeIcon Icon={PinIcon} />
         <BadgeText>{location.name}</BadgeText>
       </Badge>
     </Pressable>
