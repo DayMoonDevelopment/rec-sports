@@ -15,31 +15,22 @@ CREATE INDEX IF NOT EXISTS locations_sport_tags_gin_idx ON locations USING GIN (
 CREATE OR REPLACE FUNCTION update_location_search_vector()
 RETURNS TRIGGER AS $$
 DECLARE
-  weight_item JSONB;
-  field_value TEXT;
   result_vector tsvector := ''::tsvector;
 BEGIN
-  -- Check if meta exists with weights array
   IF NEW.search_vector_meta IS NOT NULL AND
      NEW.search_vector_meta ? 'weights' AND
      jsonb_array_length(NEW.search_vector_meta->'weights') > 0 THEN
-
-    -- Loop through weights and build vector
     FOR weight_item IN SELECT * FROM jsonb_array_elements(NEW.search_vector_meta->'weights')
     LOOP
-      -- Add weighted vector if field has content
-      IF field_value IS NOT NULL AND trim(field_value) != '' THEN
+      IF weight_item->>'value' IS NOT NULL THEN
         result_vector := result_vector ||
-          setweight(to_tsvector('english', field_value), (weight_item->>'weight')::char);
+          setweight(to_tsvector('english', weight_item->>'value'), (weight_item->>'weight')::char);
       END IF;
     END LOOP;
-
     NEW.search_vector := result_vector;
   ELSE
-    -- Set to NULL if no meta or empty weights
     NEW.search_vector := NULL;
   END IF;
-
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
