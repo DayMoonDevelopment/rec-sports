@@ -1,6 +1,7 @@
 import { Text, View, Pressable, TextInput } from "react-native";
 import { useBottomSheet, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { router } from "expo-router";
 
 import { SearchIcon } from "~/icons/search";
 import { CrossSmallIcon } from "~/icons/cross-small";
@@ -9,11 +10,11 @@ import { CrossIcon } from "../../icons/cross";
 
 export function SearchHeader() {
   const inputRef = useRef<TextInput>(null);
-  const { searchQuery, setSearchQuery, isSearchMode, setIsSearchMode } = useMap();
+  const { searchQuery, setSearchQuery, setIsSearchMode } = useMap();
   const { snapToIndex } = useBottomSheet();
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState(searchQuery);
-  
+
   const isQuerying = searchQuery.trim().length > 0;
 
   // Debounce search query updates
@@ -62,6 +63,10 @@ export function SearchHeader() {
     setInputValue(text);
   }, []);
 
+  function handleProfilePress() {
+    router.push("/profile");
+  }
+
   return (
     <View className="flex flex-row items-center gap-2 p-4">
       <View className="flex-1 flex flex-row gap-1 items-center justify-start bg-card border border-border rounded-full px-4 h-14">
@@ -98,7 +103,10 @@ export function SearchHeader() {
           <CrossIcon height={22} width={22} />
         </Pressable>
       ) : (
-        <Pressable className="size-14 bg-primary rounded-full items-center justify-center active:opacity-50 transition-opacity">
+        <Pressable
+          onPress={handleProfilePress}
+          className="size-14 bg-primary rounded-full items-center justify-center active:opacity-50 transition-opacity"
+        >
           <Text className="text-primary-foreground font-semibold text-lg">
             RS
           </Text>

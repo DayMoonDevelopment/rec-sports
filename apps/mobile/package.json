@@ -10,8 +10,8 @@
     "prebuild": "expo prebuild --clean",
     "prebuild:android": "expo prebuild --clean -p android",
     "prebuild:ios": "expo prebuild --clean -p ios",
-    "dev:android": "expo prebuild --clean -p android && expo run:android",
-    "dev:ios": "expo prebuild --clean -p ios && expo run:ios",
+    "dev:android": "graphql-codegen --config gql-codegen.ts expo prebuild --clean -p android && expo run:android",
+    "dev:ios": "graphql-codegen --config gql-codegen.ts && expo prebuild --clean -p ios && expo run:ios",
     "codegen:gql": "graphql-codegen --config gql-codegen.ts",
     "postinstall": "graphql-codegen --config gql-codegen.ts",
     "typecheck": "tsc"
@@ -44,6 +44,7 @@
     "expo-system-ui": "~5.0.10",
     "expo-task-manager": "^13.1.6",
     "expo-updates": "^0.28.17",
+    "expo-video": "~2.2.2",
     "expo-web-browser": "~14.2.0",
     "graphql": "^16.11.0",
     "install": "^0.13.0",
