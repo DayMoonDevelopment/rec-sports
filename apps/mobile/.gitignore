@@ -42,5 +42,4 @@ android
 
 # GraphQL generated files
 *.generated.ts
-
-app-example
+gql

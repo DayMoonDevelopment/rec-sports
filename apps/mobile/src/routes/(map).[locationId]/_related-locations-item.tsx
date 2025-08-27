@@ -10,7 +10,9 @@ const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.7;
 
 // Extract the individual location node type from the query
-type RelatedLocationNode = NonNullable<GetRelatedLocationsQuery["relatedLocations"]["nodes"][0]>;
+type RelatedLocationNode = NonNullable<
+  GetRelatedLocationsQuery["relatedLocations"]["nodes"][number]
+>;
 
 interface RelatedLocationItemProps {
   location: RelatedLocationNode;

@@ -8,10 +8,12 @@ import { RelatedLocationItem } from "./_related-locations-item";
 import { useMap } from "~/components/map.context";
 
 import type { Location } from "~/gql/types";
-import type { GetRelatedLocationsQuery } from "./queries/get-related-locations.generated";
+import type { GetRelatedLocationsQuery as GetRelatedLocationsQueryType } from "./queries/get-related-locations.generated";
 
 // Extract the individual location node type from the query for consistency
-type RelatedLocationNode = NonNullable<GetRelatedLocationsQuery["relatedLocations"]["nodes"][0]>;
+type RelatedLocationNode = NonNullable<
+  GetRelatedLocationsQueryType["relatedLocations"]["nodes"][number]
+>;
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.7;

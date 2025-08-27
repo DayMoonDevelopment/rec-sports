@@ -12,7 +12,8 @@
     "prebuild:ios": "expo prebuild --clean -p ios",
     "dev:android": "expo prebuild --clean -p android && expo run:android",
     "dev:ios": "expo prebuild --clean -p ios && expo run:ios",
-    "codegen:gql": "bunx graphql-codegen --config gql-codegen.ts --watch"
+    "codegen:gql": "graphql-codegen --config gql-codegen.ts",
+    "postinstall": "graphql-codegen --config gql-codegen.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
@@ -69,7 +70,6 @@
     "@graphql-codegen/typed-document-node": "^5.1.2",
     "@graphql-codegen/typescript-operations": "^4.6.1",
     "@graphql-eslint/eslint-plugin": "^4.4.0",
-    "@parcel/watcher": "^2.5.1",
     "@types/react": "~19.0.10",
     "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.25.0",
