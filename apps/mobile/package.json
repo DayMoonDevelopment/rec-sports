@@ -13,7 +13,8 @@
     "dev:android": "expo prebuild --clean -p android && expo run:android",
     "dev:ios": "expo prebuild --clean -p ios && expo run:ios",
     "codegen:gql": "graphql-codegen --config gql-codegen.ts",
-    "postinstall": "graphql-codegen --config gql-codegen.ts"
+    "postinstall": "graphql-codegen --config gql-codegen.ts",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
@@ -66,6 +67,7 @@
     "@0no-co/graphqlsp": "^1.15.0",
     "@babel/core": "^7.25.2",
     "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/graphql-modules-preset": "^4.0.17",
     "@graphql-codegen/near-operation-file-preset": "^3.1.0",
     "@graphql-codegen/typed-document-node": "^5.1.2",
     "@graphql-codegen/typescript-operations": "^4.6.1",

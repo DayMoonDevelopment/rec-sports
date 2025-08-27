@@ -43,7 +43,7 @@ export function MapViewComponent() {
     onRegionChange,
   } = useMap();
 
-  const { data, refetch, error } = useQuery(SearchLocationsDocument, {
+  const { data, refetch } = useQuery(SearchLocationsDocument, {
     fetchPolicy: "no-cache",
     variables: {
       ...PAGE_PARAMS,

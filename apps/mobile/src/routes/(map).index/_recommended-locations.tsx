@@ -7,7 +7,8 @@ import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locat
 import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
-import type { Location, Region } from "~/gql/types";
+import type { Region } from "~/gql/types";
+import type { LocationNodeFragment } from "./queries/get-recommended-locations.generated";
 
 function HorizontalItemSeparatorComponent() {
   return <View className="w-2" />;
@@ -35,7 +36,7 @@ export function RecommendedLocations() {
 
   const suggestedItems = data?.locations.nodes || [];
 
-  const handleLocationPress = (location: Location) => {
+  const handleLocationPress = (location: LocationNodeFragment) => {
     // Navigate to the location detail route
     router.push(`/${location.id}`);
   };

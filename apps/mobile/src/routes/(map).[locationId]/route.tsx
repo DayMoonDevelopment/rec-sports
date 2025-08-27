@@ -130,7 +130,7 @@ export function Component() {
         )}
       </View>
 
-      <RelatedLocations currentLocation={location} />
+      <RelatedLocations reference={location} />
     </BottomSheetScrollView>
   );
 }

@@ -5,11 +5,11 @@ import { useMap } from "~/components/map.context";
 
 import { PinIcon } from "~/icons/pin";
 
-import type { Location } from "~/gql/types";
+import type { LocationNodeFragment } from "./queries/get-recommended-locations.generated";
 
 interface RecommendedLocationProps {
-  location: Location;
-  onPress?: (location: Location) => void;
+  location: LocationNodeFragment;
+  onPress?: (location: LocationNodeFragment) => void;
 }
 
 export function RecommendedLocation({

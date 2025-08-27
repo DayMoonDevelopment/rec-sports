@@ -1,19 +1,23 @@
+fragment LocationNode on Location {
+  id
+  name
+  address {
+    id
+    street
+    city
+    state
+    stateCode
+    postalCode
+  }
+  geo {
+    latitude
+    longitude
+  }
+  sports
+}
+
 query GetLocation($id: String!) {
   location(id: $id) {
-    id
-    name
-    address {
-      id
-      street
-      city
-      state
-      stateCode
-      postalCode
-    }
-    geo {
-      latitude
-      longitude
-    }
-    sports
+    ...LocationNode
   }
 }

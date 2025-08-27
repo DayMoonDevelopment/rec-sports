@@ -39,8 +39,6 @@ class UpdateManager {
       if (!isRegistered) {
         await BackgroundTask.registerTaskAsync(BACKGROUND_UPDATE_TASK, {
           minimumInterval: 60000, // 1 minute minimum interval
-          stopOnTerminate: false,
-          startOnBoot: true,
         });
 
         logger.log("Background task registered");

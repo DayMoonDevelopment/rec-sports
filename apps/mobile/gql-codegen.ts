@@ -41,6 +41,12 @@ const config: CodegenConfig = {
         defaultScalarType: "unknown",
         nonOptionalTypename: true,
         skipTypeNameForRoot: true,
+        // Generate additional exports for nested types
+        addOperationExport: true,
+        // Better fragment type handling
+        inlineFragmentTypes: "combine",
+        // Export fragment types separately
+        exportFragmentSpreadSubTypes: true,
       },
     },
   },

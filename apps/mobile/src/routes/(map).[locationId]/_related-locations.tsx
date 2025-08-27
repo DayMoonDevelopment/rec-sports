@@ -7,13 +7,7 @@ import { GetRelatedLocationsDocument } from "./queries/get-related-locations.gen
 import { RelatedLocationItem } from "./_related-locations-item";
 import { useMap } from "~/components/map.context";
 
-import type { Location } from "~/gql/types";
-import type { GetRelatedLocationsQuery as GetRelatedLocationsQueryType } from "./queries/get-related-locations.generated";
-
-// Extract the individual location node type from the query for consistency
-type RelatedLocationNode = NonNullable<
-  GetRelatedLocationsQueryType["relatedLocations"]["nodes"][number]
->;
+import type { LocationNodeFragment } from "./queries/get-related-locations.generated";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.7;
@@ -24,10 +18,12 @@ function HorizontalItemSeparatorComponent() {
 }
 
 interface RelatedLocationsProps {
-  currentLocation: Location;
+  reference: LocationNodeFragment;
 }
 
-export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
+export function RelatedLocations({
+  reference: currentLocation,
+}: RelatedLocationsProps) {
   const { animateToLocation, showMarkerCallout } = useMap();
 
   const { data, loading, error } = useQuery(GetRelatedLocationsDocument, {
@@ -44,7 +40,7 @@ export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
       ({ id }) => id !== currentLocation.id,
     ) || [];
 
-  const handleLocationPress = (location: RelatedLocationNode) => {
+  const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to the location on the map
     if (location.geo?.latitude && location.geo?.longitude) {
       animateToLocation(location.geo.latitude, location.geo.longitude);
