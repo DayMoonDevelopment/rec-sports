@@ -11,16 +11,17 @@
     "prebuild:android": "expo prebuild --clean -p android",
     "prebuild:ios": "expo prebuild --clean -p ios",
     "dev:android": "expo prebuild --clean -p android && expo run:android",
-    "dev:ios": "expo prebuild --clean -p ios && expo run:ios"
+    "dev:ios": "expo prebuild --clean -p ios && expo run:ios",
+    "codegen:gql": "bunx graphql-codegen --config gql-codegen.ts --watch"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
-    "@rec/types": "workspace:*",
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.8",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
+    "@rec/types": "workspace:*",
     "@shopify/flash-list": "1.7.6",
     "@th3rdwave/react-navigation-bottom-sheet": "^0.3.2",
     "apollo3-cache-persist": "^0.15.0",
@@ -61,7 +62,14 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@0no-co/graphqlsp": "^1.15.0",
     "@babel/core": "^7.25.2",
+    "@graphql-codegen/cli": "^5.0.7",
+    "@graphql-codegen/near-operation-file-preset": "^3.1.0",
+    "@graphql-codegen/typed-document-node": "^5.1.2",
+    "@graphql-codegen/typescript-operations": "^4.6.1",
+    "@graphql-eslint/eslint-plugin": "^4.4.0",
+    "@parcel/watcher": "^2.5.1",
     "@types/react": "~19.0.10",
     "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.25.0",

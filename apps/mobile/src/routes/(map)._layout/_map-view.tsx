@@ -9,7 +9,7 @@ import { useMap } from "~/components/map.context";
 import { MapMarker } from "./_map-marker";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
-import { GET_MAP_LOCATIONS } from "./queries/get-map-locations";
+import { SearchLocationsDocument } from "./queries/get-map-locations.generated";
 
 import type { Region } from "react-native-maps";
 
@@ -43,7 +43,7 @@ export function MapViewComponent() {
     onRegionChange,
   } = useMap();
 
-  const { data, refetch, error } = useQuery(GET_MAP_LOCATIONS, {
+  const { data, refetch, error } = useQuery(SearchLocationsDocument, {
     fetchPolicy: "no-cache",
     variables: {
       ...PAGE_PARAMS,

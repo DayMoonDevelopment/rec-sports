@@ -3,11 +3,11 @@ import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
 
 import { RecommendedLocation } from "./_recommended-location";
-import { GET_RECOMMENDED_LOCATIONS } from "./queries/get-recommended-locations";
+import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locations.generated";
 import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
-import type { Location, Region } from "@rec/types";
+import type { Location, Region } from "~/gql/types";
 
 function HorizontalItemSeparatorComponent() {
   return <View className="w-2" />;
@@ -24,7 +24,7 @@ export function RecommendedLocations() {
     : undefined;
 
   // Query for recommended locations
-  const { data, loading } = useQuery(GET_RECOMMENDED_LOCATIONS, {
+  const { data, loading } = useQuery(GetRecommendedLocationsDocument, {
     variables: {
       limit: 5, // Get top 5 suggested locations
       region: apiRegion,

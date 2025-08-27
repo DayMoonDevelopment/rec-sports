@@ -13,9 +13,9 @@ import { SportIcon } from "~/components/sport-icon";
 import { TreeIcon } from "~/icons/tree";
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 import { sportLabel } from "~/lib/utils";
-import { GET_SEARCH_LOCATIONS } from "./queries/get-search-locations";
+import { GetSearchLocationsDocument } from "./queries/get-search-locations.generated";
 
-import type { Location } from "@rec/types";
+import type { Location } from "~/gql/types";
 
 interface SearchFeedProps {
   searchQuery: string;
@@ -95,7 +95,7 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       }
     : undefined;
 
-  const { data, loading, error } = useQuery(GET_SEARCH_LOCATIONS, {
+  const { data, loading, error } = useQuery(GetSearchLocationsDocument, {
     variables: {
       query: searchQuery,
       region: searchRegion,

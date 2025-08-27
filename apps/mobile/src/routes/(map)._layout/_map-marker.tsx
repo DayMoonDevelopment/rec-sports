@@ -3,7 +3,7 @@ import { Marker } from "react-native-maps";
 import { router } from "expo-router";
 import { useMap } from "~/components/map.context";
 
-import type { Location } from "@rec/types";
+import type { Location } from "~/gql/types";
 
 interface MapMarkerProps {
   location: Location;

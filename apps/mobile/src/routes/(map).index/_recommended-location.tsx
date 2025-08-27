@@ -5,7 +5,7 @@ import { useMap } from "~/components/map.context";
 
 import { PinIcon } from "~/icons/pin";
 
-import type { Location } from "@rec/types";
+import type { Location } from "~/gql/types";
 
 interface RecommendedLocationProps {
   location: Location;

@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Text, View, type ViewProps, type TextProps } from "react-native";
-import { Sport } from "@rec/types";
+import { Sport } from "~/gql/types";
 import { cn } from "~/lib/utils";
 
 // Badge Context

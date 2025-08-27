@@ -1,0 +1,23 @@
+query GetSearchLocations($query: String!, $region: Region, $limit: Int) {
+  locations(query: $query, region: $region, limit: $limit) {
+    nodes {
+      id
+      name
+      address {
+        id
+        street
+        city
+        state
+        stateCode
+        postalCode
+      }
+      geo {
+        latitude
+        longitude
+      }
+      sports
+    }
+    totalCount
+    hasMore
+  }
+}
