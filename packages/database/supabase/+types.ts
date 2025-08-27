@@ -40,11 +40,12 @@ export type Database = {
           country: string | null
           county: string | null
           created_at: string | null
+          geo: unknown
           id: string
-          location: unknown
           name: string | null
           postal_code: string | null
           search_vector: unknown | null
+          search_vector_meta: Json | null
           sport_tags: string[] | null
           state: string | null
           street: string | null
@@ -55,11 +56,12 @@ export type Database = {
           country?: string | null
           county?: string | null
           created_at?: string | null
+          geo: unknown
           id?: string
-          location: unknown
           name?: string | null
           postal_code?: string | null
           search_vector?: unknown | null
+          search_vector_meta?: Json | null
           sport_tags?: string[] | null
           state?: string | null
           street?: string | null
@@ -70,11 +72,12 @@ export type Database = {
           country?: string | null
           county?: string | null
           created_at?: string | null
+          geo?: unknown
           id?: string
-          location?: unknown
           name?: string | null
           postal_code?: string | null
           search_vector?: unknown | null
+          search_vector_meta?: Json | null
           sport_tags?: string[] | null
           state?: string | null
           street?: string | null
