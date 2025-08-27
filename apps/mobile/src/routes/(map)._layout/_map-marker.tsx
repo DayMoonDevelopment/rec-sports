@@ -3,10 +3,10 @@ import { Marker } from "react-native-maps";
 import { router } from "expo-router";
 import { useMap } from "~/components/map.context";
 
-import type { Location } from "@rec/types";
+import type { LocationNodeFragment } from "~/routes/(map).index/queries/get-search-locations.generated";
 
 interface MapMarkerProps {
-  location: Location;
+  location: LocationNodeFragment;
 }
 
 export function MapMarker({ location }: MapMarkerProps) {
@@ -50,8 +50,8 @@ export function MapMarker({ location }: MapMarkerProps) {
     <Marker
       ref={markerRef}
       coordinate={{
-        latitude: location.geo.latitude,
-        longitude: location.geo.longitude,
+        latitude: location.geo?.latitude || 0,
+        longitude: location.geo?.longitude || 0,
       }}
       title={title}
       description={description}

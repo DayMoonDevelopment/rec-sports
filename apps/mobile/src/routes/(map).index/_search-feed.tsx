@@ -13,17 +13,17 @@ import { SportIcon } from "~/components/sport-icon";
 import { TreeIcon } from "~/icons/tree";
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 import { sportLabel } from "~/lib/utils";
-import { GET_SEARCH_LOCATIONS } from "./queries/get-search-locations";
+import { GetSearchLocationsDocument } from "./queries/get-search-locations.generated";
 
-import type { Location } from "@rec/types";
+import type { LocationNodeFragment } from "./queries/get-search-locations.generated";
 
 interface SearchFeedProps {
   searchQuery: string;
 }
 
 interface SearchLocationItemProps {
-  location: Location;
-  onPress: (location: Location) => void;
+  location: LocationNodeFragment;
+  onPress: (location: LocationNodeFragment) => void;
 }
 
 function SearchLocationItem({ location, onPress }: SearchLocationItemProps) {
@@ -95,7 +95,7 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       }
     : undefined;
 
-  const { data, loading, error } = useQuery(GET_SEARCH_LOCATIONS, {
+  const { data, loading, error } = useQuery(GetSearchLocationsDocument, {
     variables: {
       query: searchQuery,
       region: searchRegion,
@@ -107,9 +107,11 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
 
   const searchResults = data?.locations.nodes || [];
 
-  const handleLocationPress = (location: Location) => {
+  const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to location on map
-    animateToLocation(location.geo.latitude, location.geo.longitude);
+    if (location.geo?.latitude && location.geo?.longitude) {
+      animateToLocation(location.geo.latitude, location.geo.longitude);
+    }
     setFocusedMarkerId(location.id);
 
     // Navigate to location detail

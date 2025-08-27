@@ -1,4 +1,4 @@
-import { Sport } from "@rec/types";
+import { Sport } from "~/gql/types";
 
 import type { SvgProps } from "react-native-svg";
 

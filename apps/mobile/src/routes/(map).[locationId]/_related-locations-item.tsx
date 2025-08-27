@@ -4,14 +4,14 @@ import { sportLabel } from "~/lib/utils";
 import { SportIcon } from "~/components/sport-icon";
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
-import type { Location } from "@rec/types";
+import type { LocationNodeFragment } from "./queries/get-related-locations.generated";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.7;
 
 interface RelatedLocationItemProps {
-  location: Location;
-  onPress: (location: Location) => void;
+  location: LocationNodeFragment;
+  onPress: (location: LocationNodeFragment) => void;
 }
 
 export function RelatedLocationItem({

@@ -17,9 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "bun --inspect-brk --preload tsconfig-paths/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typegen:gql": "graphql-codegen --config global-typegen.ts || true",
-    "prebuild": "bun run typegen:gql"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@apollo/gateway": "^2.11.2",

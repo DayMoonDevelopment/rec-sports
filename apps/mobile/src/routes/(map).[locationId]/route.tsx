@@ -15,7 +15,7 @@ import { LoaderIcon } from "~/icons/loader";
 
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
-import { GET_LOCATION } from "./queries/get-location";
+import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
 
 export function Component() {
@@ -26,7 +26,7 @@ export function Component() {
     useMap();
 
   // Use Apollo query to fetch location by ID
-  const { data, loading, error } = useQuery(GET_LOCATION, {
+  const { data, loading, error } = useQuery(GetLocationDocument, {
     variables: { id: locationId },
     skip: !locationId,
     fetchPolicy: "no-cache",
@@ -130,7 +130,7 @@ export function Component() {
         )}
       </View>
 
-      <RelatedLocations currentLocation={location} />
+      <RelatedLocations reference={location} />
     </BottomSheetScrollView>
   );
 }

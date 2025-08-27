@@ -1,0 +1,33 @@
+fragment LocationNode on Location {
+  id
+  name
+  address {
+    id
+    street
+    city
+    state
+    stateCode
+    postalCode
+  }
+  geo {
+    latitude
+    longitude
+  }
+  sports
+}
+
+query GetRelatedLocations($latitude: Float!, $longitude: Float!) {
+  relatedLocations: locations(
+    region: {
+      centerPoint: {
+        point: { latitude: $latitude, longitude: $longitude }
+        radiusMiles: 5
+      }
+    }
+    limit: 6
+  ) {
+    nodes {
+      ...LocationNode
+    }
+  }
+}

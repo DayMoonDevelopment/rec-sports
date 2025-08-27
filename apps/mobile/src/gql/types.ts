@@ -15,14 +15,14 @@ export type Scalars = {
 };
 
 export type Address = {
-  __typename?: 'Address';
+  __typename: 'Address';
   city: Scalars['String']['output'];
   id: Scalars['String']['output'];
   postalCode: Scalars['String']['output'];
   state: Scalars['String']['output'];
   stateCode: Scalars['String']['output'];
   street: Scalars['String']['output'];
-  street2?: Maybe<Scalars['String']['output']>;
+  street2: Maybe<Scalars['String']['output']>;
 };
 
 export type BoundingBox = {
@@ -36,8 +36,8 @@ export type CenterPoint = {
 };
 
 export type Location = {
-  __typename?: 'Location';
-  address?: Maybe<Address>;
+  __typename: 'Location';
+  address: Maybe<Address>;
   geo: Point;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -45,14 +45,14 @@ export type Location = {
 };
 
 export type LocationsResponse = {
-  __typename?: 'LocationsResponse';
+  __typename: 'LocationsResponse';
   hasMore: Scalars['Boolean']['output'];
   nodes: Array<Location>;
   totalCount: Scalars['Int']['output'];
 };
 
 export type Point = {
-  __typename?: 'Point';
+  __typename: 'Point';
   latitude: Scalars['Float']['output'];
   longitude: Scalars['Float']['output'];
 };
@@ -63,8 +63,8 @@ export type PointInput = {
 };
 
 export type Query = {
-  __typename?: 'Query';
-  location?: Maybe<Location>;
+  __typename: 'Query';
+  location: Maybe<Location>;
   locations: LocationsResponse;
 };
 

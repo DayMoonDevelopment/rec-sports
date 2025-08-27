@@ -40,4 +40,6 @@ android
 # typescript
 *.tsbuildinfo
 
-app-example
+# GraphQL generated files
+*.generated.ts
+gql

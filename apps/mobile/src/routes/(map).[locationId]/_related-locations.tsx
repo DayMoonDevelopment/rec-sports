@@ -3,11 +3,11 @@ import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
-import { GET_RELATED_LOCATIONS } from "./queries/get-related-locations";
+import { GetRelatedLocationsDocument } from "./queries/get-related-locations.generated";
 import { RelatedLocationItem } from "./_related-locations-item";
 import { useMap } from "~/components/map.context";
 
-import type { Location } from "@rec/types";
+import type { LocationNodeFragment } from "./queries/get-related-locations.generated";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.7;
@@ -18,13 +18,15 @@ function HorizontalItemSeparatorComponent() {
 }
 
 interface RelatedLocationsProps {
-  currentLocation: Location;
+  reference: LocationNodeFragment;
 }
 
-export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
+export function RelatedLocations({
+  reference: currentLocation,
+}: RelatedLocationsProps) {
   const { animateToLocation, showMarkerCallout } = useMap();
 
-  const { data, loading, error } = useQuery(GET_RELATED_LOCATIONS, {
+  const { data, loading, error } = useQuery(GetRelatedLocationsDocument, {
     variables: {
       latitude: currentLocation.geo?.latitude || 0,
       longitude: currentLocation.geo?.longitude || 0,
@@ -38,7 +40,7 @@ export function RelatedLocations({ currentLocation }: RelatedLocationsProps) {
       ({ id }) => id !== currentLocation.id,
     ) || [];
 
-  const handleLocationPress = (location: Location) => {
+  const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to the location on the map
     if (location.geo?.latitude && location.geo?.longitude) {
       animateToLocation(location.geo.latitude, location.geo.longitude);
