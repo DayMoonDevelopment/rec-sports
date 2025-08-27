@@ -117,6 +117,7 @@ out
 !.vscode/launch.json
 !.vscode/extensions.json
 .claude/
+.mcp.json
 
 # OS
 .DS_Store

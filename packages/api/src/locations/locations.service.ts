@@ -20,8 +20,8 @@ export class LocationsService {
       .selectFrom('locations')
       .selectAll()
       .select([
-        sql<number>`gis.st_x(location::gis.geometry)`.as('longitude'),
-        sql<number>`gis.st_y(location::gis.geometry)`.as('latitude'),
+        sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
+        sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
       ])
       .where('id', '=', id)
       .executeTakeFirst();
@@ -55,8 +55,8 @@ export class LocationsService {
       .selectFrom('locations')
       .selectAll()
       .select([
-        sql<number>`gis.st_x(location::gis.geometry)`.as('longitude'),
-        sql<number>`gis.st_y(location::gis.geometry)`.as('latitude'),
+        sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
+        sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
       ]);
 
     // Add search ranking if there's a text query
@@ -369,7 +369,7 @@ export class LocationsService {
   }): Expression<SqlBool> {
     const { northEast, southWest } = boundingBox;
     return sql<boolean>`gis.ST_Within(
-      location::gis.geometry,
+      geo::gis.geometry,
       gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
     )`;
   }
@@ -382,7 +382,7 @@ export class LocationsService {
     // Convert miles to meters: 1 mile = 1609.344 meters
     const radiusMeters = radiusMiles * 1609.344;
     return sql<boolean>`gis.ST_DWithin(
-      location::gis.geography,
+      geo::gis.geography,
       gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
       ${sql.literal(radiusMeters)}
     )`;
@@ -453,8 +453,8 @@ export class LocationsService {
         'country',
         'postal_code',
         'sport_tags',
-        sql<number>`gis.ST_X(location::gis.geometry)`.as('longitude'),
-        sql<number>`gis.ST_Y(location::gis.geometry)`.as('latitude'),
+        sql<number>`gis.ST_X(geo::gis.geometry)`.as('longitude'),
+        sql<number>`gis.ST_Y(geo::gis.geometry)`.as('latitude'),
       ]);
 
     // Apply filters using composable approach

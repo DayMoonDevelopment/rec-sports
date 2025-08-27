@@ -38,20 +38,20 @@ function SearchLocationItem({ location, onPress }: SearchLocationItemProps) {
           <View className="bg-green-100 dark:bg-green-800 p-2 rounded-xl">
             <TreeIcon className="size-6 text-green-700 dark:text-green-500" />
           </View>
-          
+
           {/* Content */}
           <View className="flex-1">
             <Text className="text-foreground font-semibold text-base mb-1">
               {location.name}
             </Text>
-            
+
             {location.address && (
               <Text className="text-muted-foreground text-sm mb-3">
                 {location.address.street && `${location.address.street}, `}
                 {location.address.city}, {location.address.stateCode}
               </Text>
             )}
-            
+
             {/* Sport Badges */}
             {location.sports && location.sports.length > 0 && (
               <View className="flex-row flex-wrap gap-1">
@@ -131,7 +131,7 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       <View className="flex-1 items-center justify-center p-8">
         <ActivityIndicator size="large" className="text-primary mb-4" />
         <Text className="text-muted-foreground text-center">
-          Searching for "{searchQuery}"...
+          {`Searching for "${searchQuery}"...`}
         </Text>
       </View>
     );
@@ -171,15 +171,12 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
           {data?.locations.totalCount !== 1 ? "s" : ""} for "{searchQuery}"
         </Text>
       </View>
-      
+
       <FlatList
         data={searchResults}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <SearchLocationItem
-            location={item}
-            onPress={handleLocationPress}
-          />
+          <SearchLocationItem location={item} onPress={handleLocationPress} />
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
