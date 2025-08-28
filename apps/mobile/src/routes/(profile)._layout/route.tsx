@@ -7,7 +7,7 @@ export function Component() {
   const hasUserToken = Boolean(userToken);
 
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!hasUserToken}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>

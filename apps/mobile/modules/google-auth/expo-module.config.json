@@ -1,0 +1,9 @@
+{
+  "platforms": ["android"],
+  "apple": {
+    "modules": ["GoogleAuthModule"]
+  },
+  "android": {
+    "modules": ["io.daymoon.rec.googleauth.GoogleAuthModule"]
+  }
+}

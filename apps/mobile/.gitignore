@@ -31,8 +31,8 @@ yarn-error.*
 *.pem
 
 # Expo managed workflow
-ios
-android
+/ios
+/android
 
 # local env files
 .env*.local

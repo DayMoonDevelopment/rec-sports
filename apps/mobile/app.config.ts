@@ -18,8 +18,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     newArchEnabled: true,
     plugins: [
       ...(config.plugins || []),
+      "expo-router",
       [
         "expo-splash-screen",
+
         {
           backgroundColor: "#F9FAFB",
           image: `${ASSET_DIR}/splash-icon-light.png`,
