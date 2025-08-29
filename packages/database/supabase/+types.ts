@@ -34,14 +34,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      location_facilities: {
+        Row: {
+          details: Json | null
+          geo: unknown
+          id: string
+          lat: number
+          location_id: string
+          lon: number
+          sport_tags: string[] | null
+        }
+        Insert: {
+          details?: Json | null
+          geo: unknown
+          id?: string
+          lat: number
+          location_id: string
+          lon: number
+          sport_tags?: string[] | null
+        }
+        Update: {
+          details?: Json | null
+          geo?: unknown
+          id?: string
+          lat?: number
+          location_id?: string
+          lon?: number
+          sport_tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_facilities_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_id: string
+          name: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_id: string
+          name: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_id?: string
+          name?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_tags_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           city: string | null
           country: string | null
           county: string | null
           created_at: string | null
+          details: Json | null
           geo: unknown
           id: string
+          lat: number
+          lon: number
           name: string | null
           postal_code: string | null
           search_vector: unknown | null
@@ -56,8 +132,11 @@ export type Database = {
           country?: string | null
           county?: string | null
           created_at?: string | null
+          details?: Json | null
           geo: unknown
           id?: string
+          lat: number
+          lon: number
           name?: string | null
           postal_code?: string | null
           search_vector?: unknown | null
@@ -72,8 +151,11 @@ export type Database = {
           country?: string | null
           county?: string | null
           created_at?: string | null
+          details?: Json | null
           geo?: unknown
           id?: string
+          lat?: number
+          lon?: number
           name?: string | null
           postal_code?: string | null
           search_vector?: unknown | null
