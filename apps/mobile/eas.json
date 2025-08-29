@@ -10,22 +10,12 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
-      },
-      "env": {
-        "APP_ENV": "development",
-        "IOS_BUNDLE_ID": "io.daymoon.rec.dev",
-        "ANDROID_PACKAGE": "io.daymoon.rec.dev"
       }
     },
     "production": {
       "environment": "production",
       "channel": "production",
-      "autoIncrement": true,
-      "env": {
-        "APP_ENV": "production",
-        "IOS_BUNDLE_ID": "io.daymoon.rec",
-        "ANDROID_PACKAGE": "io.daymoon.rec"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
