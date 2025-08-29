@@ -22,7 +22,8 @@ export function ContinueWithGoogleButton() {
         }
         setNativeModuleLoading(false);
       },
-      onError: () => {
+      onError: (error) => {
+        console.error(error);
         setNativeModuleLoading(false);
       },
     },

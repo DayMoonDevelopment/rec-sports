@@ -18,6 +18,7 @@ export function BackgroundVideo() {
     <VideoView
       style={StyleSheet.absoluteFillObject}
       player={player}
+      audioMixingMode="doNotMix"
       playsInline
       showsTimecodes={false}
       allowsFullscreen={false}

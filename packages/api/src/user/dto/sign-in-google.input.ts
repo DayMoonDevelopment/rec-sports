@@ -10,5 +10,6 @@ export class SignInGoogleInput {
 
   @Field()
   @IsString()
+  @IsNotEmpty()
   nonce: string;
 }

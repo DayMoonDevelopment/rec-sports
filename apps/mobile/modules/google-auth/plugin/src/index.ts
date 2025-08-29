@@ -2,6 +2,7 @@ import {
   ConfigPlugin,
   createRunOncePlugin,
   withInfoPlist,
+  withStringsXml,
 } from '@expo/config-plugins';
 
 export interface GoogleAuthPluginProps {
@@ -14,7 +15,15 @@ const withGoogleAuth: ConfigPlugin<GoogleAuthPluginProps> = (config, props) => {
     throw new Error('GoogleAuth plugin requires iosClientId');
   }
   
-  return withGoogleAuthIOS(config, props);
+  // Apply iOS configuration
+  config = withGoogleAuthIOS(config, props);
+  
+  // Apply Android configuration if webClientId is provided
+  if (props.webClientId) {
+    config = withGoogleAuthAndroid(config, props);
+  }
+  
+  return config;
 };
 
 const withGoogleAuthIOS: ConfigPlugin<GoogleAuthPluginProps> = (config, { iosClientId, webClientId }) => {
@@ -47,6 +56,31 @@ const withGoogleAuthIOS: ConfigPlugin<GoogleAuthPluginProps> = (config, { iosCli
       });
     }
     
+    return config;
+  });
+};
+
+const withGoogleAuthAndroid: ConfigPlugin<GoogleAuthPluginProps> = (config, { webClientId }) => {
+  return withStringsXml(config, (config) => {
+    // Add web client ID to Android strings.xml
+    const stringItems = config.modResults.resources.string || [];
+    
+    // Check if google_web_client_id already exists
+    const existingWebClientId = stringItems.find(
+      (item: any) => item.$.name === 'google_web_client_id'
+    );
+    
+    if (!existingWebClientId) {
+      stringItems.push({
+        $: { name: 'google_web_client_id' },
+        _: webClientId,
+      });
+    } else {
+      // Update existing value
+      existingWebClientId._ = webClientId;
+    }
+    
+    config.modResults.resources.string = stringItems;
     return config;
   });
 };

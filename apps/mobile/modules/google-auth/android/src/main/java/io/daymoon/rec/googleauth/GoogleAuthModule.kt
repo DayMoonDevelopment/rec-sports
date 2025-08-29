@@ -21,7 +21,7 @@ class GoogleAuthModule : Module() {
 
         Events("onSignInResult")
 
-        AsyncFunction("signInAsync") { options: Map<String, Any>, promise: Promise ->
+        AsyncFunction("signInAsync") { promise: Promise ->
             val context =
                     appContext.reactContext
                             ?: run {
@@ -29,16 +29,30 @@ class GoogleAuthModule : Module() {
                                 return@AsyncFunction
                             }
 
-            val webClientId =
-                    options["webClientId"] as? String
-                            ?: run {
-                                promise.reject(
-                                        "MISSING_WEB_CLIENT_ID",
-                                        "webClientId is required",
-                                        null
-                                )
-                                return@AsyncFunction
-                            }
+            // Read web client ID from Android resources (set by config plugin)
+            val webClientId = try {
+                val resourceId = context.resources.getIdentifier(
+                    "google_web_client_id",
+                    "string",
+                    context.packageName
+                )
+                if (resourceId != 0) {
+                    context.getString(resourceId)
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                null
+            }
+
+            if (webClientId == null) {
+                promise.reject(
+                    "MISSING_GOOGLE_WEB_CLIENT_ID",
+                    "google_web_client_id not found in Android resources. Ensure Google Auth config plugin is configured with webClientId.",
+                    null
+                )
+                return@AsyncFunction
+            }
 
             credentialManager = CredentialManager.create(context)
 
