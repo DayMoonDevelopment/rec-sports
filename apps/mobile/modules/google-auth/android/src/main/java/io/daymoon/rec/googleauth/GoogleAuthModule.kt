@@ -77,7 +77,8 @@ class GoogleAuthModule : Module() {
                             promise.resolve(
                                     mapOf(
                                             "success" to true,
-                                            "idToken" to googleIdTokenCredential.idToken
+                                            "idToken" to googleIdTokenCredential.idToken,
+                                            "nonce" to nonce
                                     )
                             )
                         } else {

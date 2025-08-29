@@ -1,6 +1,8 @@
 import { MMKV, Mode, useMMKV, useMMKVString } from "react-native-mmkv";
+import GoogleAuthModule from "../../modules/google-auth";
 
 const USER_STORAGE_ID = "user";
+const USER_TOKEN_KEY = "user.token";
 
 export const userStorage = new MMKV({
   id: USER_STORAGE_ID,
@@ -11,5 +13,21 @@ export const userStorage = new MMKV({
 
 export function useUserToken() {
   const _userStorage = useMMKV({ id: USER_STORAGE_ID });
-  return useMMKVString("user.token", _userStorage);
+  return useMMKVString(USER_TOKEN_KEY, _userStorage);
+}
+
+export async function signOut() {
+  userStorage.delete(USER_TOKEN_KEY);
+
+  try {
+    GoogleAuthModule.signOutAsync();
+  } catch (e) {
+    // todo
+  }
+
+  return signOut;
+}
+
+export function setUserToken(token: string) {
+  userStorage.set(USER_TOKEN_KEY, token);
 }

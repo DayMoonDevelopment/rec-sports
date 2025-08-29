@@ -16,12 +16,8 @@ export type ChangeEventPayload = {
 export type GoogleSignInResult = {
   success: boolean;
   idToken?: string;
+  nonce?: string;
   error?: string;
-};
-
-export type GoogleSignInOptions = {
-  webClientId: string;
-  iosClientId?: string;
 };
 
 export type GoogleAuthViewProps = {

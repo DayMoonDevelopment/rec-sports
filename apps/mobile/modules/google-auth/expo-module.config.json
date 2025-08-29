@@ -1,5 +1,5 @@
 {
-  "platforms": ["android"],
+  "platforms": ["android", "ios"],
   "apple": {
     "modules": ["GoogleAuthModule"]
   },

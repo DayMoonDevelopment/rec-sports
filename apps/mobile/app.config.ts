@@ -3,6 +3,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 const iosBundleId = process.env.IOS_BUNDLE_ID;
 const androidPackage = process.env.ANDROID_PACKAGE;
 const googleMapsAndroidSdkApiKey = process.env.GOOGLE_MAPS_ANDROID_SDK_API_KEY;
+const googleIOSClientId = process.env.GOOGLE_IOS_CLIENT_ID;
+const googleWebClientId = process.env.GOOGLE_WEB_CLIENT_ID;
 const ASSET_DIR = `./assets/images/${process.env.APP_ENV}`;
 
 export default ({ config }: ConfigContext): ExpoConfig => {
@@ -21,7 +23,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-router",
       [
         "expo-splash-screen",
-
         {
           backgroundColor: "#F9FAFB",
           image: `${ASSET_DIR}/splash-icon-light.png`,
@@ -30,6 +31,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             backgroundColor: "#111827",
           },
           imageWidth: 200,
+        },
+      ],
+      [
+        "./modules/google-auth/plugin/build/index.js",
+        {
+          iosClientId: googleIOSClientId,
+          webClientId: googleWebClientId,
         },
       ],
     ],

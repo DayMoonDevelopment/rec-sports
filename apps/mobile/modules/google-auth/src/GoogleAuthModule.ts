@@ -1,12 +1,9 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import { GoogleAuthModuleEvents, GoogleSignInOptions, GoogleSignInResult } from './GoogleAuth.types';
+import { GoogleAuthModuleEvents, GoogleSignInResult } from './GoogleAuth.types';
 
 declare class GoogleAuthModule extends NativeModule<GoogleAuthModuleEvents> {
-  PI: number;
-  hello(): string;
-  setValueAsync(value: string): Promise<void>;
-  signInAsync(options: GoogleSignInOptions): Promise<GoogleSignInResult>;
+  signInAsync(): Promise<GoogleSignInResult>;
   signOutAsync(): Promise<void>;
 }
 
