@@ -40,9 +40,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           webClientId: googleWebClientId,
         },
       ],
+      "expo-apple-authentication",
     ],
     ios: {
       bundleIdentifier: iosBundleId,
+      usesAppleSignIn: true,
       icon: {
         dark: `${ASSET_DIR}/ios-dark.png`,
         light: `${ASSET_DIR}/ios-light.png`,

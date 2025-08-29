@@ -53,7 +53,13 @@ export type LocationsResponse = {
 
 export type Mutation = {
   __typename: 'Mutation';
+  signInWithApple: UserAuth;
   signInWithGoogle: UserAuth;
+};
+
+
+export type MutationSignInWithAppleArgs = {
+  input: SignInAppleInput;
 };
 
 
@@ -106,6 +112,11 @@ export type Session = {
   expiresIn: Scalars['Int']['output'];
   refreshToken: Scalars['String']['output'];
   tokenType: Scalars['String']['output'];
+};
+
+export type SignInAppleInput = {
+  identityToken: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
 };
 
 export type SignInGoogleInput = {

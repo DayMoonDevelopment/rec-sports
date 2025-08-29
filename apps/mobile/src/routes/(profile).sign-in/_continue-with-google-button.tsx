@@ -36,7 +36,7 @@ export function ContinueWithGoogleButton() {
     try {
       const result = await GoogleAuthModule.signInAsync();
 
-      if (result.success && result.idToken) {
+      if (result.success && result.idToken && result.nonce) {
         signInWithGoogle({
           variables: {
             input: {

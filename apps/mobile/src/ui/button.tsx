@@ -94,7 +94,7 @@ const buttonIconVariants = cva("text-sm font-medium", {
       default: "size-6",
       sm: "size-4",
       lg: "size-5",
-      icon: "size-4",
+      icon: "size-6",
     },
   },
   defaultVariants: {
