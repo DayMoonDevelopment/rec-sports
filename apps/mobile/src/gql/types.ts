@@ -51,6 +51,22 @@ export type LocationsResponse = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type Mutation = {
+  __typename: 'Mutation';
+  signInWithApple: UserAuth;
+  signInWithGoogle: UserAuth;
+};
+
+
+export type MutationSignInWithAppleArgs = {
+  input: SignInAppleInput;
+};
+
+
+export type MutationSignInWithGoogleArgs = {
+  input: SignInGoogleInput;
+};
+
 export type Point = {
   __typename: 'Point';
   latitude: Scalars['Float']['output'];
@@ -89,6 +105,25 @@ export type Region = {
   centerPoint?: InputMaybe<CenterPoint>;
 };
 
+export type Session = {
+  __typename: 'Session';
+  accessToken: Scalars['String']['output'];
+  expiresAt: Scalars['Int']['output'];
+  expiresIn: Scalars['Int']['output'];
+  refreshToken: Scalars['String']['output'];
+  tokenType: Scalars['String']['output'];
+};
+
+export type SignInAppleInput = {
+  identityToken: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
+};
+
+export type SignInGoogleInput = {
+  idToken: Scalars['String']['input'];
+  nonce: Scalars['String']['input'];
+};
+
 /** Sports available at locations */
 export enum Sport {
   Baseball = 'BASEBALL',
@@ -105,3 +140,14 @@ export enum Sport {
   Ultimate = 'ULTIMATE',
   Volleyball = 'VOLLEYBALL'
 }
+
+export type User = {
+  __typename: 'User';
+  id: Scalars['ID']['output'];
+};
+
+export type UserAuth = {
+  __typename: 'UserAuth';
+  session: Session;
+  user: User;
+};

@@ -1,0 +1,27 @@
+{
+  "name": "@rec/google-auth-plugin",
+  "version": "1.0.0",
+  "description": "Expo config plugin for Google Auth module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf build"
+  },
+  "keywords": [
+    "expo",
+    "google-auth",
+    "config-plugin"
+  ],
+  "author": "Day Moon Development",
+  "license": "MIT",
+  "dependencies": {
+    "@expo/config-plugins": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@expo/config-plugins": "*"
+  }
+}
