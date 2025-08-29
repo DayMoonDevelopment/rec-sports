@@ -1,0 +1,14 @@
+mutation SignInWithGoogle($input: SignInGoogleInput!) {
+  signInWithGoogle(input: $input) {
+    user {
+      id
+    }
+    session {
+      accessToken
+      refreshToken
+      expiresIn
+      expiresAt
+      tokenType
+    }
+  }
+}

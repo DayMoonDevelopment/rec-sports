@@ -1,0 +1,14 @@
+mutation SignInWithApple($input: SignInAppleInput!) {
+  signInWithApple(input: $input) {
+    user {
+      id
+    }
+    session {
+      accessToken
+      refreshToken
+      expiresIn
+      expiresAt
+      tokenType
+    }
+  }
+}

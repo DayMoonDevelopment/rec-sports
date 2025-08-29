@@ -3,6 +3,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 const iosBundleId = process.env.IOS_BUNDLE_ID;
 const androidPackage = process.env.ANDROID_PACKAGE;
 const googleMapsAndroidSdkApiKey = process.env.GOOGLE_MAPS_ANDROID_SDK_API_KEY;
+const googleIOSClientId = process.env.GOOGLE_IOS_CLIENT_ID;
+const googleWebClientId = process.env.GOOGLE_WEB_CLIENT_ID;
 const ASSET_DIR = `./assets/images/${process.env.APP_ENV}`;
 
 export default ({ config }: ConfigContext): ExpoConfig => {
@@ -18,6 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     newArchEnabled: true,
     plugins: [
       ...(config.plugins || []),
+      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -30,9 +33,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           imageWidth: 200,
         },
       ],
+      [
+        "./modules/google-auth/plugin/build/index.js",
+        {
+          iosClientId: googleIOSClientId,
+          webClientId: googleWebClientId,
+        },
+      ],
+      "expo-apple-authentication",
     ],
     ios: {
       bundleIdentifier: iosBundleId,
+      usesAppleSignIn: true,
       icon: {
         dark: `${ASSET_DIR}/ios-dark.png`,
         light: `${ASSET_DIR}/ios-light.png`,

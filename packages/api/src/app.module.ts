@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 
 import { DatabaseModule } from './database/database.module';
 import { LocationsModule } from './locations/locations.module';
+import { UserModule } from './user/user.module';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
@@ -14,6 +15,7 @@ const configModule = ConfigModule.forRoot({
   imports: [
     DatabaseModule,
     LocationsModule,
+    UserModule,
     configModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
