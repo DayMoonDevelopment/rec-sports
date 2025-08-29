@@ -6,6 +6,7 @@ import { updateManager } from "~/lib/update-manager";
 
 import { AppProvider } from "~/context/app";
 import { ApolloProvider } from "~/context/apollo";
+import { PostHogProvider } from "~/context/posthog";
 
 import "~/lib/background-update";
 import "~/lib/nativewind";
@@ -22,18 +23,20 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AppProvider>
-      <ApolloProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen
-            name="profile"
-            options={{
-              presentation: "modal",
-              headerShown: Platform.OS === "android",
-            }}
-          />
-        </Stack>
-      </ApolloProvider>
-    </AppProvider>
+    <PostHogProvider>
+      <AppProvider>
+        <ApolloProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen
+              name="profile"
+              options={{
+                presentation: "modal",
+                headerShown: Platform.OS === "android",
+              }}
+            />
+          </Stack>
+        </ApolloProvider>
+      </AppProvider>
+    </PostHogProvider>
   );
 }
