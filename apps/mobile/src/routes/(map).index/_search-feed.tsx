@@ -114,8 +114,8 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
     }
     setFocusedMarkerId(location.id);
 
-    // Navigate to location detail
-    router.push(`/${location.id}`);
+    // Navigate to location detail with lat/lng for immediate animation
+    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
   };
 
   if (!searchQuery.trim()) {

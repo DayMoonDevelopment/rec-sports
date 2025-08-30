@@ -19,8 +19,10 @@ import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
 
 export function Component() {
-  const { locationId } = useLocalSearchParams<{
+  const { locationId, lat, lng } = useLocalSearchParams<{
     locationId: string;
+    lat?: string;
+    lng?: string;
   }>();
   const { setFocusedMarkerId, hideMarkerCallout, zoomOut, animateToLocation } =
     useMap();
@@ -30,17 +32,33 @@ export function Component() {
     variables: { id: locationId },
     skip: !locationId,
     fetchPolicy: "no-cache",
+    onCompleted: (data) => {
+      // Only animate from query if no lat/lng provided via params
+      if (data.location && !lat && !lng) {
+        animateToLocation(
+          data.location.geo.latitude,
+          data.location.geo.longitude,
+        );
+      }
+    },
   });
 
   const location = data?.location;
 
   // Focus on the location when it loads
   useEffect(() => {
-    if (location && locationId) {
+    if (locationId) {
       setFocusedMarkerId(locationId);
-      animateToLocation(location.geo.latitude, location.geo.longitude);
+      
+      // If lat/lng provided via params, animate immediately
+      if (lat && lng) {
+        animateToLocation(parseFloat(lat), parseFloat(lng));
+      } else if (location) {
+        // Otherwise use location data from query
+        animateToLocation(location.geo.latitude, location.geo.longitude);
+      }
     }
-  }, [location, locationId, setFocusedMarkerId, animateToLocation]);
+  }, [location, locationId, lat, lng, setFocusedMarkerId, animateToLocation]);
 
   function handleClose() {
     hideMarkerCallout(locationId);
@@ -56,7 +74,7 @@ export function Component() {
     }
   }
 
-  if (loading) {
+  if (error || !location) {
     return (
       <View className="flex-1 justify-center items-center py-8 px-4">
         <Text className="text-foreground text-lg font-medium">
@@ -66,7 +84,7 @@ export function Component() {
     );
   }
 
-  if (error || !location) {
+  if (loading) {
     return (
       <View className="justify-center items-center py-8 px-4 min-h-48">
         <View className="animate-spin">

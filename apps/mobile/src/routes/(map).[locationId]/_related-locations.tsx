@@ -49,8 +49,8 @@ export function RelatedLocations({
     // Show the marker callout on the map
     showMarkerCallout(location.id);
 
-    // Navigate to the location detail route
-    router.push(`/${location.id}`);
+    // Navigate to the location detail route with lat/lng for immediate animation
+    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
   };
 
   if (!currentLocation.geo?.latitude || !currentLocation.geo?.longitude) {

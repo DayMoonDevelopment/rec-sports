@@ -37,8 +37,8 @@ export function RecommendedLocations() {
   const suggestedItems = data?.locations.nodes || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
-    // Navigate to the location detail route
-    router.push(`/${location.id}`);
+    // Navigate to the location detail route with lat/lng for immediate animation
+    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
   };
 
   // Don't render if no data and not loading, or if we don't have a region yet
