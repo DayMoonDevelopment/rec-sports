@@ -26,7 +26,6 @@ export class LocationsArgs {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(800)
   limit?: number = 20;
 
   // Geographic region filter
