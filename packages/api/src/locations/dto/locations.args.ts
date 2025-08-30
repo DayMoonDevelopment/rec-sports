@@ -1,5 +1,13 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { IsArray, IsInt, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { Sport } from '../enums/sport.enum';
@@ -18,7 +26,6 @@ export class LocationsArgs {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(100)
   limit?: number = 20;
 
   // Geographic region filter
