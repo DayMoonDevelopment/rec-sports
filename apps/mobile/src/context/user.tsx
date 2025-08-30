@@ -1,5 +1,5 @@
 import { MMKV, Mode, useMMKV, useMMKVString } from "react-native-mmkv";
-import GoogleAuthModule from "../../modules/google-auth";
+import GoogleAuthModule from "@rec/expo-google-auth";
 
 const USER_STORAGE_ID = "user";
 const USER_TOKEN_KEY = "user.token";

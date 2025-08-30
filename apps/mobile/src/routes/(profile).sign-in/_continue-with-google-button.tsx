@@ -7,7 +7,7 @@ import { GoogleIcon } from "~/icons/google";
 
 import { Button, ButtonIcon, ButtonText } from "~/ui/button";
 
-import GoogleAuthModule from "../../../modules/google-auth";
+import GoogleAuthModule from "@rec/expo-google-auth";
 
 import { SignInWithGoogleDocument } from "./mutations/sign-in-with-google.generated";
 

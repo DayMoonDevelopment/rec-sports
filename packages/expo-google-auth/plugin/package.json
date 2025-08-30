@@ -1,5 +1,5 @@
 {
-  "name": "@rec/google-auth-plugin",
+  "name": "@rec/expo-google-auth-plugin",
   "version": "1.0.0",
   "description": "Expo config plugin for Google Auth module",
   "main": "build/index.js",

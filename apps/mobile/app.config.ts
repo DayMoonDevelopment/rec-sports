@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       [
-        "./modules/google-auth/plugin/build/index.js",
+        "@rec/expo-google-auth",
         {
           iosClientId: googleIOSClientId,
           webClientId: googleWebClientId,

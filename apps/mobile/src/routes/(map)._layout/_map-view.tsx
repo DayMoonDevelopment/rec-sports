@@ -27,7 +27,7 @@ const US_INITIAL_BOUNDING_BOX_BUFFERED = regionToBoundingBoxWithBuffer(
 );
 
 const PAGE_PARAMS = {
-  limit: 100,
+  limit: 500,
   offset: 0,
 };
 

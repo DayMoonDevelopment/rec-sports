@@ -1,0 +1,45 @@
+{
+  "name": "@rec/expo-google-auth",
+  "version": "1.0.0",
+  "description": "Google Authentication Expo Module for Rec Sports",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "cd plugin && bun run build",
+    "clean": "cd plugin && bun run clean",
+    "prepare": "bun run build"
+  },
+  "keywords": [
+    "expo",
+    "expo-module",
+    "google-auth",
+    "react-native",
+    "authentication"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DayMoonDevelopment/rec-sports.git",
+    "directory": "packages/expo-google-auth"
+  },
+  "author": "Day Moon Development",
+  "license": "MIT",
+  "homepage": "https://github.com/DayMoonDevelopment/rec-sports/tree/main/packages/expo-google-auth#readme",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "^10.1.2",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "android/",
+    "ios/",
+    "src/",
+    "plugin/build/",
+    "expo-module.config.json",
+    "index.ts",
+    "app.plugin.js"
+  ]
+}

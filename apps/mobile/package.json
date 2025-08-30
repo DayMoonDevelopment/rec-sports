@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
+    "@rec/expo-google-auth": "workspace:*",
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.8",
     "@react-navigation/bottom-tabs": "^7.3.10",
