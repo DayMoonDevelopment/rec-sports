@@ -1,0 +1,65 @@
+fragment TeamNode on Team {
+  id
+  name
+  teamType
+  sportTags
+}
+
+fragment GameEventNode on GameEvent {
+  id
+  eventType
+  eventKey
+  points
+  periodNumber
+  periodName
+  occurredAt
+  team {
+    ...TeamNode
+  }
+}
+
+fragment GameNode on Game {
+  id
+  sport
+  gameState
+  scheduledAt
+  startedAt
+  completedAt
+  team1Score
+  team2Score
+  createdAt
+  updatedAt
+  team1 {
+    ...TeamNode
+  }
+  team2 {
+    ...TeamNode
+  }
+  winnerTeam {
+    ...TeamNode
+  }
+  location {
+    id
+    name
+    address {
+      id
+      street
+      city
+      state
+      stateCode
+    }
+    geo {
+      latitude
+      longitude
+    }
+  }
+  events {
+    ...GameEventNode
+  }
+}
+
+query GetGame($id: String!) {
+  game(id: $id) {
+    ...GameNode
+  }
+}

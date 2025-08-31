@@ -1,69 +1,169 @@
-import { View, Text, Pressable } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, ActivityIndicator } from "react-native";
+import { useQuery } from "@apollo/client";
+
+import { GetGameDocument } from "./queries/get-game.generated";
+import { GameState, TeamType } from "~/gql/types";
 
 interface LiveScoreboardProps {
   gameId: string;
 }
 
 export function LiveScoreboard({ gameId }: LiveScoreboardProps) {
-  const [team1Score, setTeam1Score] = useState(0);
-  const [team2Score, setTeam2Score] = useState(0);
-  const [isLive, setIsLive] = useState(true);
+  const { data, loading } = useQuery(GetGameDocument, {
+    variables: { id: gameId },
+    pollInterval: 5000, // Poll every 5 seconds for real-time updates
+  });
 
-  // Mock auto-updating scores for demo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        if (Math.random() > 0.5) {
-          setTeam1Score(prev => prev + 1);
-        } else {
-          setTeam2Score(prev => prev + 1);
-        }
-      }
-    }, 3000);
+  const game = data?.game;
 
-    return () => clearInterval(interval);
-  }, []);
+  if (loading && !game) {
+    return (
+      <View className="px-4 py-6 bg-gray-50">
+        <View className="flex-row items-center justify-center">
+          <ActivityIndicator size="large" color="#6B7280" />
+          <Text className="text-gray-500 ml-3">Loading game...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!game) {
+    return (
+      <View className="px-4 py-6 bg-gray-50">
+        <Text className="text-center text-gray-500">Game not found</Text>
+      </View>
+    );
+  }
+
+  const isLive = game.gameState === GameState.InProgress;
+  const isCompleted = game.gameState === GameState.Completed;
+
+  const getGameStateDisplay = () => {
+    switch (game.gameState) {
+      case GameState.InProgress:
+        return { text: "LIVE", color: "green" };
+      case GameState.Completed:
+        return { text: "FINAL", color: "gray" };
+      case GameState.Scheduled:
+        return { text: "UPCOMING", color: "blue" };
+      case GameState.Cancelled:
+        return { text: "CANCELLED", color: "red" };
+      default:
+        return { text: "UNKNOWN", color: "gray" };
+    }
+  };
+
+  const gameStateDisplay = getGameStateDisplay();
+
+  const getTeamDisplayName = (team: typeof game.team1, fallback: string) => {
+    if (!team) return fallback;
+    return (
+      team.name || (team.teamType === TeamType.Individual ? "Player" : "Team")
+    );
+  };
+
+  const getWinnerStyles = (teamIndex: 1 | 2) => {
+    if (!isCompleted || !game.winnerTeam) return "";
+    const isWinner =
+      (teamIndex === 1 && game.winnerTeam?.id === game.team1?.id) ||
+      (teamIndex === 2 && game.winnerTeam?.id === game.team2?.id);
+    return isWinner ? "text-yellow-600" : "text-gray-600";
+  };
 
   return (
     <View className="px-4 py-6 bg-gray-50">
+      {/* Game State Badge */}
       <View className="flex-row items-center justify-center mb-4">
-        <View className={`flex-row items-center px-2 py-1 rounded-full ${isLive ? 'bg-green-100' : 'bg-gray-100'}`}>
-          <View className={`w-2 h-2 rounded-full mr-2 ${isLive ? 'bg-green-500' : 'bg-gray-400'}`} />
-          <Text className={`text-xs font-medium ${isLive ? 'text-green-700' : 'text-gray-600'}`}>
-            {isLive ? 'LIVE' : 'CONNECTING...'}
+        <View
+          className={`flex-row items-center px-2 py-1 rounded-full ${
+            gameStateDisplay.color === "green"
+              ? "bg-green-100"
+              : gameStateDisplay.color === "blue"
+                ? "bg-blue-100"
+                : gameStateDisplay.color === "red"
+                  ? "bg-red-100"
+                  : "bg-gray-100"
+          }`}
+        >
+          <View
+            className={`w-2 h-2 rounded-full mr-2 ${
+              gameStateDisplay.color === "green"
+                ? "bg-green-500"
+                : gameStateDisplay.color === "blue"
+                  ? "bg-blue-500"
+                  : gameStateDisplay.color === "red"
+                    ? "bg-red-500"
+                    : "bg-gray-400"
+            }`}
+          />
+          <Text
+            className={`text-xs font-medium ${
+              gameStateDisplay.color === "green"
+                ? "text-green-700"
+                : gameStateDisplay.color === "blue"
+                  ? "text-blue-700"
+                  : gameStateDisplay.color === "red"
+                    ? "text-red-700"
+                    : "text-gray-600"
+            }`}
+          >
+            {gameStateDisplay.text}
           </Text>
         </View>
       </View>
 
-      <View className="flex-row items-center justify-between mb-6">
+      {/* Score Display */}
+      <View className="flex-row items-center justify-between mb-4">
         <View className="flex-1 items-center">
-          <Text className="text-lg font-medium text-gray-900 mb-1">Team Alpha</Text>
-          <Text className="text-4xl font-bold text-blue-600">{team1Score}</Text>
+          <Text
+            className={`text-lg font-medium mb-1 ${getWinnerStyles(1) || "text-gray-900"}`}
+          >
+            {getTeamDisplayName(game.team1, "Team 1")}
+          </Text>
+          <Text
+            className={`text-4xl font-bold ${getWinnerStyles(1) || "text-blue-600"}`}
+          >
+            {game.team1Score}
+          </Text>
         </View>
-        
+
         <Text className="text-2xl font-light text-gray-400 mx-4">-</Text>
-        
+
         <View className="flex-1 items-center">
-          <Text className="text-lg font-medium text-gray-900 mb-1">Team Beta</Text>
-          <Text className="text-4xl font-bold text-red-600">{team2Score}</Text>
+          <Text
+            className={`text-lg font-medium mb-1 ${getWinnerStyles(2) || "text-gray-900"}`}
+          >
+            {getTeamDisplayName(game.team2, "Team 2")}
+          </Text>
+          <Text
+            className={`text-4xl font-bold ${getWinnerStyles(2) || "text-red-600"}`}
+          >
+            {game.team2Score}
+          </Text>
         </View>
       </View>
 
-      <View className="flex-row space-x-3">
-        <Pressable 
-          onPress={() => setTeam1Score(prev => prev + 1)}
-          className="flex-1 py-3 px-4 bg-blue-500 rounded-lg"
-        >
-          <Text className="text-white text-center font-medium">+1 Alpha</Text>
-        </Pressable>
-        
-        <Pressable 
-          onPress={() => setTeam2Score(prev => prev + 1)}
-          className="flex-1 py-3 px-4 bg-red-500 rounded-lg"
-        >
-          <Text className="text-white text-center font-medium">+1 Beta</Text>
-        </Pressable>
+      {/* Game Info */}
+      <View className="items-center">
+        {game.scheduledAt ? (
+          <Text className="text-sm text-gray-500 mb-1">
+            {game.gameState === GameState.Scheduled
+              ? "Scheduled: "
+              : "Started: "}
+            {new Date(game.scheduledAt as string).toLocaleDateString()} at{" "}
+            {new Date(game.scheduledAt as string).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Text>
+        ) : null}
+        {game.location && (
+          <Text className="text-sm text-gray-500">
+            {game.location.name}
+            {game.location.address &&
+              `, ${game.location.address.city}, ${game.location.address.stateCode}`}
+          </Text>
+        )}
       </View>
     </View>
   );

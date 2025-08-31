@@ -26,12 +26,31 @@ export default function RootLayout() {
     <PostHogProvider>
       <AppProvider>
         <ApolloProvider>
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack initialRouteName="locations">
             <Stack.Screen
-              name="profile"
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="locations"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="(profile)"
               options={{
                 presentation: "modal",
                 headerShown: Platform.OS === "android",
+              }}
+            />
+            <Stack.Screen
+              name="games/[gameId]"
+              options={{
+                presentation: "fullScreenModal",
+                headerShown: false,
               }}
             />
           </Stack>

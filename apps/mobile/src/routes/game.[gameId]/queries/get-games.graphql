@@ -1,0 +1,50 @@
+query GetGames(
+  $offset: Int
+  $limit: Int
+  $sport: String
+  $gameState: GameState
+  $teamId: String
+  $locationId: String
+  $userId: String
+) {
+  games(
+    offset: $offset
+    limit: $limit
+    sport: $sport
+    gameState: $gameState
+    teamId: $teamId
+    locationId: $locationId
+    userId: $userId
+  ) {
+    nodes {
+      ...GameNode
+    }
+    totalCount
+    hasMore
+  }
+}
+
+fragment GameListNode on Game {
+  id
+  sport
+  gameState
+  scheduledAt
+  startedAt
+  completedAt
+  team1Score
+  team2Score
+  team1 {
+    ...TeamNode
+  }
+  team2 {
+    ...TeamNode
+  }
+  location {
+    id
+    name
+    address {
+      city
+      state
+    }
+  }
+}

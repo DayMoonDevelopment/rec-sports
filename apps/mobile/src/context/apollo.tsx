@@ -26,6 +26,7 @@ const cacheConfig: InMemoryCacheConfig = {
     Query: {
       fields: {
         locations: offsetLimitPagination(),
+        games: offsetLimitPagination(),
       },
     },
   },

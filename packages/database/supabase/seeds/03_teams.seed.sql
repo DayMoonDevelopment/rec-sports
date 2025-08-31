@@ -42,14 +42,13 @@ INSERT INTO team_members (
     role
 ) VALUES
 (
-    get_team_id('Thunder Hawks'),
+    get_team_id('Rockets'),
     get_user_id('user1@example.com'),
     'captain'
 );
 
 -- Create a test game with only team 1 (Thunder Hawks), leaving team 2 open
 INSERT INTO games (
-    id,
     team_1_id,
     team_2_id,
     sport,
@@ -57,18 +56,14 @@ INSERT INTO games (
     scheduled_at,
     location_id,
     team_1_score,
-    team_2_score,
-    created_at,
-    updated_at
+    team_2_score
 ) VALUES (
     get_team_id('Thunder Hawks'),
     get_team_id('Rockets'),
     'basketball',
     'scheduled',
     NOW(),
-    NULL,                 -- No location set yet
-    0,                    -- Starting scores
+    NULL,
     0,
-    NOW(),
-    NOW()
+    0
 );

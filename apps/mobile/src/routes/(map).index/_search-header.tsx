@@ -95,7 +95,7 @@ export function SearchHeader() {
         ) : null}
       </View>
 
-      {/*{isQuerying || focused ? (
+      {isQuerying || focused ? (
         <Pressable
           className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
           onPress={handleCancel}
@@ -111,7 +111,7 @@ export function SearchHeader() {
             RS
           </Text>
         </Pressable>
-      )}*/}
+      )}
     </View>
   );
 }

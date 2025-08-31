@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 
 import { DatabaseModule } from './database/database.module';
+import { GamesModule } from './games/games.module';
 import { LocationsModule } from './locations/locations.module';
 import { UserModule } from './user/user.module';
 
@@ -14,6 +15,7 @@ const configModule = ConfigModule.forRoot({
 @Module({
   imports: [
     DatabaseModule,
+    GamesModule,
     LocationsModule,
     UserModule,
     configModule,
