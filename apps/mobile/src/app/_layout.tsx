@@ -11,6 +11,10 @@ import { PostHogProvider } from "~/context/posthog";
 import "~/lib/background-update";
 import "~/lib/nativewind";
 
+export const unstable_settings = {
+  initialRouteName: "locations",
+};
+
 export default function RootLayout() {
   useEffect(() => {
     // Initialize the update manager when the app starts

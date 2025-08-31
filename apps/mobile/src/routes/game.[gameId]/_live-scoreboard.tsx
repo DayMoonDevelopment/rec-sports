@@ -1,8 +1,10 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import { useQuery } from "@apollo/client";
 
 import { GetGameDocument } from "./queries/get-game.generated";
 import { GameState, TeamType } from "~/gql/types";
+import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
+import { PlusSmallIcon } from "~/icons/plus-small";
 
 interface LiveScoreboardProps {
   gameId: string;
@@ -125,9 +127,16 @@ export function LiveScoreboard({ gameId }: LiveScoreboardProps) {
           >
             {game.team1Score}
           </Text>
+
+          <Pressable className="opacity-100 active:opacity-50 transition-opacity">
+            <Badge variant="outline">
+              <BadgeIcon Icon={PlusSmallIcon} />
+              <BadgeText>Score</BadgeText>
+            </Badge>
+          </Pressable>
         </View>
 
-        <Text className="text-2xl font-light text-gray-400 mx-4">-</Text>
+        <Text className="text-2xl font-light text-gray-400 mx-4">{`-`}</Text>
 
         <View className="flex-1 items-center">
           <Text
@@ -135,11 +144,19 @@ export function LiveScoreboard({ gameId }: LiveScoreboardProps) {
           >
             {getTeamDisplayName(game.team2, "Team 2")}
           </Text>
+
           <Text
             className={`text-4xl font-bold ${getWinnerStyles(2) || "text-red-600"}`}
           >
             {game.team2Score}
           </Text>
+
+          <Pressable className="opacity-100 active:opacity-50 transition-opacity">
+            <Badge variant="outline">
+              <BadgeIcon Icon={PlusSmallIcon} />
+              <BadgeText>Score</BadgeText>
+            </Badge>
+          </Pressable>
         </View>
       </View>
 
