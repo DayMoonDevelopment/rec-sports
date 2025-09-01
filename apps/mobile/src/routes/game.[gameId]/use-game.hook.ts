@@ -1,13 +1,21 @@
-import { useQuery } from "@apollo/client";
+import { QueryHookOptions, useQuery } from "@apollo/client";
 import { useLocalSearchParams } from "expo-router";
-import { GetGameDocument } from "./queries/get-game.generated";
+import {
+  GetGameDocument,
+  GetGameQuery,
+  GetGameQueryVariables,
+} from "./queries/get-game.generated";
 
-export function useGame(args = {}) {
+type UseGameOptions = Omit<
+  QueryHookOptions<GetGameQuery, GetGameQueryVariables>,
+  "variables"
+>;
+
+export function useGame(options: UseGameOptions = {}) {
   const { gameId } = useLocalSearchParams<{ gameId: string }>();
 
   return useQuery(GetGameDocument, {
-    fetchPolicy: "network-only",
-    ...args,
+    ...options,
     variables: {
       id: gameId,
     },

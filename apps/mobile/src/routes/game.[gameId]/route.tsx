@@ -2,6 +2,8 @@ import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@apollo/client";
 
+import { useGame } from "./use-game.hook";
+
 import { GetGameDocument } from "./queries/get-game.generated";
 
 import { GameHeader } from "./components/game-header";
@@ -9,12 +11,9 @@ import { LiveScoreboard } from "./components/live-scoreboard";
 import { GameEvents } from "./components/game-events";
 
 export function Component() {
-  const { gameId } = useLocalSearchParams<{ gameId: string }>();
-  useQuery(GetGameDocument, {
+  useGame({
     fetchPolicy: "network-only",
-    variables: {
-      id: gameId,
-    },
+    pollInterval: 30_000,
   });
 
   return (
