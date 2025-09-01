@@ -1,7 +1,9 @@
 import { Args, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql';
 
 import { CreateGameInput } from './dto/create-game.input';
+import { CreateGameEventInput } from './dto/create-game-event.input';
 import { CreateTeamInput } from './dto/create-team.input';
+import { UpdateGameEventInput } from './dto/update-game-event.input';
 import { GamesArgs } from './dto/games.args';
 import { GamesResponse } from './dto/games-response.dto';
 import { GamesService } from './games.service';
@@ -52,5 +54,20 @@ export class TeamsResolver {
   @ResolveField(() => [TeamMember])
   async members(@Parent() team: Team): Promise<TeamMember[]> {
     return this.gamesService.findTeamMembers(team.id);
+  }
+}
+
+@Resolver(() => GameEvent)
+export class GameEventsResolver {
+  constructor(private readonly gamesService: GamesService) {}
+
+  @Mutation(() => GameEvent)
+  async createGameEvent(@Args('input') input: CreateGameEventInput): Promise<GameEvent> {
+    return this.gamesService.createGameEvent(input);
+  }
+
+  @Mutation(() => GameEvent)
+  async updateGameEvent(@Args('input') input: UpdateGameEventInput): Promise<GameEvent> {
+    return this.gamesService.updateGameEvent(input);
   }
 }

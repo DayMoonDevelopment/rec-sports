@@ -36,6 +36,14 @@ export type CenterPoint = {
   radiusMiles: Scalars['Float']['input'];
 };
 
+export type CreateGameEventInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  eventType: Scalars['String']['input'];
+  gameId: Scalars['String']['input'];
+  points: Scalars['Float']['input'];
+  teamId: Scalars['String']['input'];
+};
+
 export type CreateGameInput = {
   locationId?: InputMaybe<Scalars['String']['input']>;
   scheduledAt?: InputMaybe<Scalars['DateTime']['input']>;
@@ -118,14 +126,21 @@ export type LocationsResponse = {
 export type Mutation = {
   __typename: 'Mutation';
   createGame: Game;
+  createGameEvent: GameEvent;
   createTeam: Team;
   signInWithApple: UserAuth;
   signInWithGoogle: UserAuth;
+  updateGameEvent: GameEvent;
 };
 
 
 export type MutationCreateGameArgs = {
   input: CreateGameInput;
+};
+
+
+export type MutationCreateGameEventArgs = {
+  input: CreateGameEventInput;
 };
 
 
@@ -141,6 +156,11 @@ export type MutationSignInWithAppleArgs = {
 
 export type MutationSignInWithGoogleArgs = {
   input: SignInGoogleInput;
+};
+
+
+export type MutationUpdateGameEventArgs = {
+  input: UpdateGameEventInput;
 };
 
 export type Point = {
@@ -266,6 +286,13 @@ export enum TeamType {
   Individual = 'INDIVIDUAL',
   Team = 'TEAM'
 }
+
+export type UpdateGameEventInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  eventType?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  points?: InputMaybe<Scalars['Float']['input']>;
+};
 
 export type User = {
   __typename: 'User';

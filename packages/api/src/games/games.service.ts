@@ -2,8 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../database/database.service';
+import { SupabaseService } from '../lib/supabase.service';
 import { CreateGameInput } from './dto/create-game.input';
+import { CreateGameEventInput } from './dto/create-game-event.input';
 import { CreateTeamInput } from './dto/create-team.input';
+import { UpdateGameEventInput } from './dto/update-game-event.input';
 import { GamesArgs } from './dto/games.args';
 import { GamesResponse } from './dto/games-response.dto';
 import { GameState } from './enums/game-state.enum';
@@ -15,7 +18,10 @@ import { TeamMember } from './models/team-member.model';
 
 @Injectable()
 export class GamesService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   async findGameById(id: string): Promise<Game | null> {
     const { client } = this.databaseService;
@@ -306,6 +312,153 @@ export class GamesService {
       occurredAt: new Date(result.occurred_at),
       createdAt: new Date(result.created_at),
     }));
+  }
+
+  async createGameEvent(input: CreateGameEventInput): Promise<GameEvent> {
+    const { client } = this.databaseService;
+
+    const occurredAt = new Date().toISOString();
+    const result = await client
+      .insertInto('game_events')
+      .values({
+        game_id: input.gameId,
+        team_id: input.teamId,
+        event_type: input.eventType,
+        points: input.points,
+        period_number: 1,
+        occurred_at: occurredAt,
+        event_key: input.description || null,
+      })
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
+
+    const gameEvent = await this.findGameEventById(result.id);
+    if (!gameEvent) {
+      throw new Error('Failed to create game event');
+    }
+
+    // Send minimal broadcast payload
+    try {
+      await this.supabaseService.client
+        .channel(`game-events-broadcast-${input.gameId}`)
+        .send({
+          type: 'broadcast',
+          event: 'game_event_created',
+          payload: {
+            id: result.id,
+            created_at: occurredAt,
+            value: input.points,
+            type: input.eventType,
+            team_id: input.teamId,
+            game_id: input.gameId,
+          }
+        });
+      
+      console.log(`Broadcast sent for game event created: ${result.id}`);
+    } catch (error) {
+      console.error('Failed to send broadcast for game event:', error);
+      // Don't fail the mutation if broadcast fails
+    }
+
+    return gameEvent;
+  }
+
+  async updateGameEvent(input: UpdateGameEventInput): Promise<GameEvent> {
+    const { client } = this.databaseService;
+
+    const updateData: any = {};
+    if (input.eventType !== undefined) updateData.event_type = input.eventType;
+    if (input.points !== undefined) updateData.points = input.points;
+    if (input.description !== undefined) updateData.event_key = input.description;
+
+    await client
+      .updateTable('game_events')
+      .set(updateData)
+      .where('id', '=', input.id)
+      .execute();
+
+    const gameEvent = await this.findGameEventById(input.id);
+    if (!gameEvent) {
+      throw new Error('Game event not found after update');
+    }
+
+    // Send minimal broadcast payload
+    try {
+      await this.supabaseService.client
+        .channel(`game-events-broadcast-${gameEvent.gameId}`)
+        .send({
+          type: 'broadcast',
+          event: 'game_event_updated',
+          payload: {
+            id: input.id,
+            created_at: gameEvent.occurredAt.toISOString(),
+            value: gameEvent.points,
+            type: gameEvent.eventType,
+            team_id: gameEvent.team?.id || null,
+            game_id: gameEvent.gameId,
+          }
+        });
+      
+      console.log(`Broadcast sent for game event updated: ${input.id}`);
+    } catch (error) {
+      console.error('Failed to send broadcast for game event update:', error);
+      // Don't fail the mutation if broadcast fails
+    }
+
+    return gameEvent;
+  }
+
+  async findGameEventById(id: string): Promise<GameEvent | null> {
+    const { client } = this.databaseService;
+
+    const result = await client
+      .selectFrom('game_events')
+      .leftJoin('teams', 'teams.id', 'game_events.team_id')
+      .select([
+        'game_events.id',
+        'game_events.game_id',
+        'game_events.user_id',
+        'game_events.event_type',
+        'game_events.event_key',
+        'game_events.points',
+        'game_events.period_number',
+        'game_events.period_name',
+        'game_events.occurred_at',
+        'game_events.created_at',
+        'teams.id as team_id',
+        'teams.name as team_name',
+        'teams.team_type as team_type',
+        'teams.sport_tags as team_sport_tags',
+        'teams.created_at as team_created_at',
+        'teams.updated_at as team_updated_at',
+      ])
+      .where('game_events.id', '=', id)
+      .executeTakeFirst();
+
+    if (!result) {
+      return null;
+    }
+
+    return {
+      id: result.id,
+      gameId: result.game_id,
+      team: result.team_id ? {
+        id: result.team_id,
+        name: result.team_name || undefined,
+        teamType: result.team_type as TeamType,
+        sportTags: result.team_sport_tags || undefined,
+        createdAt: new Date(result.team_created_at),
+        updatedAt: new Date(result.team_updated_at),
+      } : undefined,
+      userId: result.user_id || undefined,
+      eventType: result.event_type,
+      eventKey: result.event_key || undefined,
+      points: result.points,
+      periodNumber: result.period_number,
+      periodName: result.period_name || undefined,
+      occurredAt: new Date(result.occurred_at),
+      createdAt: new Date(result.created_at),
+    };
   }
 
   private transformGameResult(result: any): Game {

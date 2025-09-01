@@ -1,0 +1,15 @@
+mutation UpdateGameEvent($input: UpdateGameEventInput!) {
+  updateGameEvent(input: $input) {
+    id
+    gameId
+    eventType
+    points
+    occurredAt
+    createdAt
+    team {
+      id
+      name
+      teamType
+    }
+  }
+}

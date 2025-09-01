@@ -1,0 +1,15 @@
+mutation CreateGameEvent($input: CreateGameEventInput!) {
+  createGameEvent(input: $input) {
+    id
+    gameId
+    eventType
+    points
+    occurredAt
+    createdAt
+    team {
+      id
+      name
+      teamType
+    }
+  }
+}

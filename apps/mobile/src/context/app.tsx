@@ -13,7 +13,7 @@ import type { ReactNode } from "react";
 SplashScreen.preventAutoHideAsync();
 
 // Define provider types
-type ProviderName = "apollo-cache";
+type ProviderName = "apollo-cache" | "supabase";
 
 // Define ready state for each provider
 type ReadyState = {
