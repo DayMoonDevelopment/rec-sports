@@ -1,6 +1,7 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text } from "react-native";
 import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { RecommendedLocation } from "./_recommended-location";
 import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locations.generated";
@@ -53,7 +54,7 @@ export function RecommendedLocations() {
         Recommended
       </Text>
 
-      <FlatList
+      <BottomSheetFlatList
         horizontal
         data={suggestedItems}
         keyExtractor={(item) => item.id}
