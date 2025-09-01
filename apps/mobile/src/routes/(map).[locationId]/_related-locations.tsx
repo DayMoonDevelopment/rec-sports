@@ -27,16 +27,16 @@ export function RelatedLocations({
   const { animateToLocation, showMarkerCallout } = useMap();
 
   const { data, loading, error } = useQuery(GetRelatedLocationsDocument, {
+    fetchPolicy: "cache-and-network",
     variables: {
       latitude: currentLocation.geo?.latitude || 0,
       longitude: currentLocation.geo?.longitude || 0,
     },
     skip: !currentLocation.geo?.latitude || !currentLocation.geo?.longitude,
-    fetchPolicy: "no-cache",
   });
 
   const relatedLocations =
-    data?.relatedLocations.nodes.filter(
+    data?.relatedLocations.nodes?.filter(
       ({ id }) => id !== currentLocation.id,
     ) || [];
 
@@ -50,7 +50,9 @@ export function RelatedLocations({
     showMarkerCallout(location.id);
 
     // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
+    router.push(
+      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
+    );
   };
 
   if (!currentLocation.geo?.latitude || !currentLocation.geo?.longitude) {

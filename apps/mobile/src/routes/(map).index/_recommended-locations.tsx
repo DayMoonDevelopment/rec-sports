@@ -30,7 +30,6 @@ export function RecommendedLocations() {
       limit: 5, // Get top 5 suggested locations
       region: apiRegion,
     },
-    fetchPolicy: "no-cache", // Use cache but also fetch fresh data
     skip: !currentRegion, // Skip query until we have a region
   });
 
@@ -38,7 +37,9 @@ export function RecommendedLocations() {
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
+    router.push(
+      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
+    );
   };
 
   // Don't render if no data and not loading, or if we don't have a region yet

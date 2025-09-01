@@ -44,7 +44,7 @@ export function MapViewComponent() {
   } = useMap();
 
   const { data, refetch } = useQuery(SearchLocationsDocument, {
-    fetchPolicy: "no-cache",
+    fetchPolicy: "no-cache", // map-based search is far too unique to be safely cachable
     variables: {
       ...PAGE_PARAMS,
       region: {

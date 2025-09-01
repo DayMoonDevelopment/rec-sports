@@ -47,6 +47,8 @@ const config: CodegenConfig = {
         inlineFragmentTypes: "combine",
         // Export fragment types separately
         exportFragmentSpreadSubTypes: true,
+        // Force __typename in all selections for proper cache normalization
+        addTypename: true,
       },
     },
   },

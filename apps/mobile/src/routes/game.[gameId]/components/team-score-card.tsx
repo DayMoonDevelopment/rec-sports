@@ -20,6 +20,10 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   const { data } = useGame();
   const [createGameEvent, { loading: isAddingScore }] = useMutation(
     CreateGameEventDocument,
+    {
+      refetchQueries: ["GetGame"],
+      awaitRefetchQueries: false,
+    },
   );
 
   const game = data?.game;

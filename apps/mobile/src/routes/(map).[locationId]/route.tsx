@@ -29,9 +29,9 @@ export function Component() {
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GetLocationDocument, {
+    fetchPolicy: "cache-and-network",
     variables: { id: locationId },
     skip: !locationId,
-    fetchPolicy: "no-cache",
     onCompleted: (data) => {
       // Only animate from query if no lat/lng provided via params
       if (data.location && !lat && !lng) {
@@ -49,7 +49,7 @@ export function Component() {
   useEffect(() => {
     if (locationId) {
       setFocusedMarkerId(locationId);
-      
+
       // If lat/lng provided via params, animate immediately
       if (lat && lng) {
         animateToLocation(parseFloat(lat), parseFloat(lng));

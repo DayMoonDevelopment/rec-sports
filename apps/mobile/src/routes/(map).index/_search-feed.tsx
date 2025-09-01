@@ -102,7 +102,6 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       limit: 100,
     },
     skip: !searchQuery.trim(),
-    fetchPolicy: "no-cache",
   });
 
   const searchResults = data?.locations.nodes || [];
@@ -115,7 +114,9 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
     setFocusedMarkerId(location.id);
 
     // Navigate to location detail with lat/lng for immediate animation
-    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
+    router.push(
+      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
+    );
   };
 
   if (!searchQuery.trim()) {
