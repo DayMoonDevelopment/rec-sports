@@ -14,7 +14,7 @@ export function GameHeader() {
   });
 
   return (
-    <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+    <View className="flex-row items-center justify-between px-4 py-3 border-b border-border bg-background">
       <View className="flex-1">
         {loading ? (
           <LoadingState />

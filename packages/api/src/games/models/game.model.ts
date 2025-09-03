@@ -3,9 +3,9 @@ import { IsArray, IsNotEmpty, IsOptional } from 'class-validator';
 
 import { Sport } from '../../common/enums/sport.enum';
 import { Location } from '../../locations/models/location.model';
-import { Team } from '../../teams/models/team.model';
 import { GameActionsConnection } from '../actions/models/game-actions-connection.model';
 import { GameStatus } from '../enums/game-status.enum';
+import { GameTeam } from './game-team.model';
 
 @ObjectType()
 export class Game {
@@ -21,9 +21,9 @@ export class Game {
   @IsNotEmpty()
   sport: Sport;
 
-  @Field(() => [Team])
+  @Field(() => [GameTeam])
   @IsArray()
-  teams: Team[];
+  teams: GameTeam[];
 
   @Field(() => GameStatus)
   @IsNotEmpty()

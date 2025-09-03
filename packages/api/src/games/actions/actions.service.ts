@@ -76,7 +76,6 @@ export class ActionsService {
     };
 
     return {
-      nodes: edges.map((edge) => edge.node),
       edges,
       pageInfo,
       totalCount: Number(totalCount?.count ?? 0),

@@ -75,7 +75,7 @@ export type Game = {
   sport: Sport;
   startedAt: Maybe<Scalars['DateTime']['output']>;
   status: GameStatus;
-  teams: Array<Team>;
+  teams: Array<GameTeam>;
 };
 
 
@@ -124,6 +124,12 @@ export enum GameStatus {
   InProgress = 'IN_PROGRESS',
   Upcoming = 'UPCOMING'
 }
+
+export type GameTeam = {
+  __typename: 'GameTeam';
+  score: Maybe<Scalars['Int']['output']>;
+  team: Team;
+};
 
 export type Location = {
   __typename: 'Location';

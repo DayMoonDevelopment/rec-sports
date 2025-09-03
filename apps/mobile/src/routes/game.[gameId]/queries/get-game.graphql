@@ -6,6 +6,13 @@ fragment TeamNode on Team {
   }
 }
 
+fragment GameTeamNode on GameTeam {
+  score
+  team {
+    ...TeamNode
+  }
+}
+
 fragment GameActionNode on GameScoreAction {
   id
   occurredAt
@@ -27,7 +34,7 @@ fragment GameNode on Game {
   startedAt
   endedAt
   teams {
-    ...TeamNode
+    ...GameTeamNode
   }
   location {
     id

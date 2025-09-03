@@ -1,6 +1,11 @@
 import { View, Text } from "react-native";
+
 import { SportIcon } from "~/components/sport-icon";
+
 import { Sport } from "~/gql/types";
+
+import { sportLabel } from "~/lib/utils";
+
 import { useGame } from "../use-game.hook";
 
 export function GameTitle() {
@@ -15,8 +20,8 @@ export function GameTitle() {
         sport={game.sport.toUpperCase() as Sport}
         className="size-6 mr-2"
       />
-      <Text className="text-lg font-semibold text-gray-900 capitalize">
-        {game.sport} Game
+      <Text className="text-lg font-semibold text-foreground">
+        {sportLabel(game.sport)}
       </Text>
     </View>
   );

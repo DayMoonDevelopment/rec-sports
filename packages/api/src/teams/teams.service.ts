@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../database/database.service';
+import { GameTeam } from '../games/models/game-team.model';
 import { CreateTeamInput } from './dto/create-team.input';
 import { TeamMemberInput } from './dto/team-member.input';
 import { Team } from './models/team.model';
@@ -105,24 +106,27 @@ export class TeamsService {
     return team;
   }
 
-  async getGameTeams(gameId: string): Promise<Team[]> {
+  async getGameTeams(gameId: string): Promise<GameTeam[]> {
     const { client } = this.databaseService;
 
     const results = await client
       .selectFrom('game_teams')
       .innerJoin('teams', 'teams.id', 'game_teams.team_id')
-      .select(['teams.id', 'teams.name'])
+      .select(['teams.id', 'teams.name', 'game_teams.score'])
       .where('game_teams.game_id', '=', gameId)
       .execute();
 
-    const teams: Team[] = [];
+    const gameTeams: GameTeam[] = [];
     for (const result of results) {
       const team = await this.findTeamById(result.id);
       if (team) {
-        teams.push(team);
+        gameTeams.push({
+          team,
+          score: result.score || 0,
+        });
       }
     }
 
-    return teams;
+    return gameTeams;
   }
 }

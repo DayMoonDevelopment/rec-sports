@@ -39,35 +39,33 @@ INSERT INTO team_members (
 ) VALUES
 (
     get_team_id('Rockets'),
-    get_user_id('user1@example.com')
+    get_user_id('user3@example.com')
 );
 
--- Create a test game
-INSERT INTO games (
-    sport,
-    game_state,
-    scheduled_at,
-    location_id
+-- Create a team that can have a user added to it later
+INSERT INTO teams (
+    name,
+    team_type,
+    sport_tags
 ) VALUES (
-    'basketball',
-    'upcoming',
-    NOW(),
-    NULL
+    'Booger Beans',
+    'group',
+    ARRAY['basketball', 'tennis', 'pickleball']
 );
 
--- Associate teams with the game via game_teams table
-INSERT INTO game_teams (
-    game_id,
+INSERT INTO team_members (
     team_id,
-    score
+    user_id
 ) VALUES
 (
-    (SELECT id FROM games LIMIT 1),
-    get_team_id('Thunder Hawks'),
-    0
+    get_team_id('Booger Beans'),
+    get_user_id('user4@example.com')
 ),
 (
-(SELECT id FROM games LIMIT 1),
-    get_team_id('Rockets'),
-    0
+    get_team_id('Booger Beans'),
+    get_user_id('user5@example.com')
+),
+(
+    get_team_id('Booger Beans'),
+    get_user_id('user6@example.com')
 );

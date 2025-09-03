@@ -7,6 +7,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 
+import { GamesService } from '../../games.service';
 import { Game } from '../../models/game.model';
 import { AddGameScorePayload } from './dto/add-game-score.payload';
 import { GameScoreInput } from './dto/game-score.input';
@@ -45,7 +46,7 @@ export class ScoreActionsResolver {
 
 @Resolver(() => AddGameScorePayload)
 export class AddGameScorePayloadResolver {
-  constructor(private readonly scoreActionsService: ScoreActionsService) {}
+  constructor(private readonly gamesService: GamesService) {}
 
   @ResolveField(() => Game)
   async game(@Parent() payload: AddGameScorePayload): Promise<Game | null> {

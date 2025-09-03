@@ -1,15 +1,25 @@
 import { View, Text } from "react-native";
+import { useState } from "react";
 
 import { useGame } from "../use-game.hook";
 
-import { GameStateBadge } from "./game-state-badge";
-import { TeamScoreCard } from "./team-score-card";
-import { GameInfo } from "./game-info";
 import { LoadingState } from "./loading-state";
+import { MultiTeamScoreboard } from "./multi-team-scoreboard";
+import { TwoTeamScoreboard } from "./two-team-scoreboard";
+
+const TEAM_COLORS = [
+  "text-blue-600",
+  "text-red-600",
+  "text-green-600",
+  "text-purple-600",
+  "text-orange-600",
+  "text-pink-600",
+];
 
 export function LiveScoreboard() {
   const { data, loading } = useGame();
   const game = data?.game;
+  const [focusedTeamIndex, setFocusedTeamIndex] = useState(0);
 
   if (loading && !game) {
     return (
@@ -29,33 +39,19 @@ export function LiveScoreboard() {
     );
   }
 
+  const hasMultipleTeams = game.teams.length >= 3;
+
   return (
-    <View className="px-4 py-6 bg-gray-50">
-      {/* Game State Badge */}
-      <GameStateBadge />
-
-      {/* Score Display */}
-      <View className={`${game.teams.length <= 2 ? 'flex-row items-center justify-between' : 'flex-wrap justify-center'} mb-4`}>
-        {game.teams.map((team, index) => {
-          const colors = ["text-blue-600", "text-red-600", "text-green-600", "text-purple-600"];
-          const scoreColor = colors[index] || "text-gray-600";
-          
-          return (
-            <View key={team.id} className="flex-row items-center">
-              <TeamScoreCard 
-                teamIndex={(index + 1) as 1 | 2} 
-                scoreColor={scoreColor} 
-              />
-              {index < game.teams.length - 1 && game.teams.length <= 2 && (
-                <Text className="text-2xl font-light text-gray-400 mx-4">-</Text>
-              )}
-            </View>
-          );
-        })}
-      </View>
-
-      {/* Game Info */}
-      <GameInfo />
+    <View className="px-4 py-6 bg-muted">
+      {hasMultipleTeams ? (
+        <MultiTeamScoreboard
+          focusedTeamIndex={focusedTeamIndex}
+          onTeamFocus={setFocusedTeamIndex}
+          colors={TEAM_COLORS}
+        />
+      ) : (
+        <TwoTeamScoreboard colors={TEAM_COLORS} />
+      )}
     </View>
   );
 }

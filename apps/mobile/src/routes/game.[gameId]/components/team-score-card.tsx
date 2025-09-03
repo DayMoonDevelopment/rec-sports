@@ -13,10 +13,9 @@ import { AddGameScoreDocument } from "../mutations/create-game-event.generated";
 
 interface TeamScoreCardProps {
   teamIndex: 1 | 2; // Keep for backward compatibility but will be deprecated
-  scoreColor: string;
 }
 
-export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
+export function TeamScoreCard({ teamIndex }: TeamScoreCardProps) {
   const { data } = useGame();
   const [addGameScore, { loading: isAddingScore }] = useMutation(
     AddGameScoreDocument,
@@ -31,20 +30,15 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   if (!game) return null;
 
   const gameId = game.id;
-  const team = game.teams[teamIndex - 1]; // teamIndex is 1-based, array is 0-based
+  const gameTeam = game.teams[teamIndex - 1]; // teamIndex is 1-based, array is 0-based
   const isLive = game.status === GameStatus.InProgress;
   const isCompleted = game.status === GameStatus.Completed;
 
   // If no team exists for this index, don't render
-  if (!team) return null;
+  if (!gameTeam) return null;
 
-  // Calculate team score from game actions
-  const teamScore = (game.actions.edges?.map((edge) => edge.node) || [])
-    .filter(
-      (action: any) =>
-        action.__typename === "GameScoreAction" && action.team?.id === team.id,
-    )
-    .reduce((total: number, action: any) => total + (action.value || 0), 0);
+  const team = gameTeam.team;
+  const teamScore = gameTeam.score || 0;
 
   const getTeamDisplayName = (team: any, fallback: string) => {
     if (!team) return fallback;
@@ -54,14 +48,7 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   const getWinnerStyles = () => {
     if (!isCompleted) return "";
     // For now, we'll determine winner by highest score
-    const allTeamScores = game.teams.map((t) => {
-      return (game.actions.edges?.map((edge) => edge.node) || [])
-        .filter(
-          (action: any) =>
-            action.__typename === "GameScoreAction" && action.team?.id === t.id,
-        )
-        .reduce((total: number, action: any) => total + (action.value || 0), 0);
-    });
+    const allTeamScores = game.teams.map((gameTeam) => gameTeam.score || 0);
     const maxScore = Math.max(...allTeamScores);
     const isWinner = teamScore === maxScore && teamScore > 0;
     return isWinner ? "text-yellow-600" : "text-gray-600";
@@ -87,26 +74,27 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   };
 
   return (
-    <View className="flex-1 items-center">
+    <View className="flex flex-col items-center">
       <Text
         className={`text-lg font-medium mb-1 ${getWinnerStyles() || "text-gray-900"}`}
       >
         {getTeamDisplayName(team, team?.name || `Team ${teamIndex}`)}
       </Text>
-      <Text className={`text-4xl font-bold ${getWinnerStyles() || scoreColor}`}>
-        {teamScore}
-      </Text>
 
-      <Pressable
-        className="opacity-100 active:opacity-50 transition-opacity"
-        onPress={handleAddScore}
-        disabled={isAddingScore || !isLive}
-      >
-        <Badge variant="outline">
-          <BadgeIcon Icon={PlusSmallIcon} />
-          <BadgeText>Score</BadgeText>
-        </Badge>
-      </Pressable>
+      <Text className={`text-4xl font-bold text-foreground`}>{teamScore}</Text>
+
+      {isLive ? (
+        <Pressable
+          className="opacity-100 active:opacity-50 transition-opacity"
+          onPress={handleAddScore}
+          disabled={isAddingScore}
+        >
+          <Badge variant="outline">
+            <BadgeIcon Icon={PlusSmallIcon} />
+            <BadgeText>Score</BadgeText>
+          </Badge>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -10,8 +10,11 @@ mutation CreateGame($input: CreateGameInput!) {
         name
       }
       teams {
-        id
-        name
+        score
+        team {
+          id
+          name
+        }
       }
     }
   }

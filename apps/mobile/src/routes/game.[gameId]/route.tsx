@@ -1,10 +1,6 @@
 import { View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useQuery } from "@apollo/client";
 
 import { useGame } from "./use-game.hook";
-
-import { GetGameDocument } from "./queries/get-game.generated";
 
 import { GameHeader } from "./components/game-header";
 import { LiveScoreboard } from "./components/live-scoreboard";
