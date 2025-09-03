@@ -16,12 +16,16 @@ fragment LocationNode on Location {
   sports
 }
 
-query GetSearchLocations($query: String!, $region: Region, $limit: Int) {
-  locations(query: $query, region: $region, limit: $limit) {
+query GetSearchLocations($query: String!, $region: Region, $first: Int, $after: String) {
+  locations(query: $query, region: $region, first: $first, after: $after) {
     nodes {
       ...LocationNode
     }
     totalCount
     hasMore
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
   }
 }

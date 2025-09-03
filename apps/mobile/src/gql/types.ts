@@ -12,7 +12,14 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: unknown; output: unknown; }
+};
+
+export type AddGameScorePayload = {
+  __typename: 'AddGameScorePayload';
+  action: GameScoreAction;
+  game: Game;
 };
 
 export type Address = {
@@ -36,76 +43,87 @@ export type CenterPoint = {
   radiusMiles: Scalars['Float']['input'];
 };
 
-export type CreateGameEventInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  eventType: Scalars['String']['input'];
-  gameId: Scalars['String']['input'];
-  points: Scalars['Float']['input'];
-  teamId: Scalars['String']['input'];
+export type CreateGameInput = {
+  locationId: Scalars['ID']['input'];
+  scheduledAt: Scalars['DateTime']['input'];
+  sport: Sport;
+  teamIds: Array<Scalars['ID']['input']>;
 };
 
-export type CreateGameInput = {
-  locationId?: InputMaybe<Scalars['String']['input']>;
-  scheduledAt?: InputMaybe<Scalars['DateTime']['input']>;
-  sport: Scalars['String']['input'];
-  team1Id?: InputMaybe<Scalars['String']['input']>;
-  team2Id?: InputMaybe<Scalars['String']['input']>;
+export type CreateGamePayload = {
+  __typename: 'CreateGamePayload';
+  game: Game;
 };
 
 export type CreateTeamInput = {
-  name?: InputMaybe<Scalars['String']['input']>;
-  sportTags?: InputMaybe<Array<Scalars['String']['input']>>;
-  teamType: TeamType;
+  members: Array<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+};
+
+export type CreateTeamPayload = {
+  __typename: 'CreateTeamPayload';
+  team: Team;
 };
 
 export type Game = {
   __typename: 'Game';
-  completedAt: Maybe<Scalars['DateTime']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  events: Array<GameEvent>;
-  gameState: GameState;
+  actions: GameActionsConnection;
+  endedAt: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
   location: Maybe<Location>;
   scheduledAt: Maybe<Scalars['DateTime']['output']>;
-  sport: Scalars['String']['output'];
+  sport: Sport;
   startedAt: Maybe<Scalars['DateTime']['output']>;
-  team1: Maybe<Team>;
-  team1Score: Scalars['Int']['output'];
-  team2: Maybe<Team>;
-  team2Score: Scalars['Int']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  winnerTeam: Maybe<Team>;
+  status: GameStatus;
+  teams: Array<Team>;
 };
 
-export type GameEvent = {
-  __typename: 'GameEvent';
-  createdAt: Scalars['DateTime']['output'];
-  eventKey: Maybe<Scalars['String']['output']>;
-  eventType: Scalars['String']['output'];
-  gameId: Scalars['String']['output'];
+
+export type GameActionsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+};
+
+export type GameAction = {
   id: Scalars['ID']['output'];
   occurredAt: Scalars['DateTime']['output'];
-  periodName: Maybe<Scalars['String']['output']>;
-  periodNumber: Scalars['Int']['output'];
-  points: Scalars['Int']['output'];
-  team: Maybe<Team>;
-  userId: Maybe<Scalars['String']['output']>;
 };
 
-/** The state of a game */
-export enum GameState {
-  Cancelled = 'CANCELLED',
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Scheduled = 'SCHEDULED'
-}
+export type GameActionEdge = {
+  __typename: 'GameActionEdge';
+  cursor: Scalars['String']['output'];
+  node: GameAction;
+};
 
-export type GamesResponse = {
-  __typename: 'GamesResponse';
-  hasMore: Scalars['Boolean']['output'];
-  nodes: Array<Game>;
+export type GameActionsConnection = {
+  __typename: 'GameActionsConnection';
+  edges: Array<GameActionEdge>;
+  pageInfo: PageInfo;
   totalCount: Scalars['Int']['output'];
 };
+
+export type GameScoreAction = GameAction & {
+  __typename: 'GameScoreAction';
+  id: Scalars['ID']['output'];
+  key: Scalars['String']['output'];
+  occurredAt: Scalars['DateTime']['output'];
+  occurredBy: User;
+  team: Team;
+  value: Scalars['Float']['output'];
+};
+
+export type GameScoreInput = {
+  key: Scalars['String']['input'];
+  occurredByTeamMemberId: Scalars['ID']['input'];
+  value: Scalars['Float']['input'];
+};
+
+/** The status of a game */
+export enum GameStatus {
+  Completed = 'COMPLETED',
+  InProgress = 'IN_PROGRESS',
+  Upcoming = 'UPCOMING'
+}
 
 export type Location = {
   __typename: 'Location';
@@ -120,17 +138,34 @@ export type LocationsResponse = {
   __typename: 'LocationsResponse';
   hasMore: Scalars['Boolean']['output'];
   nodes: Array<Location>;
+  pageInfo: PageInfo;
   totalCount: Scalars['Int']['output'];
 };
 
 export type Mutation = {
   __typename: 'Mutation';
-  createGame: Game;
-  createGameEvent: GameEvent;
-  createTeam: Team;
+  addGameScore: AddGameScorePayload;
+  addTeamMember: UpdateTeamPayload;
+  createGame: CreateGamePayload;
+  createTeam: CreateTeamPayload;
+  endGame: UpdateGamePayload;
+  removeGameAction: RemoveGameActionPayload;
+  removeTeamMember: UpdateTeamPayload;
   signInWithApple: UserAuth;
   signInWithGoogle: UserAuth;
-  updateGameEvent: GameEvent;
+  startGame: UpdateGamePayload;
+  updateGameScore: UpdateGameScorePayload;
+};
+
+
+export type MutationAddGameScoreArgs = {
+  gameId: Scalars['ID']['input'];
+  input: GameScoreInput;
+};
+
+
+export type MutationAddTeamMemberArgs = {
+  input: TeamMemberInput;
 };
 
 
@@ -139,13 +174,23 @@ export type MutationCreateGameArgs = {
 };
 
 
-export type MutationCreateGameEventArgs = {
-  input: CreateGameEventInput;
+export type MutationCreateTeamArgs = {
+  input: CreateTeamInput;
 };
 
 
-export type MutationCreateTeamArgs = {
-  input: CreateTeamInput;
+export type MutationEndGameArgs = {
+  gameId: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveGameActionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveTeamMemberArgs = {
+  input: TeamMemberInput;
 };
 
 
@@ -159,8 +204,20 @@ export type MutationSignInWithGoogleArgs = {
 };
 
 
-export type MutationUpdateGameEventArgs = {
-  input: UpdateGameEventInput;
+export type MutationStartGameArgs = {
+  gameId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateGameScoreArgs = {
+  id: Scalars['ID']['input'];
+  input: GameScoreInput;
+};
+
+export type PageInfo = {
+  __typename: 'PageInfo';
+  endCursor: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
 };
 
 export type Point = {
@@ -177,7 +234,6 @@ export type PointInput = {
 export type Query = {
   __typename: 'Query';
   game: Maybe<Game>;
-  games: GamesResponse;
   location: Maybe<Location>;
   locations: LocationsResponse;
   team: Maybe<Team>;
@@ -185,18 +241,7 @@ export type Query = {
 
 
 export type QueryGameArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-export type QueryGamesArgs = {
-  gameState?: InputMaybe<GameState>;
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  locationId?: InputMaybe<Scalars['String']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
-  sport?: InputMaybe<Scalars['String']['input']>;
-  teamId?: InputMaybe<Scalars['String']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -206,8 +251,8 @@ export type QueryLocationArgs = {
 
 
 export type QueryLocationsArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  offset?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
   query?: InputMaybe<Scalars['String']['input']>;
   region?: InputMaybe<Region>;
   searchMode?: InputMaybe<Scalars['String']['input']>;
@@ -217,12 +262,18 @@ export type QueryLocationsArgs = {
 
 
 export type QueryTeamArgs = {
-  id: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type Region = {
   boundingBox?: InputMaybe<BoundingBox>;
   centerPoint?: InputMaybe<CenterPoint>;
+};
+
+export type RemoveGameActionPayload = {
+  __typename: 'RemoveGameActionPayload';
+  gameId: Scalars['ID']['output'];
+  success: Scalars['Boolean']['output'];
 };
 
 export type Session = {
@@ -263,35 +314,29 @@ export enum Sport {
 
 export type Team = {
   __typename: 'Team';
-  createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  members: Array<TeamMember>;
-  name: Maybe<Scalars['String']['output']>;
-  sportTags: Maybe<Array<Scalars['String']['output']>>;
-  teamType: TeamType;
-  updatedAt: Scalars['DateTime']['output'];
+  members: Maybe<Array<User>>;
+  name: Scalars['String']['output'];
 };
 
-export type TeamMember = {
-  __typename: 'TeamMember';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  role: Maybe<Scalars['String']['output']>;
-  teamId: Scalars['String']['output'];
-  userId: Scalars['String']['output'];
+export type TeamMemberInput = {
+  teamId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
-/** The type of team - individual player or team */
-export enum TeamType {
-  Individual = 'INDIVIDUAL',
-  Team = 'TEAM'
-}
+export type UpdateGamePayload = {
+  __typename: 'UpdateGamePayload';
+  game: Game;
+};
 
-export type UpdateGameEventInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
-  eventType?: InputMaybe<Scalars['String']['input']>;
-  id: Scalars['String']['input'];
-  points?: InputMaybe<Scalars['Float']['input']>;
+export type UpdateGameScorePayload = {
+  __typename: 'UpdateGameScorePayload';
+  action: GameScoreAction;
+};
+
+export type UpdateTeamPayload = {
+  __typename: 'UpdateTeamPayload';
+  team: Team;
 };
 
 export type User = {

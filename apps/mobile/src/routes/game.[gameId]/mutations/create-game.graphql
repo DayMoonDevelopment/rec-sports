@@ -1,0 +1,18 @@
+mutation CreateGame($input: CreateGameInput!) {
+  createGame(input: $input) {
+    game {
+      id
+      sport
+      status
+      scheduledAt
+      location {
+        id
+        name
+      }
+      teams {
+        id
+        name
+      }
+    }
+  }
+}

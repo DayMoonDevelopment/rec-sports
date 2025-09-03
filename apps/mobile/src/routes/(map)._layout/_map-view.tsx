@@ -27,8 +27,7 @@ const US_INITIAL_BOUNDING_BOX_BUFFERED = regionToBoundingBoxWithBuffer(
 );
 
 const PAGE_PARAMS = {
-  limit: 200,
-  offset: 0,
+  first: 200,
 };
 
 export function MapViewComponent() {

@@ -1,15 +1,21 @@
-mutation CreateGameEvent($input: CreateGameEventInput!) {
-  createGameEvent(input: $input) {
-    id
-    gameId
-    eventType
-    points
-    occurredAt
-    createdAt
-    team {
+mutation AddGameScore($gameId: ID!, $input: GameScoreInput!) {
+  addGameScore(gameId: $gameId, input: $input) {
+    game {
       id
-      name
-      teamType
+      status
+    }
+    action {
+      id
+      occurredAt
+      occurredBy {
+        id
+      }
+      team {
+        id
+        name
+      }
+      value
+      key
     }
   }
 }

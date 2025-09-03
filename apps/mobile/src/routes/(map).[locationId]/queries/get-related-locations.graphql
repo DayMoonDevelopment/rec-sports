@@ -24,10 +24,16 @@ query GetRelatedLocations($latitude: Float!, $longitude: Float!) {
         radiusMiles: 5
       }
     }
-    limit: 6
+    first: 6
   ) {
     nodes {
       ...LocationNode
+    }
+    hasMore
+    totalCount
+    pageInfo {
+      endCursor
+      hasNextPage
     }
   }
 }

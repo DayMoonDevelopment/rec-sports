@@ -28,7 +28,7 @@ export function RecommendedLocations() {
   // Query for recommended locations
   const { data, loading } = useQuery(GetRecommendedLocationsDocument, {
     variables: {
-      limit: 5, // Get top 5 suggested locations
+      first: 5, // Get top 5 suggested locations
       region: apiRegion,
     },
     skip: !currentRegion, // Skip query until we have a region

@@ -1,0 +1,164 @@
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input CreateTeamInput {
+  name: String!
+  members: [ID!]!
+}
+
+input TeamMemberInput {
+  userId: ID!
+  teamId: ID!
+}
+
+input CreateGameInput {
+  sport: Sport!
+  teamIds: [ID!]!
+  locationId: ID!
+  scheduledAt: DateTime!
+}
+
+input GameScoreInput {
+  occurredByUserId: ID!
+  value: Float!
+  key: String!
+}
+
+type Game {
+  id: ID!
+  location: Location!
+  sport: Sport!
+  teams: [Team!]!
+  status: GameStatus!
+  scheduledAt: DateTime
+  startedAt: DateTime
+  endedAt: DateTime
+  actions(first: Int = 20, after: String): GameActionsConnection!
+}
+
+type GameActionsConnection {
+  nodes: [GameAction!]!
+  edges: [GameActionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type GameActionEdge {
+  node: GameAction!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+interface GameAction {
+  id: ID!
+  occurredAt: DateTime!
+}
+
+type GameScoreAction implements GameAction {
+  id: ID!
+  occurredAt: DateTime!
+  occurredBy: User!
+  team: Team!
+  value: Float!
+  key: String!
+}
+
+type Mutation {
+  createTeam(input: CreateTeamInput!): CreateTeamPayload!
+  addTeamMember(input: TeamMemberInput!): UpdateTeamPayload!
+  removeTeamMember(input: TeamMemberInput!): UpdateTeamPayload!
+  createGame(input: CreateGameInput!): CreateGamePayload!
+  startGame(gameId: ID!): UpdateGamePayload!
+  endGame(gameId: ID!): UpdateGamePayload!
+  addGameScore(gameId: ID!, input: GameScoreInput!): AddGameScorePayload!
+  updateGameScore(id: ID!, input: GameScoreInput!): UpdateGameScorePayload!
+  removeGameAction(id: ID!): RemoveGameActionPayload!
+}
+
+type CreateTeamPayload {
+  team: Team!
+}
+
+type UpdateTeamPayload {
+  team: Team!
+}
+
+type CreateGamePayload {
+  game: Game!
+}
+
+type UpdateGamePayload {
+  game: Game!
+}
+
+type AddGameScorePayload {
+  game: Game!
+  action: GameScoreAction!
+}
+
+type UpdateGameScorePayload {
+  game: Game!
+  action: GameScoreAction!
+}
+
+type RemoveGameActionPayload {
+  game: Game!
+  success: Boolean!
+}
+
+type Query {
+  game(id: ID!): Game
+  team(id: ID!): Team
+}
+
+type GameConnection {
+  nodes: [Game!]!
+  edges: [GameEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type GameEdge {
+  node: Game!
+  cursor: String!
+}
+
+enum GameStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Sport {
+  BASEBALL
+  BASKETBALL
+  DISC_GOLF
+  FOOTBALL
+  GOLF
+  HOCKEY
+  KICKBALL
+  PICKLEBALL
+  SOCCER
+  SOFTBALL
+  TENNIS
+  ULTIMATE
+  VOLLEYBALL
+}
+
+type Team {
+  id: ID!
+  name: String!
+  members: [User]!
+}
+
+type User {
+  id: ID!
+  teams: [Team]!
+  games: [Game]!
+}

@@ -8,7 +8,7 @@ import { setLogVerbosity } from "@apollo/client/core";
 import { persistCache, MMKVWrapper } from "apollo3-cache-persist";
 import { MMKV, Mode } from "react-native-mmkv";
 
-import { offsetLimitPagination } from "~/lib/offset-limit-pagination";
+import { cursorPagination } from "~/lib/cursor-pagination";
 
 import { useAppReady } from "~/context/app";
 
@@ -27,8 +27,8 @@ const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
     Query: {
       fields: {
-        locations: offsetLimitPagination(["query", "region", "sports"]),
-        games: offsetLimitPagination([
+        locations: cursorPagination(["query", "region", "sports"]),
+        games: cursorPagination([
           "gameState",
           "locationId",
           "sport",

@@ -21,9 +21,9 @@ export function offsetLimitPagination<T = Reference>(
 ): FieldPolicy<PaginatedResponse<T>> {
   return {
     keyArgs,
-    merge(existing, incoming, { args }) {
+    merge(existing, incoming, { args }): PaginatedResponse<T> {
       if (!incoming) {
-        return existing;
+        return existing || { nodes: [], hasMore: false, totalCount: 0 };
       }
 
       const existingNodes = existing?.nodes || [];

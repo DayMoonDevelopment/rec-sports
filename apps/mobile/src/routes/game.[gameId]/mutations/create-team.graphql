@@ -1,0 +1,11 @@
+mutation CreateTeam($input: CreateTeamInput!) {
+  createTeam(input: $input) {
+    team {
+      id
+      name
+      members {
+        id
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ export function GameMeta() {
   return (
     <View className="flex-row items-center">
       <Text className="text-sm text-gray-500 capitalize mr-2">
-        {game.gameState.replace("_", " ")}
+        {game.status.replace("_", " ")}
       </Text>
       {game.location && (
         <Text className="text-sm text-gray-500">• {game.location.name}</Text>

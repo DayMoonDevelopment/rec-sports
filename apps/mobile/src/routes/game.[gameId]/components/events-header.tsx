@@ -7,7 +7,7 @@ export function EventsHeader() {
     fetchPolicy: "cache-only",
   });
 
-  const events = data?.game?.events || [];
+  const events = data?.game?.actions?.edges?.map((edge) => edge.node) || [];
 
   return (
     <View className="px-4 py-3 bg-white border-b border-gray-200">

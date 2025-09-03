@@ -35,12 +35,23 @@ export function LiveScoreboard() {
       <GameStateBadge />
 
       {/* Score Display */}
-      <View className="flex-row items-center justify-between mb-4">
-        <TeamScoreCard teamIndex={1} scoreColor="text-blue-600" />
-
-        <Text className="text-2xl font-light text-gray-400 mx-4">-</Text>
-
-        <TeamScoreCard teamIndex={2} scoreColor="text-red-600" />
+      <View className={`${game.teams.length <= 2 ? 'flex-row items-center justify-between' : 'flex-wrap justify-center'} mb-4`}>
+        {game.teams.map((team, index) => {
+          const colors = ["text-blue-600", "text-red-600", "text-green-600", "text-purple-600"];
+          const scoreColor = colors[index] || "text-gray-600";
+          
+          return (
+            <View key={team.id} className="flex-row items-center">
+              <TeamScoreCard 
+                teamIndex={(index + 1) as 1 | 2} 
+                scoreColor={scoreColor} 
+              />
+              {index < game.teams.length - 1 && game.teams.length <= 2 && (
+                <Text className="text-2xl font-light text-gray-400 mx-4">-</Text>
+              )}
+            </View>
+          );
+        })}
       </View>
 
       {/* Game Info */}

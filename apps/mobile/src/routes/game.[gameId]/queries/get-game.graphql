@@ -1,41 +1,32 @@
 fragment TeamNode on Team {
   id
   name
-  teamType
-  sportTags
+  members {
+    id
+  }
 }
 
-fragment GameEventNode on GameEvent {
+fragment GameActionNode on GameScoreAction {
   id
-  eventType
-  eventKey
-  points
-  periodNumber
-  periodName
   occurredAt
+  occurredBy {
+    id
+  }
   team {
     ...TeamNode
   }
+  value
+  key
 }
 
 fragment GameNode on Game {
   id
   sport
-  gameState
+  status
   scheduledAt
   startedAt
-  completedAt
-  team1Score
-  team2Score
-  createdAt
-  updatedAt
-  team1 {
-    ...TeamNode
-  }
-  team2 {
-    ...TeamNode
-  }
-  winnerTeam {
+  endedAt
+  teams {
     ...TeamNode
   }
   location {
@@ -53,12 +44,23 @@ fragment GameNode on Game {
       longitude
     }
   }
-  events {
-    ...GameEventNode
+  actions(first: 20) {
+    edges {
+      node {
+        ...GameActionNode
+      }
+      cursor
+    }
+
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
   }
 }
 
-query GetGame($id: String!) {
+query GetGame($id: ID!) {
   game(id: $id) {
     ...GameNode
   }

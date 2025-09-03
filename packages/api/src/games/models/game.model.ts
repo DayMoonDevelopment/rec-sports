@@ -1,9 +1,11 @@
-import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { IsArray, IsNotEmpty, IsOptional } from 'class-validator';
 
+import { Sport } from '../../common/enums/sport.enum';
 import { Location } from '../../locations/models/location.model';
-import { GameState } from '../enums/game-state.enum';
-import { Team } from './team.model';
+import { Team } from '../../teams/models/team.model';
+import { GameActionsConnection } from '../actions/models/game-actions-connection.model';
+import { GameStatus } from '../enums/game-status.enum';
 
 @ObjectType()
 export class Game {
@@ -11,21 +13,21 @@ export class Game {
   @IsNotEmpty()
   id: string;
 
-  @Field(() => Team, { nullable: true })
+  @Field(() => Location, { nullable: true })
   @IsOptional()
-  team1?: Team;
+  location?: Location;
 
-  @Field(() => Team, { nullable: true })
-  @IsOptional()
-  team2?: Team;
-
-  @Field()
+  @Field(() => Sport)
   @IsNotEmpty()
-  sport: string;
+  sport: Sport;
 
-  @Field(() => GameState)
+  @Field(() => [Team])
+  @IsArray()
+  teams: Team[];
+
+  @Field(() => GameStatus)
   @IsNotEmpty()
-  gameState: GameState;
+  status: GameStatus;
 
   @Field({ nullable: true })
   @IsOptional()
@@ -37,25 +39,8 @@ export class Game {
 
   @Field({ nullable: true })
   @IsOptional()
-  completedAt?: Date;
+  endedAt?: Date;
 
-  @Field(() => Location, { nullable: true })
-  @IsOptional()
-  location?: Location;
-
-  @Field(() => Int)
-  team1Score: number;
-
-  @Field(() => Int)
-  team2Score: number;
-
-  @Field(() => Team, { nullable: true })
-  @IsOptional()
-  winnerTeam?: Team;
-
-  @Field()
-  createdAt: Date;
-
-  @Field()
-  updatedAt: Date;
+  @Field(() => GameActionsConnection)
+  actions: GameActionsConnection;
 }

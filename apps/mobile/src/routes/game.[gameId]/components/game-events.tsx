@@ -7,10 +7,15 @@ import { GameEventItem } from "./game-event-item";
 
 export function GameEvents() {
   const { data } = useGame({ fetchPolicy: "cache-only" });
-  const events = data?.game?.events || [];
+  const events = data?.game?.actions?.edges?.map((edge) => edge.node) || [];
 
   const renderEvent = ({ item }: { item: (typeof events)[0] }) => (
-    <GameEventItem event={item} />
+    <GameEventItem
+      event={{
+        ...item,
+        occurredAt: String(item.occurredAt),
+      }}
+    />
   );
 
   return (

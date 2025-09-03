@@ -19,14 +19,18 @@ fragment LocationNode on Location {
 query SearchLocations(
   $query: String
   $region: Region
-  $offset: Int
-  $limit: Int
+  $first: Int
+  $after: String
 ) {
-  locations(query: $query, region: $region, offset: $offset, limit: $limit) {
+  locations(query: $query, region: $region, first: $first, after: $after) {
     nodes {
       ...LocationNode
     }
     hasMore
     totalCount
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
   }
 }

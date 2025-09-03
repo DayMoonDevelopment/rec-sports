@@ -16,10 +16,16 @@ fragment LocationNode on Location {
   sports
 }
 
-query GetRecommendedLocations($region: Region, $limit: Int) {
-  locations(region: $region, limit: $limit) {
+query GetRecommendedLocations($region: Region, $first: Int, $after: String) {
+  locations(region: $region, first: $first, after: $after) {
     nodes {
       ...LocationNode
+    }
+    totalCount
+    hasMore
+    pageInfo {
+      endCursor
+      hasNextPage
     }
   }
 }

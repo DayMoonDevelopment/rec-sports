@@ -95,14 +95,27 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       }
     : undefined;
 
-  const { data, loading, error } = useQuery(GetSearchLocationsDocument, {
+  const { data, loading, error, fetchMore } = useQuery(GetSearchLocationsDocument, {
     variables: {
       query: searchQuery,
       region: searchRegion,
-      limit: 100,
+      first: 20,
     },
     skip: !searchQuery.trim(),
   });
+
+  const loadMore = () => {
+    const endCursor = data?.locations?.pageInfo?.endCursor;
+    const hasNextPage = data?.locations?.pageInfo?.hasNextPage;
+
+    if (hasNextPage && endCursor && !loading) {
+      fetchMore({
+        variables: {
+          after: endCursor,
+        },
+      });
+    }
+  };
 
   const searchResults = data?.locations.nodes || [];
 
@@ -183,6 +196,15 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loading && searchResults.length > 0 ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" className="text-primary" />
+            </View>
+          ) : null
+        }
       />
     </View>
   );

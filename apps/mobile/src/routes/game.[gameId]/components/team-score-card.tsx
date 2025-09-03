@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { useMutation } from "@apollo/client";
 
-import { TeamType, GameState } from "~/gql/types";
+import { GameStatus } from "~/gql/types";
 
 import { PlusSmallIcon } from "~/icons/plus-small";
 
@@ -9,17 +9,17 @@ import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 
 import { useGame } from "../use-game.hook";
 
-import { CreateGameEventDocument } from "../mutations/create-game-event.generated";
+import { AddGameScoreDocument } from "../mutations/create-game-event.generated";
 
 interface TeamScoreCardProps {
-  teamIndex: 1 | 2;
+  teamIndex: 1 | 2; // Keep for backward compatibility but will be deprecated
   scoreColor: string;
 }
 
 export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   const { data } = useGame();
-  const [createGameEvent, { loading: isAddingScore }] = useMutation(
-    CreateGameEventDocument,
+  const [addGameScore, { loading: isAddingScore }] = useMutation(
+    AddGameScoreDocument,
     {
       refetchQueries: ["GetGame"],
       awaitRefetchQueries: false,
@@ -31,22 +31,39 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
   if (!game) return null;
 
   const gameId = game.id;
-  const scores = { team1Score: game.team1Score, team2Score: game.team2Score };
-  const team = teamIndex === 1 ? game.team1 : game.team2;
-  const score = teamIndex === 1 ? scores.team1Score : scores.team2Score;
-  const isLive = game.gameState === GameState.InProgress;
-  const isCompleted = game.gameState === GameState.Completed;
+  const team = game.teams[teamIndex - 1]; // teamIndex is 1-based, array is 0-based
+  const isLive = game.status === GameStatus.InProgress;
+  const isCompleted = game.status === GameStatus.Completed;
 
-  const getTeamDisplayName = (team: typeof game.team1, fallback: string) => {
+  // If no team exists for this index, don't render
+  if (!team) return null;
+
+  // Calculate team score from game actions
+  const teamScore = (game.actions.edges?.map((edge) => edge.node) || [])
+    .filter(
+      (action: any) =>
+        action.__typename === "GameScoreAction" && action.team?.id === team.id,
+    )
+    .reduce((total: number, action: any) => total + (action.value || 0), 0);
+
+  const getTeamDisplayName = (team: any, fallback: string) => {
     if (!team) return fallback;
-    return (
-      team.name || (team.teamType === TeamType.Individual ? "Player" : "Team")
-    );
+    return team.name || fallback;
   };
 
   const getWinnerStyles = () => {
-    if (!isCompleted || !game.winnerTeam) return "";
-    const isWinner = game.winnerTeam?.id === team?.id;
+    if (!isCompleted) return "";
+    // For now, we'll determine winner by highest score
+    const allTeamScores = game.teams.map((t) => {
+      return (game.actions.edges?.map((edge) => edge.node) || [])
+        .filter(
+          (action: any) =>
+            action.__typename === "GameScoreAction" && action.team?.id === t.id,
+        )
+        .reduce((total: number, action: any) => total + (action.value || 0), 0);
+    });
+    const maxScore = Math.max(...allTeamScores);
+    const isWinner = teamScore === maxScore && teamScore > 0;
     return isWinner ? "text-yellow-600" : "text-gray-600";
   };
 
@@ -54,14 +71,13 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
     if (!team?.id) return;
 
     try {
-      await createGameEvent({
+      await addGameScore({
         variables: {
+          gameId,
           input: {
-            gameId,
-            teamId: team.id,
-            eventType: "score",
-            points: 1,
-            description: "Score +1",
+            key: "score",
+            value: 1,
+            occurredByTeamMemberId: team.members?.[0]?.id || "current-user-id", // This should come from auth context
           },
         },
       });
@@ -75,10 +91,10 @@ export function TeamScoreCard({ teamIndex, scoreColor }: TeamScoreCardProps) {
       <Text
         className={`text-lg font-medium mb-1 ${getWinnerStyles() || "text-gray-900"}`}
       >
-        {getTeamDisplayName(team, `Team ${teamIndex}`)}
+        {getTeamDisplayName(team, team?.name || `Team ${teamIndex}`)}
       </Text>
       <Text className={`text-4xl font-bold ${getWinnerStyles() || scoreColor}`}>
-        {score}
+        {teamScore}
       </Text>
 
       <Pressable

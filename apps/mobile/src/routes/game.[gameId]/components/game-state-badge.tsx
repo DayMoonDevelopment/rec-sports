@@ -1,64 +1,59 @@
 import { View, Text } from "react-native";
 import { cva } from "class-variance-authority";
-import { GameState } from "~/gql/types";
+import { GameStatus } from "~/gql/types";
 import { useGame } from "../use-game.hook";
 
-// Badge container styles using GameState as variant key
+// Badge container styles using GameStatus as variant key
 const badgeVariants = cva("flex-row items-center px-2 py-1 rounded-full", {
   variants: {
     state: {
-      [GameState.InProgress]: "bg-green-100",
-      [GameState.Completed]: "bg-gray-100",
-      [GameState.Scheduled]: "bg-blue-100",
-      [GameState.Cancelled]: "bg-red-100",
+      [GameStatus.InProgress]: "bg-green-100",
+      [GameStatus.Completed]: "bg-gray-100",
+      [GameStatus.Upcoming]: "bg-blue-100",
     },
   },
   defaultVariants: {
-    state: GameState.Scheduled,
+    state: GameStatus.Upcoming,
   },
 });
 
-// Dot indicator styles using GameState as variant key
+// Dot indicator styles using GameStatus as variant key
 const dotVariants = cva("w-2 h-2 rounded-full mr-2", {
   variants: {
     state: {
-      [GameState.InProgress]: "bg-green-500",
-      [GameState.Completed]: "bg-gray-400",
-      [GameState.Scheduled]: "bg-blue-500",
-      [GameState.Cancelled]: "bg-red-500",
+      [GameStatus.InProgress]: "bg-green-500",
+      [GameStatus.Completed]: "bg-gray-400",
+      [GameStatus.Upcoming]: "bg-blue-500",
     },
   },
   defaultVariants: {
-    state: GameState.Scheduled,
+    state: GameStatus.Upcoming,
   },
 });
 
-// Text styles using GameState as variant key
+// Text styles using GameStatus as variant key
 const textVariants = cva("text-xs font-medium", {
   variants: {
     state: {
-      [GameState.InProgress]: "text-green-700",
-      [GameState.Completed]: "text-gray-600",
-      [GameState.Scheduled]: "text-blue-700",
-      [GameState.Cancelled]: "text-red-700",
+      [GameStatus.InProgress]: "text-green-700",
+      [GameStatus.Completed]: "text-gray-600",
+      [GameStatus.Upcoming]: "text-blue-700",
     },
   },
   defaultVariants: {
-    state: GameState.Scheduled,
+    state: GameStatus.Upcoming,
   },
 });
 
 // Simple function to get label text
-function labelText(gameState: GameState, isConnected: boolean = true) {
-  switch (gameState) {
-    case GameState.InProgress:
+function labelText(gameStatus: GameStatus, isConnected: boolean = true) {
+  switch (gameStatus) {
+    case GameStatus.InProgress:
       return isConnected ? "LIVE" : "LIVE (OFFLINE)";
-    case GameState.Completed:
+    case GameStatus.Completed:
       return "FINAL";
-    case GameState.Scheduled:
+    case GameStatus.Upcoming:
       return "UPCOMING";
-    case GameState.Cancelled:
-      return "CANCELLED";
     default:
       return "UNKNOWN";
   }
@@ -72,13 +67,13 @@ export function GameStateBadge() {
 
   // For now, assume we're connected (we can add realtime connection status later)
   const isRealtimeConnected = true;
-  const text = labelText(game.gameState, isRealtimeConnected);
+  const text = labelText(game.status, isRealtimeConnected);
 
   return (
     <View className="flex-row items-center justify-center mb-4">
-      <View className={badgeVariants({ state: game.gameState })}>
-        <View className={dotVariants({ state: game.gameState })} />
-        <Text className={textVariants({ state: game.gameState })}>{text}</Text>
+      <View className={badgeVariants({ state: game.status })}>
+        <View className={dotVariants({ state: game.status })} />
+        <Text className={textVariants({ state: game.status })}>{text}</Text>
       </View>
     </View>
   );

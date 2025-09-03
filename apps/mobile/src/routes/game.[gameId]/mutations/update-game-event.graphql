@@ -1,15 +1,17 @@
-mutation UpdateGameEvent($input: UpdateGameEventInput!) {
-  updateGameEvent(input: $input) {
-    id
-    gameId
-    eventType
-    points
-    occurredAt
-    createdAt
-    team {
+mutation UpdateGameScore($id: ID!, $input: GameScoreInput!) {
+  updateGameScore(id: $id, input: $input) {
+    action {
       id
-      name
-      teamType
+      occurredAt
+      occurredBy {
+        id
+      }
+      team {
+        id
+        name
+      }
+      value
+      key
     }
   }
 }

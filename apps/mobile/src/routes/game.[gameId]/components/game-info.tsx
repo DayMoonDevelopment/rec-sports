@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { GameState } from "~/gql/types";
+import { GameStatus } from "~/gql/types";
 
 import { useGame } from "../use-game.hook";
 
@@ -13,7 +13,7 @@ export function GameInfo() {
     <View className="items-center">
       {game.scheduledAt ? (
         <Text className="text-sm text-gray-500 mb-1">
-          {game.gameState === GameState.Scheduled ? "Scheduled: " : "Started: "}
+          {game.status === GameStatus.Upcoming ? "Scheduled: " : "Started: "}
           {new Date(game.scheduledAt as string).toLocaleDateString()} at{" "}
           {new Date(game.scheduledAt as string).toLocaleTimeString([], {
             hour: "2-digit",
