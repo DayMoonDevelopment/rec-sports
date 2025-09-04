@@ -29,16 +29,6 @@ const configModule = ConfigModule.forRoot({
       sortSchema: true,
       debug: true,
       includeStacktraceInErrorResponses: true,
-      formatError: (error) => {
-        console.error('GraphQL Error:', {
-          message: error.message,
-          code: error.extensions?.code,
-          path: error.path,
-          locations: error.locations,
-          stack: error.stack,
-        });
-        return error;
-      },
     }),
   ],
 })

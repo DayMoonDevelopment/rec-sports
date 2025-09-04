@@ -1,9 +1,5 @@
-mutation AddGameScore($gameId: ID!, $input: GameScoreInput!) {
-  addGameScore(gameId: $gameId, input: $input) {
-    game {
-      id
-      status
-    }
+mutation UpdateGameScore($id: ID!, $input: GameScoreInput!) {
+  updateGameScore(id: $id, input: $input) {
     action {
       id
       occurredAt

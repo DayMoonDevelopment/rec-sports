@@ -100,7 +100,8 @@ INSERT INTO game_actions (
     point_value,
     details,
     occurred_at,
-    occurred_by
+    occurred_by_user_id,
+    occurred_to_team_id
 ) VALUES
 -- Game start
 (
@@ -109,10 +110,11 @@ INSERT INTO game_actions (
     NULL,
     '{"message": "Game started"}',
     NOW() - INTERVAL '30 minutes',
-    (SELECT tm.id FROM team_members tm
+    (SELECT tm.user_id FROM team_members tm
      JOIN game_teams gt ON tm.team_id = gt.team_id
      WHERE gt.game_id = (SELECT id FROM games WHERE game_state = 'in_progress' LIMIT 1)
-     LIMIT 1)
+     LIMIT 1),
+    NULL
 ),
 -- Some score actions for Thunder Hawks
 (
@@ -121,9 +123,8 @@ INSERT INTO game_actions (
     5,
     '{"description": "Team scored"}',
     NOW() - INTERVAL '25 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Thunder Hawks' LIMIT 1)
+    NULL,
+    get_team_id('Thunder Hawks')
 ),
 (
     (SELECT id FROM games WHERE game_state = 'in_progress' LIMIT 1),
@@ -131,9 +132,8 @@ INSERT INTO game_actions (
     3,
     '{"description": "Team scored"}',
     NOW() - INTERVAL '20 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Thunder Hawks' LIMIT 1)
+    NULL,
+    get_team_id('Thunder Hawks')
 ),
 -- Some score actions for Rockets
 (
@@ -142,9 +142,8 @@ INSERT INTO game_actions (
     4,
     '{"description": "Team scored"}',
     NOW() - INTERVAL '18 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Rockets' LIMIT 1)
+    NULL,
+    get_team_id('Rockets')
 ),
 -- Some score actions for Booger Beans
 (
@@ -153,9 +152,8 @@ INSERT INTO game_actions (
     2,
     '{"description": "Team scored"}',
     NOW() - INTERVAL '15 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Booger Beans' LIMIT 1)
+    NULL,
+    get_team_id('Booger Beans')
 );
 
 -- Game actions for the completed game
@@ -165,7 +163,8 @@ INSERT INTO game_actions (
     point_value,
     details,
     occurred_at,
-    occurred_by
+    occurred_by_user_id,
+    occurred_to_team_id
 ) VALUES
 -- Game start
 (
@@ -174,10 +173,11 @@ INSERT INTO game_actions (
     NULL,
     '{"message": "Game started"}',
     NOW() - INTERVAL '2 hours',
-    (SELECT tm.id FROM team_members tm
+    (SELECT tm.user_id FROM team_members tm
      JOIN game_teams gt ON tm.team_id = gt.team_id
      WHERE gt.game_id = (SELECT id FROM games WHERE game_state = 'completed' LIMIT 1)
-     LIMIT 1)
+     LIMIT 1),
+    NULL
 ),
 -- Multiple score actions throughout the game
 (
@@ -186,9 +186,8 @@ INSERT INTO game_actions (
     25,
     '{"description": "Thunder Hawks scored"}',
     NOW() - INTERVAL '1 hour 30 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Thunder Hawks' LIMIT 1)
+    NULL,
+    get_team_id('Thunder Hawks')
 ),
 (
     (SELECT id FROM games WHERE game_state = 'completed' LIMIT 1),
@@ -196,9 +195,8 @@ INSERT INTO game_actions (
     20,
     '{"description": "Rockets scored"}',
     NOW() - INTERVAL '1 hour 25 minutes',
-    (SELECT tm.id FROM team_members tm
-     JOIN teams t ON tm.team_id = t.id
-     WHERE t.name = 'Rockets' LIMIT 1)
+    NULL,
+    get_team_id('Rockets')
 ),
 -- Game end
 (
@@ -207,8 +205,9 @@ INSERT INTO game_actions (
     NULL,
     '{"message": "Game ended", "final_scores": {"Thunder Hawks": 95, "Rockets": 87}}',
     NOW() - INTERVAL '10 minutes',
-    (SELECT tm.id FROM team_members tm
+    (SELECT tm.user_id FROM team_members tm
      JOIN game_teams gt ON tm.team_id = gt.team_id
      WHERE gt.game_id = (SELECT id FROM games WHERE game_state = 'completed' LIMIT 1)
-     LIMIT 1)
+     LIMIT 1),
+    NULL
 );

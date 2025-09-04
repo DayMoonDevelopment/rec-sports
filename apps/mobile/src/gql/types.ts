@@ -105,16 +105,17 @@ export type GameActionsConnection = {
 export type GameScoreAction = GameAction & {
   __typename: 'GameScoreAction';
   id: Scalars['ID']['output'];
-  key: Scalars['String']['output'];
+  key: Maybe<Scalars['String']['output']>;
   occurredAt: Scalars['DateTime']['output'];
-  occurredBy: User;
-  team: Team;
+  occurredByUser: Maybe<User>;
+  occurredToTeam: Team;
   value: Scalars['Float']['output'];
 };
 
 export type GameScoreInput = {
-  key: Scalars['String']['input'];
-  occurredByTeamMemberId: Scalars['ID']['input'];
+  key?: InputMaybe<Scalars['String']['input']>;
+  occurredByUserId?: InputMaybe<Scalars['ID']['input']>;
+  occurredToTeamId: Scalars['ID']['input'];
   value: Scalars['Float']['input'];
 };
 
@@ -128,7 +129,7 @@ export enum GameStatus {
 export type GameTeam = {
   __typename: 'GameTeam';
   id: Scalars['ID']['output'];
-  score: Maybe<Scalars['Int']['output']>;
+  score: Scalars['Int']['output'];
   team: Team;
 };
 

@@ -1,5 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber } from 'class-validator';
 
 import { Team } from '../../teams/models/team.model';
 
@@ -12,8 +12,8 @@ export class GameTeam {
   @Field(() => Team)
   team: Team;
 
-  @Field(() => Int, { nullable: true })
-  @IsOptional()
+  @Field(() => Int)
+  @IsNotEmpty()
   @IsNumber()
-  score?: number;
+  score: number;
 }

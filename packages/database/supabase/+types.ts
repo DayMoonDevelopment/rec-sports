@@ -42,7 +42,8 @@ export type Database = {
           game_id: string
           id: string
           occurred_at: string | null
-          occurred_by: string | null
+          occurred_by_user_id: string | null
+          occurred_to_team_id: string | null
           point_value: number | null
           type: string
           updated_at: string | null
@@ -55,7 +56,8 @@ export type Database = {
           game_id: string
           id?: string
           occurred_at?: string | null
-          occurred_by?: string | null
+          occurred_by_user_id?: string | null
+          occurred_to_team_id?: string | null
           point_value?: number | null
           type: string
           updated_at?: string | null
@@ -68,7 +70,8 @@ export type Database = {
           game_id?: string
           id?: string
           occurred_at?: string | null
-          occurred_by?: string | null
+          occurred_by_user_id?: string | null
+          occurred_to_team_id?: string | null
           point_value?: number | null
           type?: string
           updated_at?: string | null
@@ -83,10 +86,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "game_actions_occurred_by_fkey"
-            columns: ["occurred_by"]
+            foreignKeyName: "game_actions_occurred_to_team_id_fkey"
+            columns: ["occurred_to_team_id"]
             isOneToOne: false
-            referencedRelation: "team_members"
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -94,33 +97,27 @@ export type Database = {
       game_teams: {
         Row: {
           created_at: string | null
-          created_up: string | null
           game_id: string
           id: string
           score: number | null
           team_id: string
           updated_at: string | null
-          updated_by: string | null
         }
         Insert: {
           created_at?: string | null
-          created_up?: string | null
           game_id: string
           id?: string
           score?: number | null
           team_id: string
           updated_at?: string | null
-          updated_by?: string | null
         }
         Update: {
           created_at?: string | null
-          created_up?: string | null
           game_id?: string
           id?: string
           score?: number | null
           team_id?: string
           updated_at?: string | null
-          updated_by?: string | null
         }
         Relationships: [
           {
@@ -427,6 +424,10 @@ export type Database = {
       show_trgm: {
         Args: { "": string }
         Returns: string[]
+      }
+      update_game_team_score: {
+        Args: { p_game_id: string; p_team_id: string }
+        Returns: undefined
       }
       user_is_in_game: {
         Args: { game_id_param: string }

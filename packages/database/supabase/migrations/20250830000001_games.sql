@@ -49,9 +49,7 @@ CREATE TABLE game_teams (
     team_id text NOT NULL REFERENCES teams ON DELETE CASCADE,
     score integer DEFAULT 0,
     created_at timestamp with time zone DEFAULT now(),
-    created_up uuid NULL REFERENCES auth.users ON DELETE SET NULL,
-    updated_at timestamp with time zone DEFAULT now(),
-    updated_by uuid NULL REFERENCES auth.users ON DELETE SET NULL
+    updated_at timestamp with time zone DEFAULT now()
 );
 COMMENT ON TABLE game_teams IS 'Allows any number of teams to be represented as participants of a game. Sport-specific limits should be handled by API business logic';
 COMMENT ON COLUMN game_teams.score IS 'Aggregated from game_actions as a part of the heavy-write, light-read principle for data storage';
@@ -62,8 +60,9 @@ CREATE TABLE game_actions (
     type text NOT NULL CHECK (type IN ('GAME_START', 'GAME_END', 'SCORE')),
     point_value numeric NULL, -- Points for SCORE events, NULL for GAME_START/GAME_END
     details jsonb NULL, -- Additional event details (e.g., period info, descriptions)
-    occurred_at timestamp with time zone DEFAULT now(),
-    occurred_by text NULL REFERENCES team_members ON DELETE SET NULL,
+    occurred_at timestamp with time zone DEFAULT NOW(),
+    occurred_by_user_id uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    occurred_to_team_id text NULL REFERENCES teams ON DELETE SET NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_by uuid NULL REFERENCES auth.users ON DELETE SET NULL,
     updated_at timestamp with time zone DEFAULT now(),
@@ -72,7 +71,8 @@ CREATE TABLE game_actions (
 COMMENT ON TABLE game_actions IS 'Determines the flow of the gameplay as is tracked by users in realtime';
 COMMENT ON COLUMN game_actions.type IS '[GAME_START/GAME_END] manages game timers. [SCORE] manages team scores';
 COMMENT ON COLUMN game_actions.point_value IS 'Action-specific column for the SCORE action.';
-COMMENT ON COLUMN game_actions.occurred_by IS 'Team can be inferred by the player who triggered the action.';
+COMMENT ON COLUMN game_actions.occurred_by_user_id IS 'User who triggered the action.';
+COMMENT ON COLUMN game_actions.occurred_to_team_id IS 'Optional team that the action is associated with (e.g., for SCORE events).';
 
 --
 -- Helper functions for RLS policies
@@ -114,7 +114,15 @@ CREATE INDEX game_actions_game_idx ON game_actions(game_id);
 CREATE INDEX game_actions_game_occurred_idx ON game_actions(game_id, occurred_at);
 CREATE INDEX game_actions_type_idx ON game_actions(type);
 CREATE INDEX game_actions_occurred_idx ON game_actions(occurred_at);
-CREATE INDEX game_actions_occurred_by_idx ON game_actions(occurred_by);
+CREATE INDEX game_actions_occurred_by_user_idx ON game_actions(occurred_by_user_id);
+CREATE INDEX game_actions_occurred_to_team_idx ON game_actions(occurred_to_team_id);
+
+-- Performance optimization index for score aggregation queries
+CREATE INDEX game_actions_score_lookup_idx
+    ON game_actions(game_id, occurred_to_team_id, type)
+    WHERE type = 'SCORE';
+COMMENT ON INDEX game_actions_score_lookup_idx IS
+'Optimizes score aggregation queries by covering the exact columns used for score calculations with SCORE type filter.';
 
 --
 -- Table constraints
@@ -203,7 +211,7 @@ CREATE TRIGGER update_games_updated_at
 CREATE TRIGGER update_game_teams_updated_at
     BEFORE UPDATE ON game_teams
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_by_columns();
+    EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_game_actions_updated_at
     BEFORE UPDATE ON game_actions

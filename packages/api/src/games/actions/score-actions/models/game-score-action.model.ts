@@ -14,19 +14,17 @@ export class GameScoreAction implements GameAction {
   @IsNotEmpty()
   occurredAt: Date;
 
-  @Field(() => User)
-  @IsNotEmpty()
-  occurredBy: User;
+  @Field(() => User, { nullable: true })
+  occurredByUser?: User;
 
   @Field(() => Team)
   @IsNotEmpty()
-  team: Team;
+  occurredToTeam: Team;
 
   @Field(() => Float)
   @IsNotEmpty()
   value: number;
 
-  @Field()
-  @IsNotEmpty()
-  key: string;
+  @Field({ nullable: true })
+  key?: string;
 }

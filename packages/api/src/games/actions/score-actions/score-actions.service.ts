@@ -19,6 +19,43 @@ export class ScoreActionsService {
     private readonly teamsService: TeamsService,
   ) {}
 
+  /**
+   * Recalculates and updates the score for a specific team in a game
+   * based on all SCORE-type actions in the game_actions table.
+   *
+   * @param gameId - The game ID to update scores for
+   * @param teamId - The team ID to update the score for
+   */
+  private async recalculateTeamScore(
+    gameId: string,
+    teamId: string,
+  ): Promise<void> {
+    const { client } = this.databaseService;
+
+    // Calculate the total score for the team from all SCORE actions
+    const scoreResult = await client
+      .selectFrom('game_actions')
+      .select([(eb) => eb.fn.sum('point_value').as('total_score')])
+      .where('game_id', '=', gameId)
+      .where('occurred_to_team_id', '=', teamId)
+      .where('type', '=', 'SCORE')
+      .where('point_value', 'is not', null)
+      .executeTakeFirst();
+
+    const totalScore = Number(scoreResult?.total_score || 0);
+
+    // Update the team's score in the game_teams table
+    await client
+      .updateTable('game_teams')
+      .set({
+        score: totalScore,
+        updated_at: new Date().toISOString(),
+      })
+      .where('game_id', '=', gameId)
+      .where('team_id', '=', teamId)
+      .execute();
+  }
+
   async addGameScore(
     gameId: string,
     input: GameScoreInput,
@@ -29,13 +66,12 @@ export class ScoreActionsService {
       .insertInto('game_actions')
       .values({
         game_id: gameId,
-        occurred_by: input.occurredByTeamMemberId,
+        occurred_by_user_id: input.occurredByUserId || null,
+        occurred_to_team_id: input.occurredToTeamId,
         point_value: input.value,
         type: 'SCORE',
         occurred_at: new Date().toISOString(),
-        details: {
-          key: input.key,
-        },
+        details: input.key ? { key: input.key } : null,
       })
       .returning(['id'])
       .executeTakeFirstOrThrow();
@@ -45,6 +81,9 @@ export class ScoreActionsService {
     if (!action) {
       throw new Error('Failed to add game score');
     }
+
+    // Recalculate the team's score after adding the new score action
+    await this.recalculateTeamScore(gameId, input.occurredToTeamId);
 
     // Return minimal game object - let field resolver handle the rest
     const game = {
@@ -73,14 +112,27 @@ export class ScoreActionsService {
       throw new Error('Game action not found');
     }
 
+    // Get the current game_id and team_id before update
+    const currentActionData = await client
+      .selectFrom('game_actions')
+      .select(['game_id', 'occurred_to_team_id'])
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    if (!currentActionData) {
+      throw new Error('Game action data not found');
+    }
+
+    const oldTeamId = currentActionData.occurred_to_team_id;
+    const gameId = currentActionData.game_id;
+
     await client
       .updateTable('game_actions')
       .set({
-        occurred_by: input.occurredByTeamMemberId,
+        occurred_by_user_id: input.occurredByUserId || null,
+        occurred_to_team_id: input.occurredToTeamId,
         point_value: input.value,
-        details: {
-          key: input.key,
-        },
+        details: input.key ? { key: input.key } : null,
       })
       .where('id', '=', id)
       .execute();
@@ -89,6 +141,16 @@ export class ScoreActionsService {
 
     if (!action) {
       throw new Error('Failed to update game score');
+    }
+
+    // Recalculate scores for affected teams
+    if (oldTeamId && oldTeamId !== input.occurredToTeamId) {
+      // If team changed, recalculate both old and new team scores
+      await this.recalculateTeamScore(gameId, oldTeamId);
+      await this.recalculateTeamScore(gameId, input.occurredToTeamId);
+    } else if (input.occurredToTeamId) {
+      // If same team or no old team, just recalculate the current team
+      await this.recalculateTeamScore(gameId, input.occurredToTeamId);
     }
 
     return { action };
@@ -102,16 +164,28 @@ export class ScoreActionsService {
       throw new Error('Game action not found');
     }
 
-    // Get the game ID before deletion
+    // Get the game ID and team ID before deletion
     const gameData = await client
       .selectFrom('game_actions')
-      .select(['game_id'])
+      .select(['game_id', 'occurred_to_team_id'])
       .where('id', '=', id)
       .executeTakeFirst();
 
+    if (!gameData) {
+      throw new Error('Game action data not found');
+    }
+
     await client.deleteFrom('game_actions').where('id', '=', id).execute();
 
-    return { gameId: gameData?.game_id || '', success: true };
+    // Recalculate the team's score after removing the score action
+    if (gameData.occurred_to_team_id) {
+      await this.recalculateTeamScore(
+        gameData.game_id,
+        gameData.occurred_to_team_id,
+      );
+    }
+
+    return { gameId: gameData.game_id, success: true };
   }
 
   async findGameScoreActionById(id: string): Promise<GameScoreAction | null> {
@@ -119,14 +193,13 @@ export class ScoreActionsService {
 
     const result = await client
       .selectFrom('game_actions')
-      .leftJoin('team_members', 'team_members.id', 'game_actions.occurred_by')
-      .leftJoin('teams', 'teams.id', 'team_members.team_id')
+      .leftJoin('teams', 'teams.id', 'game_actions.occurred_to_team_id')
       .select([
         'game_actions.id',
         'game_actions.occurred_at',
         'game_actions.point_value as value',
-        'game_actions.type as key',
-        'team_members.user_id',
+        'game_actions.details',
+        'game_actions.occurred_by_user_id as user_id',
         'teams.id as team_id',
         'teams.name as team_name',
       ])
@@ -140,12 +213,17 @@ export class ScoreActionsService {
     const gameScoreAction = new GameScoreAction();
     gameScoreAction.id = result.id;
     gameScoreAction.occurredAt = new Date(result.occurred_at);
-    gameScoreAction.occurredBy = { id: result.user_id || '' };
-    gameScoreAction.team = result.team_id
+    gameScoreAction.occurredByUser = result.user_id
+      ? { id: result.user_id }
+      : undefined;
+    gameScoreAction.occurredToTeam = result.team_id
       ? { id: result.team_id, name: result.team_name || '', members: [] }
       : ({} as any);
     gameScoreAction.value = result.value || 0;
-    gameScoreAction.key = result.key || '';
+
+    // Extract key from details JSON if it exists
+    const details = result.details as any;
+    gameScoreAction.key = details?.key || undefined;
 
     return gameScoreAction;
   }

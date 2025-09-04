@@ -1,5 +1,3 @@
-import { View, Text } from "react-native";
-
 import { GameStatus } from "~/gql/types";
 import { CircleSmallIcon } from "~/icons/circle-small";
 

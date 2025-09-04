@@ -1,6 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
-import { useMutation } from "@apollo/client";
 
 import { CalendarIcon } from "~/icons/calendar";
 import { PlusSmallIcon } from "~/icons/plus-small";
@@ -10,62 +9,83 @@ import { GameStatus } from "~/gql/types";
 import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 
 import { useGame } from "../use-game.hook";
+import { useScore } from "../use-score.hook";
 import { TeamPreviewCard } from "./team-preview-card";
 import { GameStatusBadge } from "./game-status-badge";
-import { AddGameScoreDocument } from "../mutations/create-game-event.generated";
 
 import type { GameTeamNodeFragment } from "../queries/get-game.generated";
-
-function ItemSeparatorComponent() {
-  return <View className="size-4" />;
-}
+import { cn } from "~/lib/utils";
 
 export function MultiTeamScoreboard() {
-  const { data } = useGame({ fetchPolicy: "cache-only" });
   const [focusedTeam, setFocusedTeam] = useState<GameTeamNodeFragment | null>(
     null,
   );
-  const [addGameScore, { loading: isAddingScore }] = useMutation(
-    AddGameScoreDocument,
-    {
-      refetchQueries: ["GetGame"],
-      awaitRefetchQueries: false,
+
+  const { data } = useGame({
+    fetchPolicy: "cache-first",
+    onCompleted: (data) => {
+      if (!focusedTeam && data?.game?.teams && data.game.teams.length > 0) {
+        setFocusedTeam(data.game.teams[0]);
+      }
     },
-  );
+  });
+  const { addScore, loading: isAddingScore } = useScore();
+
   const game = data?.game;
+
+  // Set the first team as focused when component mounts or game data changes
+  React.useEffect(() => {
+    if (!focusedTeam && game?.teams && game.teams.length > 0) {
+      setFocusedTeam(game.teams[0]);
+    }
+  }, [game?.teams, focusedTeam]);
 
   if (!game) return null;
 
   const isLive = game.status === GameStatus.InProgress;
+  const teamsList = game.teams.filter(
+    (team) => team.team.id !== focusedTeam?.team.id,
+  );
 
   const handleAddScore = async () => {
-    if (!focusedTeam?.team?.id || !game?.id) return;
+    if (!focusedTeam?.team?.id) return;
 
     try {
-      await addGameScore({
-        variables: {
-          gameId: game.id,
-          input: {
-            key: "score",
-            value: 1,
-            occurredByTeamMemberId:
-              focusedTeam.team.members?.[0]?.id || "current-user-id",
-          },
-        },
+      await addScore({
+        teamId: focusedTeam.team.id,
+        value: 1,
       });
     } catch (error) {
       console.error("Failed to add score:", error);
     }
   };
 
+  function Item({ item: gameTeam }: { item: GameTeamNodeFragment }) {
+    return (
+      <View
+        key={gameTeam.team.id}
+        className={cn("p-1 flex-1 flex flex-row justify-space-between gap-2")}
+        style={{ maxWidth: "33%" }}
+      >
+        <TeamPreviewCard
+          score={gameTeam.score}
+          name={gameTeam.team.name}
+          onPress={() => setFocusedTeam(gameTeam)}
+        />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex flex-col gap-6">
-      <GameStatusBadge status={game.status} />
+    <View className="flex flex-col gap-6 py-6">
+      <View className="self-center">
+        <GameStatusBadge status={game.status} />
+      </View>
 
       {/* Focused Team Display */}
       {focusedTeam ? (
-        <View className="flex flex-row items-center gap-4">
-          <Text className="text-foreground text-5xl font-bold">{`${focusedTeam.score || 0}`}</Text>
+        <View className="flex flex-row items-center gap-4 px-4">
+          <Text className="text-foreground text-5xl font-bold">{`${focusedTeam.score}`}</Text>
           <Text
             numberOfLines={1}
             className="flex-1 text-foreground text-3xl"
@@ -86,26 +106,18 @@ export function MultiTeamScoreboard() {
       ) : null}
 
       {/* Team Previews Grid */}
-      <FlatList
-        data={game.teams.filter(
-          (team) => team.team.id !== focusedTeam?.team.id,
-        )}
-        horizontal={false}
-        numColumns={game.teams.length >= 3 ? 3 : 2}
-        keyExtractor={(gameTeam) => gameTeam.team.id}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-        renderItem={({ item: gameTeam, index }) => (
-          <TeamPreviewCard
-            score={gameTeam.score}
-            name={gameTeam.team.name}
-            onPress={() => setFocusedTeam(gameTeam)}
-          />
-        )}
-        contentContainerStyle={{ paddingBottom: 8 }}
-        scrollEnabled={false}
-        style={{ flexGrow: 0 }}
-        ItemSeparatorComponent={ItemSeparatorComponent}
-      />
+      <View className="max-h-64">
+        <FlatList
+          data={teamsList}
+          horizontal={false}
+          numColumns={3}
+          keyExtractor={(gameTeam) => gameTeam.team.id}
+          renderItem={Item}
+          contentContainerClassName="px-3"
+          scrollEnabled
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
 
       {/* Game Info */}
       {game.scheduledAt ? (

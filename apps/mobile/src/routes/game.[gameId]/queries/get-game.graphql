@@ -14,10 +14,10 @@ fragment GameTeamNode on GameTeam {
 fragment GameActionNode on GameScoreAction {
   id
   occurredAt
-  occurredBy {
+  occurredByUser {
     id
   }
-  team {
+  occurredToTeam {
     ...TeamNode
   }
   value

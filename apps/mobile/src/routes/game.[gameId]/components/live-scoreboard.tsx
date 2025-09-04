@@ -33,7 +33,7 @@ export function LiveScoreboard() {
   const hasMultipleTeams = game.teams.length >= 3;
 
   return (
-    <View className="px-4 py-6 bg-muted">
+    <View className="bg-muted">
       {hasMultipleTeams ? <MultiTeamScoreboard /> : <TwoTeamScoreboard />}
     </View>
   );
