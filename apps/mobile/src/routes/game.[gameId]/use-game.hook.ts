@@ -17,7 +17,9 @@ export function useGame(options: UseGameOptions = {}) {
   return useQuery(GetGameDocument, {
     ...options,
     variables: {
-      id: gameId,
+      id: gameId!,
     },
+    skip: !gameId,
+    errorPolicy: "all",
   });
 }

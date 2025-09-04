@@ -9,9 +9,11 @@ export { GameMeta } from "./game-meta";
 export { GameTitle } from "./game-title";
 
 // Scoreboard components
-export { GameInfo } from "./game-info";
-export { GameStateBadge } from "./game-state-badge";
+export { GameStatusBadge } from "./game-status-badge";
+export { MultiTeamScoreboard } from "./multi-team-scoreboard";
+export { TeamPreviewCard } from "./team-preview-card";
 export { TeamScoreCard } from "./team-score-card";
+export { TwoTeamScoreboard } from "./two-team-scoreboard";
 
 // Event components
 export { EventsHeader } from "./events-header";

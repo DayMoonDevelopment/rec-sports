@@ -137,16 +137,17 @@ export class ScoreActionsService {
       return null;
     }
 
-    return {
-      id: result.id,
-      occurredAt: new Date(result.occurred_at),
-      occurredBy: { id: result.user_id || '' },
-      team: result.team_id
-        ? { id: result.team_id, name: result.team_name || '', members: [] }
-        : ({} as any),
-      value: result.value || 0,
-      key: result.key || '',
-    };
+    const gameScoreAction = new GameScoreAction();
+    gameScoreAction.id = result.id;
+    gameScoreAction.occurredAt = new Date(result.occurred_at);
+    gameScoreAction.occurredBy = { id: result.user_id || '' };
+    gameScoreAction.team = result.team_id
+      ? { id: result.team_id, name: result.team_name || '', members: [] }
+      : ({} as any);
+    gameScoreAction.value = result.value || 0;
+    gameScoreAction.key = result.key || '';
+
+    return gameScoreAction;
   }
 
   async findGameById(id: string): Promise<Game | null> {

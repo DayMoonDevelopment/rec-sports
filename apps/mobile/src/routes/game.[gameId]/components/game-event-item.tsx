@@ -39,7 +39,9 @@ export function GameEventItem({ event }: GameEventItemProps) {
       .join(" ");
   };
 
-  const getTeamDisplayName = (team: { id: string; name?: string | null } | null | undefined) => {
+  const getTeamDisplayName = (
+    team: { id: string; name?: string | null } | null | undefined,
+  ) => {
     if (!team) return "Unknown Team";
     return team.name || `Team ${team.id.slice(-4)}`;
   };

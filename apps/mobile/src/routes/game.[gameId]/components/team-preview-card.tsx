@@ -14,7 +14,7 @@ export function TeamPreviewCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`flex-1 flex flex-row gap-2 items-center px-4 py-2 rounded-full border-1 border-border opacity-100 active:opacity-50 transition-opacity`}
+      className={`flex-1 flex flex-row gap-2 items-center px-4 py-2 rounded-full border border-border opacity-100 active:opacity-50 transition-opacity`}
     >
       <Text
         className={`text-lg font-bold text-foreground`}

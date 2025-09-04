@@ -1,9 +1,0 @@
-query GetTeam($id: ID!) {
-  team(id: $id) {
-    id
-    name
-    members {
-      id
-    }
-  }
-}

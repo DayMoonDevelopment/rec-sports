@@ -5,6 +5,7 @@ import { PageInfo } from '../../common/pagination/page-info.model';
 import { DatabaseService } from '../../database/database.service';
 import { GameActionEdge } from './models/game-action-edge.model';
 import { GameActionsConnection } from './models/game-actions-connection.model';
+import { GameScoreAction } from './score-actions/models/game-score-action.model';
 
 @Injectable()
 export class ActionsService {
@@ -31,6 +32,7 @@ export class ActionsService {
         'teams.name as team_name',
       ])
       .where('game_actions.game_id', '=', gameId)
+      .where('game_actions.type', '=', 'SCORE')
       .orderBy('game_actions.occurred_at', 'desc');
 
     if (after) {
@@ -50,24 +52,31 @@ export class ActionsService {
     const hasNextPage = results.length > first;
     const nodes = results.slice(0, first);
 
-    const edges: GameActionEdge[] = nodes.map((result) => ({
-      node: {
-        id: result.id,
-        occurredAt: new Date(result.occurred_at),
-        occurredBy: { id: result.user_id || '' },
-        team: result.team_id
-          ? { id: result.team_id, name: result.team_name || '', members: [] }
-          : ({} as any),
-        value: result.value || 0,
-        key: result.key || '',
-      },
-      cursor: CursorUtil.createCursor(result.id, new Date(result.occurred_at)),
-    }));
+    const edges: GameActionEdge[] = nodes.map((result) => {
+      const gameScoreAction = new GameScoreAction();
+      gameScoreAction.id = result.id;
+      gameScoreAction.occurredAt = new Date(result.occurred_at);
+      gameScoreAction.occurredBy = { id: result.user_id || '' };
+      gameScoreAction.team = result.team_id
+        ? { id: result.team_id, name: result.team_name || '', members: [] }
+        : ({} as any);
+      gameScoreAction.value = result.value || 0;
+      gameScoreAction.key = result.key || '';
+
+      return {
+        node: gameScoreAction,
+        cursor: CursorUtil.createCursor(
+          result.id,
+          new Date(result.occurred_at),
+        ),
+      };
+    });
 
     const totalCount = await client
       .selectFrom('game_actions')
       .select([(eb) => eb.fn.countAll().as('count')])
       .where('game_id', '=', gameId)
+      .where('type', '=', 'SCORE')
       .executeTakeFirst();
 
     const pageInfo: PageInfo = {

@@ -112,7 +112,12 @@ export class TeamsService {
     const results = await client
       .selectFrom('game_teams')
       .innerJoin('teams', 'teams.id', 'game_teams.team_id')
-      .select(['teams.id', 'teams.name', 'game_teams.score'])
+      .select([
+        'game_teams.id as game_team_id',
+        'teams.id',
+        'teams.name',
+        'game_teams.score',
+      ])
       .where('game_teams.game_id', '=', gameId)
       .execute();
 
@@ -121,6 +126,7 @@ export class TeamsService {
       const team = await this.findTeamById(result.id);
       if (team) {
         gameTeams.push({
+          id: result.game_team_id,
           team,
           score: result.score || 0,
         });

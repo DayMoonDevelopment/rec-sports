@@ -3,7 +3,11 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider as CoreApolloProvider,
+  from,
 } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
+import { createHttpLink } from "@apollo/client/link/http";
+import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { setLogVerbosity } from "@apollo/client/core";
 import { persistCache, MMKVWrapper } from "apollo3-cache-persist";
 import { MMKV, Mode } from "react-native-mmkv";
@@ -15,6 +19,12 @@ import { useAppReady } from "~/context/app";
 import type { ReactNode } from "react";
 import type { InMemoryCacheConfig } from "@apollo/client";
 
+if (__DEV__) {
+  // Adds messages only in a dev environment
+  loadDevMessages();
+  loadErrorMessages();
+}
+
 const DATA_URL = process.env.EXPO_PUBLIC_GQL_DATA_URL;
 
 const storage = new MMKV({
@@ -24,6 +34,9 @@ const storage = new MMKV({
 });
 
 const cacheConfig: InMemoryCacheConfig = {
+  possibleTypes: {
+    GameAction: ["GameScoreAction"],
+  },
   typePolicies: {
     Query: {
       fields: {
@@ -46,7 +59,13 @@ const cacheConfig: InMemoryCacheConfig = {
     Team: {
       keyFields: ["id"],
     },
-    GameEvent: {
+    GameTeam: {
+      keyFields: ["id"],
+    },
+    GameAction: {
+      keyFields: ["id"],
+    },
+    GameScoreAction: {
       keyFields: ["id"],
     },
     User: {
@@ -100,9 +119,48 @@ export const ApolloProvider = ({ children }: { children: ReactNode }) => {
           storage: new MMKVWrapper(storage),
         });
 
+        // Create error link for better error handling
+        const errorLink = onError(
+          ({ graphQLErrors, networkError, operation, forward }) => {
+            if (graphQLErrors) {
+              console.error(
+                "Apollo GraphQL Errors:",
+                graphQLErrors.map(({ message, locations, path }) => ({
+                  message,
+                  locations,
+                  path,
+                })),
+              );
+            }
+
+            if (networkError) {
+              console.error("Apollo Network Error:", {
+                name: networkError.name,
+                message: networkError.message,
+                stack: networkError.stack,
+                operation: operation.operationName,
+                variables: operation.variables,
+              });
+
+              // Log additional network error details
+              if ("statusCode" in networkError) {
+                console.error("HTTP Status Code:", networkError.statusCode);
+              }
+              if ("response" in networkError) {
+                console.error("Network Response:", networkError.response);
+              }
+            }
+          },
+        );
+
+        // Create HTTP link
+        const httpLink = createHttpLink({
+          uri: DATA_URL,
+        });
+
         setClient(
           new ApolloClient({
-            uri: DATA_URL,
+            link: from([errorLink, httpLink]),
             cache,
             defaultOptions: {
               watchQuery: {

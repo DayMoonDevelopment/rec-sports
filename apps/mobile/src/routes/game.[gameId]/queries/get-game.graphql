@@ -1,12 +1,10 @@
 fragment TeamNode on Team {
   id
   name
-  members {
-    id
-  }
 }
 
 fragment GameTeamNode on GameTeam {
+  id
   score
   team {
     ...TeamNode

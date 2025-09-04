@@ -127,6 +127,7 @@ export enum GameStatus {
 
 export type GameTeam = {
   __typename: 'GameTeam';
+  id: Scalars['ID']['output'];
   score: Maybe<Scalars['Int']['output']>;
   team: Team;
 };

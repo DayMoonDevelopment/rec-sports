@@ -1,10 +1,10 @@
 import { View, Text } from "react-native";
 
-import { SportIcon } from "~/components/sport-icon";
-
 import { Sport } from "~/gql/types";
 
 import { sportLabel } from "~/lib/utils";
+
+import { SportIcon } from "~/components/sport-icon";
 
 import { useGame } from "../use-game.hook";
 
