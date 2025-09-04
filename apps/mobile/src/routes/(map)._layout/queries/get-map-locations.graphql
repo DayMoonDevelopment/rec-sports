@@ -23,10 +23,12 @@ query SearchLocations(
   $after: String
 ) {
   locations(query: $query, region: $region, first: $first, after: $after) {
-    nodes {
-      ...LocationNode
+    edges {
+      node {
+        ...LocationNode
+      }
+      cursor
     }
-    hasMore
     totalCount
     pageInfo {
       endCursor

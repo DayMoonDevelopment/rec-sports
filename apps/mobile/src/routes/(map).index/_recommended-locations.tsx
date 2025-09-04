@@ -30,11 +30,12 @@ export function RecommendedLocations() {
     variables: {
       first: 5, // Get top 5 suggested locations
       region: apiRegion,
+      after: null, // Start from beginning
     },
     skip: !currentRegion, // Skip query until we have a region
   });
 
-  const suggestedItems = data?.locations.nodes || [];
+  const suggestedItems = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Navigate to the location detail route with lat/lng for immediate animation

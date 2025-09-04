@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Expression, sql } from 'kysely';
 
 import { Sport } from '../common/enums/sport.enum';
+import { CursorUtil } from '../common/pagination/cursor.util';
+import { PageInfo } from '../common/pagination/page-info.model';
 import { DatabaseService } from '../database/database.service';
-import { LocationsResponse } from './dto/locations-response.dto';
 import { LocationsArgs } from './dto/locations.args';
+import { LocationEdge } from './models/location-edge.model';
 import { Location } from './models/location.model';
+import { LocationsConnection } from './models/locations-connection.model';
 
 import type { SqlBool } from 'kysely';
 
@@ -45,22 +48,10 @@ export class LocationsService {
     };
   }
 
-  async findLocations(args: LocationsArgs): Promise<LocationsResponse> {
+  async findLocations(args: LocationsArgs): Promise<LocationsConnection> {
     const { client } = this.databaseService;
 
-    let offset = 0;
     const limit = args.first ?? 20;
-
-    // Decode cursor to get offset (simple base64 encoded offset for now)
-    if (args.after) {
-      try {
-        offset =
-          parseInt(Buffer.from(args.after, 'base64').toString('ascii')) + 1;
-      } catch {
-        offset = 0;
-      }
-    }
-
     const hasTextSearch = Boolean(args.query?.trim());
 
     let query = client
@@ -69,6 +60,7 @@ export class LocationsService {
       .select([
         sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
         sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
+        'created_at',
       ]);
 
     // Add search ranking if there's a text query
@@ -87,12 +79,37 @@ export class LocationsService {
       query = query.where((eb) => eb.and(filterExpressions));
     }
 
-    // Add ordering - search results by relevance, others by name
-    if (hasTextSearch) {
-      query = query.orderBy(sql`search_rank`, 'desc').orderBy('name', 'asc');
-    } else {
-      query = query.orderBy('name', 'asc');
+    // Handle cursor-based pagination
+    if (args.after) {
+      const { id, timestamp } = CursorUtil.parseCursor(args.after);
+      if (timestamp) {
+        // Use timestamp for ordering
+        query = query.where(
+          'created_at',
+          '<',
+          new Date(timestamp).toISOString(),
+        );
+      } else if (hasTextSearch) {
+        // For search queries, use ID-based cursor as fallback
+        query = query.where('id', '>', id);
+      } else {
+        // For non-search queries, use name-based cursor
+        query = query.where('name', '>', id);
+      }
     }
+
+    // Add ordering - search results by relevance, others by created_at (for consistent cursor pagination)
+    if (hasTextSearch) {
+      query = query
+        .orderBy(sql`search_rank`, 'desc')
+        .orderBy('created_at', 'desc')
+        .orderBy('id', 'asc'); // Tie-breaker for consistent ordering
+    } else {
+      query = query.orderBy('created_at', 'desc').orderBy('id', 'asc');
+    }
+
+    // Get one extra result to check if there are more pages
+    query = query.limit(limit + 1);
 
     // Get total count with a separate simpler query
     let countQuery = client
@@ -104,42 +121,47 @@ export class LocationsService {
       countQuery = countQuery.where((eb) => eb.and(filterExpressions));
     }
 
-    const countResult = await countQuery.executeTakeFirst();
+    const [results, countResult] = await Promise.all([
+      query.execute(),
+      countQuery.executeTakeFirst(),
+    ]);
+
     const totalCount = Number(countResult?.count ?? 0);
+    const hasNextPage = results.length > limit;
+    const nodes = results.slice(0, limit);
 
-    // Apply pagination and get results
-    const results = await query.offset(offset).limit(limit).execute();
+    // Transform database results to GraphQL types and create edges
+    const edges: LocationEdge[] = nodes.map((row) => {
+      const location: Location = {
+        id: row.id,
+        name: row.name || 'Unknown Location',
+        address: this.buildAddress(row),
+        geo: {
+          latitude: row.latitude,
+          longitude: row.longitude,
+        },
+        sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
+      };
 
-    // Transform database results to GraphQL types
-    const nodes = results.map((row) => ({
-      id: row.id,
-      name: row.name || 'Unknown Location', // Handle nullable name
-      address: this.buildAddress(row),
-      geo: {
-        latitude: row.latitude,
-        longitude: row.longitude,
-      },
-      sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
-    }));
+      return {
+        node: location,
+        cursor: CursorUtil.createCursor(
+          row.id,
+          row.created_at ? new Date(row.created_at) : undefined,
+        ),
+      };
+    });
 
-    // Generate cursor for pagination
-    const hasMore = offset + limit < totalCount;
-    const endCursor =
-      nodes.length > 0 && hasMore
-        ? Buffer.from((offset + nodes.length - 1).toString()).toString('base64')
-        : null;
-
-    const response: LocationsResponse = {
-      nodes,
-      totalCount,
-      hasMore,
-      pageInfo: {
-        endCursor,
-        hasNextPage: hasMore,
-      },
+    const pageInfo: PageInfo = {
+      hasNextPage,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : undefined,
     };
 
-    return response;
+    return {
+      edges,
+      pageInfo,
+      totalCount,
+    };
   }
 
   private buildFilterExpressions(args: LocationsArgs): Expression<SqlBool>[] {
@@ -375,7 +397,7 @@ export class LocationsService {
   // Enhanced search with performance tracking
   async findLocationsWithMetrics(
     args: LocationsArgs,
-  ): Promise<LocationsResponse & { searchMetrics?: any }> {
+  ): Promise<LocationsConnection & { searchMetrics?: any }> {
     const startTime = Date.now();
     const result = await this.findLocations(args);
     const executionTime = Date.now() - startTime;
@@ -430,52 +452,6 @@ export class LocationsService {
       gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
       ${sql.literal(radiusMeters)}
     )`;
-  }
-
-  private extractLatitude(location: unknown): number {
-    if (!location) return 0;
-
-    // Handle PostGIS POINT geometry
-    // PostGIS returns POINT(longitude latitude) format
-    const locationStr = String(location);
-    const pointMatch = locationStr.match(/POINT\(([\d.-]+)\s+([\d.-]+)\)/);
-    if (pointMatch) {
-      const [, , latitude] = pointMatch;
-      return Number(latitude);
-    }
-
-    // Handle binary/hex format (WKB)
-    if (locationStr.startsWith('0101000000')) {
-      // For WKB format, you would need a proper parser
-      // This is a placeholder for proper WKB parsing
-      console.warn('WKB format detected, consider using ST_AsText in query');
-      return 0;
-    }
-
-    return 0;
-  }
-
-  private extractLongitude(location: unknown): number {
-    if (!location) return 0;
-
-    // Handle PostGIS POINT geometry
-    // PostGIS returns POINT(longitude latitude) format
-    const locationStr = String(location);
-    const pointMatch = locationStr.match(/POINT\(([\d.-]+)\s+([\d.-]+)\)/);
-    if (pointMatch) {
-      const [, longitude] = pointMatch;
-      return Number(longitude);
-    }
-
-    // Handle binary/hex format (WKB)
-    if (locationStr.startsWith('0101000000')) {
-      // For WKB format, you would need a proper parser
-      // This is a placeholder for proper WKB parsing
-      console.warn('WKB format detected, consider using ST_AsText in query');
-      return 0;
-    }
-
-    return 0;
   }
 
   private buildAddress(row: any) {

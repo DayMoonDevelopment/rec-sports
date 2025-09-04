@@ -27,7 +27,8 @@ const US_INITIAL_BOUNDING_BOX_BUFFERED = regionToBoundingBoxWithBuffer(
 );
 
 const PAGE_PARAMS = {
-  first: 200,
+  first: 100,
+  after: null,
 };
 
 export function MapViewComponent() {
@@ -52,7 +53,7 @@ export function MapViewComponent() {
     },
   });
 
-  const items = data?.locations.nodes || [];
+  const items = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const mapBottomPadding =
     Platform.OS === "ios"
@@ -68,6 +69,7 @@ export function MapViewComponent() {
 
     refetch({
       ...PAGE_PARAMS,
+      after: null, // Reset cursor when region changes
       region: {
         boundingBox: boundingBoxWithBuffer,
       },

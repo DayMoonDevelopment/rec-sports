@@ -95,14 +95,17 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       }
     : undefined;
 
-  const { data, loading, error, fetchMore } = useQuery(GetSearchLocationsDocument, {
-    variables: {
-      query: searchQuery,
-      region: searchRegion,
-      first: 20,
+  const { data, loading, error, fetchMore } = useQuery(
+    GetSearchLocationsDocument,
+    {
+      variables: {
+        query: searchQuery,
+        region: searchRegion,
+        first: 20,
+      },
+      skip: !searchQuery.trim(),
     },
-    skip: !searchQuery.trim(),
-  });
+  );
 
   const loadMore = () => {
     const endCursor = data?.locations?.pageInfo?.endCursor;
@@ -113,11 +116,24 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
         variables: {
           after: endCursor,
         },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          return {
+            locations: {
+              ...fetchMoreResult.locations,
+              edges: [
+                ...prev.locations.edges,
+                ...fetchMoreResult.locations.edges,
+              ],
+            },
+          };
+        },
       });
     }
   };
 
-  const searchResults = data?.locations.nodes || [];
+  const searchResults = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to location on map

@@ -18,11 +18,13 @@ fragment LocationNode on Location {
 
 query GetRecommendedLocations($region: Region, $first: Int, $after: String) {
   locations(region: $region, first: $first, after: $after) {
-    nodes {
-      ...LocationNode
+    edges {
+      node {
+        ...LocationNode
+      }
+      cursor
     }
     totalCount
-    hasMore
     pageInfo {
       endCursor
       hasNextPage

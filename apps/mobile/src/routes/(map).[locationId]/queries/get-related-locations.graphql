@@ -16,7 +16,12 @@ fragment LocationNode on Location {
   sports
 }
 
-query GetRelatedLocations($latitude: Float!, $longitude: Float!) {
+query GetRelatedLocations(
+  $latitude: Float!
+  $longitude: Float!
+  $first: Int
+  $after: String
+) {
   relatedLocations: locations(
     region: {
       centerPoint: {
@@ -24,12 +29,15 @@ query GetRelatedLocations($latitude: Float!, $longitude: Float!) {
         radiusMiles: 5
       }
     }
-    first: 6
+    first: $first
+    after: $after
   ) {
-    nodes {
-      ...LocationNode
+    edges {
+      node {
+        ...LocationNode
+      }
+      cursor
     }
-    hasMore
     totalCount
     pageInfo {
       endCursor

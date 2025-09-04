@@ -142,10 +142,15 @@ export type Location = {
   sports: Array<Sport>;
 };
 
-export type LocationsResponse = {
-  __typename: 'LocationsResponse';
-  hasMore: Scalars['Boolean']['output'];
-  nodes: Array<Location>;
+export type LocationEdge = {
+  __typename: 'LocationEdge';
+  cursor: Scalars['String']['output'];
+  node: Location;
+};
+
+export type LocationsConnection = {
+  __typename: 'LocationsConnection';
+  edges: Array<LocationEdge>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int']['output'];
 };
@@ -243,7 +248,7 @@ export type Query = {
   __typename: 'Query';
   game: Maybe<Game>;
   location: Maybe<Location>;
-  locations: LocationsResponse;
+  locations: LocationsConnection;
   team: Maybe<Team>;
 };
 

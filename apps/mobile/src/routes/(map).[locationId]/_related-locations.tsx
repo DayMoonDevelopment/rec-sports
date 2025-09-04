@@ -31,14 +31,16 @@ export function RelatedLocations({
     variables: {
       latitude: currentLocation.geo?.latitude || 0,
       longitude: currentLocation.geo?.longitude || 0,
+      first: 6,
+      after: null,
     },
     skip: !currentLocation.geo?.latitude || !currentLocation.geo?.longitude,
   });
 
   const relatedLocations =
-    data?.relatedLocations.nodes?.filter(
-      ({ id }) => id !== currentLocation.id,
-    ) || [];
+    data?.relatedLocations.edges
+      ?.map((edge) => edge.node)
+      .filter(({ id }) => id !== currentLocation.id) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to the location on the map
