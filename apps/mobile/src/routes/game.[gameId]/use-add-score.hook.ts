@@ -81,6 +81,7 @@ export function useAddScore() {
 
     const optimisticGameData = {
       ...game,
+      __typename: "Game" as const,
       teams: game.teams.map((gameTeam) =>
         gameTeam.team.id === teamId
           ? { ...gameTeam, score: gameTeam.score + value }
@@ -88,7 +89,15 @@ export function useAddScore() {
       ),
       actions: {
         ...game.actions,
-        edges: [...game.actions.edges, optimisticActionData],
+        __typename: "GameActionsConnection" as const,
+        edges: [
+          {
+            __typename: "GameActionEdge" as const,
+            node: optimisticActionData,
+            cursor: `cursor-${optimisticActionData.id}`,
+          },
+          ...game.actions.edges,
+        ],
         totalCount: game.actions.totalCount + 1,
       },
     };

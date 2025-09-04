@@ -17,17 +17,10 @@ import type { GameTeamNodeFragment } from "../queries/get-game.generated";
 import { cn } from "~/lib/utils";
 
 export function MultiTeamScoreboard() {
-  const [focusedTeam, setFocusedTeam] = useState<GameTeamNodeFragment | null>(
-    null,
-  );
+  const [focusedTeamId, setFocusedTeamId] = useState<string | null>(null);
 
   const { data } = useGame({
     fetchPolicy: "cache-first",
-    onCompleted: (data) => {
-      if (!focusedTeam && data?.game?.teams && data.game.teams.length > 0) {
-        setFocusedTeam(data.game.teams[0]);
-      }
-    },
   });
   const [addScore, { loading: isAddingScore }] = useAddScore();
 
@@ -35,10 +28,14 @@ export function MultiTeamScoreboard() {
 
   // Set the first team as focused when component mounts or game data changes
   React.useEffect(() => {
-    if (!focusedTeam && game?.teams && game.teams.length > 0) {
-      setFocusedTeam(game.teams[0]);
+    if (!focusedTeamId && game?.teams && game.teams.length > 0) {
+      setFocusedTeamId(game.teams[0].team.id);
     }
-  }, [game?.teams, focusedTeam]);
+  }, [game?.teams, focusedTeamId]);
+
+  // Derive the focused team from the current game data
+  const focusedTeam =
+    game?.teams?.find((team) => team.team.id === focusedTeamId) || null;
 
   if (!game) return null;
 
@@ -70,7 +67,7 @@ export function MultiTeamScoreboard() {
         <TeamPreviewCard
           score={gameTeam.score}
           name={gameTeam.team.name}
-          onPress={() => setFocusedTeam(gameTeam)}
+          onPress={() => setFocusedTeamId(gameTeam.team.id)}
         />
       </View>
     );

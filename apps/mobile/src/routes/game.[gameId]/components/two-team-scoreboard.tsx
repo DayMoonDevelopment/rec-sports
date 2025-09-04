@@ -8,7 +8,7 @@ import { TeamScoreCard } from "./team-score-card";
 import { GameStatusBadge } from "./game-status-badge";
 
 export function TwoTeamScoreboard() {
-  const { data } = useGame({ fetchPolicy: "cache-only" });
+  const { data } = useGame({ fetchPolicy: "cache-first" });
   const game = data?.game;
 
   if (!game) return null;
