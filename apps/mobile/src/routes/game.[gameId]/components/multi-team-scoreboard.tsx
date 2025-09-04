@@ -21,17 +21,15 @@ export function MultiTeamScoreboard() {
 
   const { data } = useGame({
     fetchPolicy: "cache-first",
+    onCompleted: (data) => {
+      if (!focusedTeamId && data.game?.teams && data.game.teams.length > 0) {
+        setFocusedTeamId(data.game.teams[0].team.id);
+      }
+    },
   });
   const [addScore, { loading: isAddingScore }] = useAddScore();
 
   const game = data?.game;
-
-  // Set the first team as focused when component mounts or game data changes
-  React.useEffect(() => {
-    if (!focusedTeamId && game?.teams && game.teams.length > 0) {
-      setFocusedTeamId(game.teams[0].team.id);
-    }
-  }, [game?.teams, focusedTeamId]);
 
   // Derive the focused team from the current game data
   const focusedTeam =

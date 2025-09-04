@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { AddGameScoreDocument } from "./mutations/create-game-event.generated";
+import { AddGameScoreDocument } from "./mutations/add-game-score.generated";
 import { GetGameDocument } from "./queries/get-game.generated";
 import { useGame } from "./use-game.hook";
 
@@ -75,7 +75,6 @@ export function useAddScore() {
       occurredToTeam: {
         __typename: "Team" as const,
         id: teamId,
-        name: "", // We don't have the team name in this context
       },
     };
 

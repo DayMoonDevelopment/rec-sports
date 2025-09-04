@@ -12,7 +12,6 @@ mutation AddGameScore($gameId: ID!, $input: GameScoreInput!) {
       }
       occurredToTeam {
         id
-        name
       }
       value
       key
