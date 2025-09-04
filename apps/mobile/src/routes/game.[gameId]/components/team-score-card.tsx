@@ -7,7 +7,7 @@ import { PlusSmallIcon } from "~/icons/plus-small";
 import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 
 import { useGame } from "../use-game.hook";
-import { useScore } from "../use-score.hook";
+import { useAddScore } from "../use-add-score.hook";
 
 interface TeamScoreCardProps {
   teamIndex: 1 | 2; // Keep for backward compatibility but will be deprecated
@@ -17,7 +17,7 @@ export function TeamScoreCard({ teamIndex }: TeamScoreCardProps) {
   const { data } = useGame({
     fetchPolicy: "cache-first",
   });
-  const { addScore, loading: isAddingScore } = useScore();
+  const [addScore, { loading: isAddingScore }] = useAddScore();
   const game = data?.game;
 
   if (!game) return null;
@@ -47,11 +47,11 @@ export function TeamScoreCard({ teamIndex }: TeamScoreCardProps) {
   };
 
   const handleAddScore = async () => {
-    if (!team?.id) return;
+    if (!gameTeam?.team?.id) return;
 
     try {
       await addScore({
-        teamId: team.id,
+        teamId: gameTeam.team.id,
         value: 1,
       });
     } catch (error) {

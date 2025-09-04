@@ -9,7 +9,7 @@ import { GameStatus } from "~/gql/types";
 import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 
 import { useGame } from "../use-game.hook";
-import { useScore } from "../use-score.hook";
+import { useAddScore } from "../use-add-score.hook";
 import { TeamPreviewCard } from "./team-preview-card";
 import { GameStatusBadge } from "./game-status-badge";
 
@@ -29,7 +29,7 @@ export function MultiTeamScoreboard() {
       }
     },
   });
-  const { addScore, loading: isAddingScore } = useScore();
+  const [addScore, { loading: isAddingScore }] = useAddScore();
 
   const game = data?.game;
 
