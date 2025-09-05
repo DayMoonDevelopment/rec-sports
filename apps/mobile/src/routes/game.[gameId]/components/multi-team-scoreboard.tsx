@@ -11,7 +11,6 @@ import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 import { useGame } from "../use-game.hook";
 import { useAddScore } from "../use-add-score.hook";
 import { TeamPreviewCard } from "./team-preview-card";
-import { GameStatusBadge } from "./game-status-badge";
 
 import type { GameTeamNodeFragment } from "../queries/get-game.generated";
 import { cn } from "~/lib/utils";
@@ -73,10 +72,6 @@ export function MultiTeamScoreboard() {
 
   return (
     <View className="flex flex-col gap-6 py-6">
-      <View className="self-center">
-        <GameStatusBadge status={game.status} />
-      </View>
-
       {/* Focused Team Display */}
       {focusedTeam ? (
         <View className="flex flex-row items-center gap-4 px-4">

@@ -16,7 +16,7 @@ export { TeamScoreCard } from "./team-score-card";
 export { TwoTeamScoreboard } from "./two-team-scoreboard";
 
 // Event components
-export { EventsHeader } from "./events-header";
+export { GameActionsHeader as EventsHeader } from "./game-actions-header";
 export { GameEventItem } from "./game-event-item";
 
 // Shared components
