@@ -11,7 +11,7 @@ fragment GameTeamNode on GameTeam {
   }
 }
 
-fragment GameActionNode on GameScoreAction {
+fragment GameScoreActionNode on GameScoreAction {
   id
   occurredAt
   occurredByUser {
@@ -52,7 +52,7 @@ fragment GameNode on Game {
   actions(first: 20) {
     edges {
       node {
-        ...GameActionNode
+        ...GameScoreActionNode
       }
       cursor
     }

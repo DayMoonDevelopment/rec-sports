@@ -5,7 +5,6 @@ import { CalendarIcon } from "~/icons/calendar";
 
 import { useGame } from "../use-game.hook";
 import { TeamScoreCard } from "./team-score-card";
-import { GameStatusBadge } from "./game-status-badge";
 
 export function TwoTeamScoreboard() {
   const { data } = useGame({ fetchPolicy: "cache-first" });
@@ -17,8 +16,6 @@ export function TwoTeamScoreboard() {
 
   return (
     <View className="flex flex-col gap-6">
-      <GameStatusBadge status={game.status} />
-
       {/* Teams Display */}
       <View className="flex-row items-center justify-center">
         <View className="flex-1">
