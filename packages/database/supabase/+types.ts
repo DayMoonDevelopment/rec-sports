@@ -34,6 +34,152 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_actions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          details: Json | null
+          game_id: string
+          id: string
+          occurred_at: string | null
+          occurred_by_user_id: string | null
+          occurred_to_team_id: string | null
+          point_value: number | null
+          type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          game_id: string
+          id?: string
+          occurred_at?: string | null
+          occurred_by_user_id?: string | null
+          occurred_to_team_id?: string | null
+          point_value?: number | null
+          type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          game_id?: string
+          id?: string
+          occurred_at?: string | null
+          occurred_by_user_id?: string | null
+          occurred_to_team_id?: string | null
+          point_value?: number | null
+          type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_actions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_occurred_to_team_id_fkey"
+            columns: ["occurred_to_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_teams: {
+        Row: {
+          created_at: string | null
+          game_id: string
+          id: string
+          score: number | null
+          team_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_id: string
+          id?: string
+          score?: number | null
+          team_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string
+          id?: string
+          score?: number | null
+          team_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_teams_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          created_at: string | null
+          created_up: string | null
+          game_state: string
+          id: string
+          location_id: string | null
+          scheduled_at: string | null
+          sport: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_up?: string | null
+          game_state?: string
+          id?: string
+          location_id?: string | null
+          scheduled_at?: string | null
+          sport: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_up?: string | null
+          game_state?: string
+          id?: string
+          location_id?: string | null
+          scheduled_at?: string | null
+          sport?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       location_facilities: {
         Row: {
           details: Json | null
@@ -167,6 +313,77 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          created_at: string | null
+          created_up: string | null
+          id: string
+          team_id: string
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_up?: string | null
+          id?: string
+          team_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_up?: string | null
+          id?: string
+          team_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          created_up: string | null
+          id: string
+          name: string | null
+          sport_tags: string[] | null
+          team_type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_up?: string | null
+          id?: string
+          name?: string | null
+          sport_tags?: string[] | null
+          team_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_up?: string | null
+          id?: string
+          name?: string | null
+          sport_tags?: string[] | null
+          team_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -207,6 +424,18 @@ export type Database = {
       show_trgm: {
         Args: { "": string }
         Returns: string[]
+      }
+      update_game_team_score: {
+        Args: { p_game_id: string; p_team_id: string }
+        Returns: undefined
+      }
+      user_is_in_game: {
+        Args: { game_id_param: string }
+        Returns: boolean
+      }
+      user_is_in_team: {
+        Args: { team_id_param: string }
+        Returns: boolean
       }
     }
     Enums: {

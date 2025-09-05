@@ -27,7 +27,9 @@ export function MapMarker({ location }: MapMarkerProps) {
   const handleMarkerPress = () => {
     if (!isFocused) {
       // If not focused, navigate to the location detail route with lat/lng for immediate animation
-      router.push(`/${location.id}?lat=${location.geo?.latitude}&lng=${location.geo?.longitude}`);
+      router.push(
+        `/locations//${location.id}?lat=${location.geo?.latitude}&lng=${location.geo?.longitude}`,
+      );
     }
   };
 

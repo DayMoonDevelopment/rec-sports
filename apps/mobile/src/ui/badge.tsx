@@ -199,6 +199,7 @@ function BadgeIcon({
   Icon,
   variant: propVariant,
   size: propSize,
+  className,
   ...iconProps
 }: BadgeIconProps) {
   const context = useBadgeContext();
@@ -206,7 +207,7 @@ function BadgeIcon({
   const size = propSize ?? context.size;
 
   return (
-    <View className="-ml-0.5">
+    <View className={cn("-ml-0.5", className)}>
       <Icon
         {...iconProps}
         className={cn(badgeIconVariants({ variant, size }))}

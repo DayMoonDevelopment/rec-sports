@@ -3,7 +3,7 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 const config: CodegenConfig = {
   overwrite: true,
   schema:
-    process.env.EXPO_PUBLIC_GQL_DATA_URL || "http://localhost:4000/graphql",
+    process.env.EXPO_PUBLIC_GQL_DATA_URL || "../../packages/api/schema.gql",
   documents: [
     "src/**/*.{ts,tsx,graphql}",
     "!src/gql/**/*",
@@ -47,6 +47,8 @@ const config: CodegenConfig = {
         inlineFragmentTypes: "combine",
         // Export fragment types separately
         exportFragmentSpreadSubTypes: true,
+        // Force __typename in all selections for proper cache normalization
+        addTypename: true,
       },
     },
   },

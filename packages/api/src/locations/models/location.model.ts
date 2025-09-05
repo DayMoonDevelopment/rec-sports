@@ -1,12 +1,8 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import {
-  IsArray,
-  IsNotEmpty,
-  ValidateNested,
-} from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 
-import { Sport } from '../enums/sport.enum';
+import { Sport } from '../../common/enums/sport.enum';
 import { Address } from './address.model';
 import { Point } from './point.model';
 

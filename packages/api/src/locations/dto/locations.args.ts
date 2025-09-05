@@ -1,4 +1,5 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -8,25 +9,24 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
-import { Sport } from '../enums/sport.enum';
+import { Sport } from '../../common/enums/sport.enum';
 import { Region } from './region.input';
 
 @ArgsType()
 export class LocationsArgs {
-  // Pagination
-  @Field(() => Int, { nullable: true, defaultValue: 0 })
+  // Pagination - cursor-based
+  @Field({ nullable: true })
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  offset?: number = 0;
+  @IsString()
+  after?: string;
 
   @Field(() => Int, { nullable: true, defaultValue: 20 })
   @IsOptional()
   @IsInt()
   @Min(1)
-  limit?: number = 20;
+  @Max(100)
+  first?: number = 20;
 
   // Geographic region filter
   @Field(() => Region, { nullable: true })

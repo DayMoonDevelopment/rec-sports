@@ -95,17 +95,45 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
       }
     : undefined;
 
-  const { data, loading, error } = useQuery(GetSearchLocationsDocument, {
-    variables: {
-      query: searchQuery,
-      region: searchRegion,
-      limit: 100,
+  const { data, loading, error, fetchMore } = useQuery(
+    GetSearchLocationsDocument,
+    {
+      variables: {
+        query: searchQuery,
+        region: searchRegion,
+        first: 20,
+      },
+      skip: !searchQuery.trim(),
     },
-    skip: !searchQuery.trim(),
-    fetchPolicy: "no-cache",
-  });
+  );
 
-  const searchResults = data?.locations.nodes || [];
+  const loadMore = () => {
+    const endCursor = data?.locations?.pageInfo?.endCursor;
+    const hasNextPage = data?.locations?.pageInfo?.hasNextPage;
+
+    if (hasNextPage && endCursor && !loading) {
+      fetchMore({
+        variables: {
+          after: endCursor,
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+
+          return {
+            locations: {
+              ...fetchMoreResult.locations,
+              edges: [
+                ...prev.locations.edges,
+                ...fetchMoreResult.locations.edges,
+              ],
+            },
+          };
+        },
+      });
+    }
+  };
+
+  const searchResults = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Animate to location on map
@@ -115,7 +143,9 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
     setFocusedMarkerId(location.id);
 
     // Navigate to location detail with lat/lng for immediate animation
-    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
+    router.push(
+      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
+    );
   };
 
   if (!searchQuery.trim()) {
@@ -182,6 +212,15 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loading && searchResults.length > 0 ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" className="text-primary" />
+            </View>
+          ) : null
+        }
       />
     </View>
   );

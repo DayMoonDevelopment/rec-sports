@@ -1,6 +1,7 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text } from "react-native";
 import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { RecommendedLocation } from "./_recommended-location";
 import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locations.generated";
@@ -27,18 +28,20 @@ export function RecommendedLocations() {
   // Query for recommended locations
   const { data, loading } = useQuery(GetRecommendedLocationsDocument, {
     variables: {
-      limit: 5, // Get top 5 suggested locations
+      first: 5, // Get top 5 suggested locations
       region: apiRegion,
+      after: null, // Start from beginning
     },
-    fetchPolicy: "no-cache", // Use cache but also fetch fresh data
     skip: !currentRegion, // Skip query until we have a region
   });
 
-  const suggestedItems = data?.locations.nodes || [];
+  const suggestedItems = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(`/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`);
+    router.push(
+      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
+    );
   };
 
   // Don't render if no data and not loading, or if we don't have a region yet
@@ -52,7 +55,7 @@ export function RecommendedLocations() {
         Recommended
       </Text>
 
-      <FlatList
+      <BottomSheetFlatList
         horizontal
         data={suggestedItems}
         keyExtractor={(item) => item.id}

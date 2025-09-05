@@ -1,3 +1,5 @@
+import { cn } from "~/lib/utils";
+
 import { Sport } from "~/gql/types";
 
 import type { SvgProps } from "react-native-svg";
@@ -18,34 +20,100 @@ import { VolleyballIcon } from "../icons/volleyball";
 
 import { CircleIcon } from "../icons/circle";
 
-export function SportIcon({ sport, ...props }: SvgProps & { sport: Sport }) {
+export function SportIcon({
+  sport,
+  className,
+  ...props
+}: SvgProps & { sport: Sport }) {
   switch (sport) {
     case Sport.Baseball:
-      return <BaseballIcon {...props} />;
+      return (
+        <BaseballIcon
+          className={cn("text-sport-baseball", className)}
+          {...props}
+        />
+      );
     case Sport.Basketball:
-      return <BasketballIcon {...props} />;
+      return (
+        <BasketballIcon
+          className={cn("text-sport-basketball", className)}
+          {...props}
+        />
+      );
     case Sport.DiscGolf:
-      return <DiscGolfIcon filled {...props} />;
+      return (
+        <DiscGolfIcon
+          filled
+          className={cn("text-sport-disc-golf", className)}
+          {...props}
+        />
+      );
     case Sport.Football:
-      return <FootballIcon filled {...props} />;
+      return (
+        <FootballIcon
+          filled
+          className={cn("text-sport-football", className)}
+          {...props}
+        />
+      );
     case Sport.Golf:
-      return <GolfIcon {...props} />;
+      return (
+        <GolfIcon className={cn("text-sport-golf", className)} {...props} />
+      );
     case Sport.Hockey:
-      return <HockeyIcon {...props} />;
+      return (
+        <HockeyIcon className={cn("text-sport-hockey", className)} {...props} />
+      );
     case Sport.Kickball:
-      return <KickballIcon filled {...props} />;
+      return (
+        <KickballIcon
+          filled
+          className={cn("text-sport-kickball", className)}
+          {...props}
+        />
+      );
     case Sport.Pickleball:
-      return <PickleballIcon {...props} />;
+      return (
+        <PickleballIcon
+          className={cn("text-sport-pickleball", className)}
+          {...props}
+        />
+      );
     case Sport.Soccer:
-      return <SoccerIcon filled {...props} />;
+      return (
+        <SoccerIcon
+          filled
+          className={cn("text-sport-soccer", className)}
+          {...props}
+        />
+      );
     case Sport.Softball:
-      return <SoftballIcon filled {...props} />;
+      return (
+        <SoftballIcon
+          filled
+          className={cn("text-sport-softball", className)}
+          {...props}
+        />
+      );
     case Sport.Tennis:
-      return <TennisIcon {...props} />;
+      return (
+        <TennisIcon className={cn("text-sport-tennis", className)} {...props} />
+      );
     case Sport.Ultimate:
-      return <DiscIcon filled {...props} />;
+      return (
+        <DiscIcon
+          filled
+          className={cn("text-sport-ultimate", className)}
+          {...props}
+        />
+      );
     case Sport.Volleyball:
-      return <VolleyballIcon {...props} />;
+      return (
+        <VolleyballIcon
+          className={cn("text-sport-volleyball", className)}
+          {...props}
+        />
+      );
     default:
       return <CircleIcon {...props} />;
   }

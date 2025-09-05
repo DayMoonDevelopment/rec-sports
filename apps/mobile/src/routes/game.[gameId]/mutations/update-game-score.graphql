@@ -1,0 +1,16 @@
+mutation UpdateGameScore($id: ID!, $input: GameScoreInput!) {
+  updateGameScore(id: $id, input: $input) {
+    action {
+      id
+      occurredAt
+      occurredByUser {
+        id
+      }
+      occurredToTeam {
+        id
+      }
+      value
+      key
+    }
+  }
+}

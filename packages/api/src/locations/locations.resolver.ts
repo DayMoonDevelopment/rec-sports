@@ -1,16 +1,16 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 
-import { LocationsService } from './locations.service';
 import { LocationsArgs } from './dto/locations.args';
-import { LocationsResponse } from './dto/locations-response.dto';
+import { LocationsService } from './locations.service';
 import { Location } from './models/location.model';
+import { LocationsConnection } from './models/locations-connection.model';
 
 @Resolver()
 export class LocationsResolver {
   constructor(private readonly locationsService: LocationsService) {}
 
-  @Query(() => LocationsResponse)
-  async locations(@Args() args: LocationsArgs): Promise<LocationsResponse> {
+  @Query(() => LocationsConnection)
+  async locations(@Args() args: LocationsArgs): Promise<LocationsConnection> {
     return this.locationsService.findLocations(args);
   }
 

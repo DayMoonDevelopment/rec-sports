@@ -11,6 +11,10 @@ import { PostHogProvider } from "~/context/posthog";
 import "~/lib/background-update";
 import "~/lib/nativewind";
 
+export const unstable_settings = {
+  initialRouteName: "locations",
+};
+
 export default function RootLayout() {
   useEffect(() => {
     // Initialize the update manager when the app starts
@@ -26,12 +30,31 @@ export default function RootLayout() {
     <PostHogProvider>
       <AppProvider>
         <ApolloProvider>
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack initialRouteName="locations">
             <Stack.Screen
-              name="profile"
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="locations"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="(profile)"
               options={{
                 presentation: "modal",
                 headerShown: Platform.OS === "android",
+              }}
+            />
+            <Stack.Screen
+              name="games/[gameId]"
+              options={{
+                presentation: "fullScreenModal",
+                headerShown: false,
               }}
             />
           </Stack>

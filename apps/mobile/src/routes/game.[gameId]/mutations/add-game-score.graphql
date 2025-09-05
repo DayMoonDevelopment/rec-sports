@@ -1,0 +1,20 @@
+mutation AddGameScore($gameId: ID!, $input: GameScoreInput!) {
+  addGameScore(gameId: $gameId, input: $input) {
+    game {
+      id
+      status
+    }
+    action {
+      id
+      occurredAt
+      occurredByUser {
+        id
+      }
+      occurredToTeam {
+        id
+      }
+      value
+      key
+    }
+  }
+}

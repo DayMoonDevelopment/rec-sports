@@ -27,8 +27,8 @@ const US_INITIAL_BOUNDING_BOX_BUFFERED = regionToBoundingBoxWithBuffer(
 );
 
 const PAGE_PARAMS = {
-  limit: 200,
-  offset: 0,
+  first: 100,
+  after: null,
 };
 
 export function MapViewComponent() {
@@ -44,7 +44,7 @@ export function MapViewComponent() {
   } = useMap();
 
   const { data, refetch } = useQuery(SearchLocationsDocument, {
-    fetchPolicy: "no-cache",
+    fetchPolicy: "no-cache", // map-based search is far too unique to be safely cachable
     variables: {
       ...PAGE_PARAMS,
       region: {
@@ -53,7 +53,7 @@ export function MapViewComponent() {
     },
   });
 
-  const items = data?.locations.nodes || [];
+  const items = data?.locations.edges?.map((edge) => edge.node) || [];
 
   const mapBottomPadding =
     Platform.OS === "ios"
@@ -69,6 +69,7 @@ export function MapViewComponent() {
 
     refetch({
       ...PAGE_PARAMS,
+      after: null, // Reset cursor when region changes
       region: {
         boundingBox: boundingBoxWithBuffer,
       },

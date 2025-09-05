@@ -1,0 +1,72 @@
+fragment TeamNode on Team {
+  id
+  name
+}
+
+fragment GameTeamNode on GameTeam {
+  id
+  score
+  team {
+    ...TeamNode
+  }
+}
+
+fragment GameActionNode on GameScoreAction {
+  id
+  occurredAt
+  occurredByUser {
+    id
+  }
+  occurredToTeam {
+    ...TeamNode
+  }
+  value
+  key
+}
+
+fragment GameNode on Game {
+  id
+  sport
+  status
+  scheduledAt
+  startedAt
+  endedAt
+  teams {
+    ...GameTeamNode
+  }
+  location {
+    id
+    name
+    address {
+      id
+      street
+      city
+      state
+      stateCode
+    }
+    geo {
+      latitude
+      longitude
+    }
+  }
+  actions(first: 20) {
+    edges {
+      node {
+        ...GameActionNode
+      }
+      cursor
+    }
+
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetGame($id: ID!) {
+  game(id: $id) {
+    ...GameNode
+  }
+}

@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Expression, sql } from 'kysely';
 
+import { Sport } from '../common/enums/sport.enum';
+import { CursorUtil } from '../common/pagination/cursor.util';
+import { PageInfo } from '../common/pagination/page-info.model';
 import { DatabaseService } from '../database/database.service';
-import { LocationsResponse } from './dto/locations-response.dto';
 import { LocationsArgs } from './dto/locations.args';
-import { Sport } from './enums/sport.enum';
+import { LocationEdge } from './models/location-edge.model';
 import { Location } from './models/location.model';
+import { LocationsConnection } from './models/locations-connection.model';
 
 import type { SqlBool } from 'kysely';
 
@@ -45,10 +48,10 @@ export class LocationsService {
     };
   }
 
-  async findLocations(args: LocationsArgs): Promise<LocationsResponse> {
+  async findLocations(args: LocationsArgs): Promise<LocationsConnection> {
     const { client } = this.databaseService;
-    const offset = args.offset ?? 0;
-    const limit = args.limit ?? 20;
+
+    const limit = args.first ?? 20;
     const hasTextSearch = Boolean(args.query?.trim());
 
     let query = client
@@ -57,6 +60,7 @@ export class LocationsService {
       .select([
         sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
         sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
+        'created_at',
       ]);
 
     // Add search ranking if there's a text query
@@ -64,7 +68,7 @@ export class LocationsService {
       const searchRank = this.buildSearchRankExpression(
         args.query!,
         args.searchMode || 'combined',
-        args.similarityThreshold || 0.3
+        args.similarityThreshold || 0.3,
       );
       query = query.select([sql<number>`(${searchRank})`.as('search_rank')]);
     }
@@ -75,45 +79,88 @@ export class LocationsService {
       query = query.where((eb) => eb.and(filterExpressions));
     }
 
-    // Add ordering - search results by relevance, others by name
-    if (hasTextSearch) {
-      query = query.orderBy(sql`search_rank`, 'desc').orderBy('name', 'asc');
-    } else {
-      query = query.orderBy('name', 'asc');
+    // Handle cursor-based pagination
+    if (args.after) {
+      const { id, timestamp } = CursorUtil.parseCursor(args.after);
+      if (timestamp) {
+        // Use timestamp for ordering
+        query = query.where(
+          'created_at',
+          '<',
+          new Date(timestamp).toISOString(),
+        );
+      } else if (hasTextSearch) {
+        // For search queries, use ID-based cursor as fallback
+        query = query.where('id', '>', id);
+      } else {
+        // For non-search queries, use name-based cursor
+        query = query.where('name', '>', id);
+      }
     }
+
+    // Add ordering - search results by relevance, others by created_at (for consistent cursor pagination)
+    if (hasTextSearch) {
+      query = query
+        .orderBy(sql`search_rank`, 'desc')
+        .orderBy('created_at', 'desc')
+        .orderBy('id', 'asc'); // Tie-breaker for consistent ordering
+    } else {
+      query = query.orderBy('created_at', 'desc').orderBy('id', 'asc');
+    }
+
+    // Get one extra result to check if there are more pages
+    query = query.limit(limit + 1);
 
     // Get total count with a separate simpler query
     let countQuery = client
       .selectFrom('locations')
       .select((eb) => eb.fn.count('id').as('count'));
-    
+
     // Apply the same filters to count query
     if (filterExpressions.length > 0) {
       countQuery = countQuery.where((eb) => eb.and(filterExpressions));
     }
-    
-    const countResult = await countQuery.executeTakeFirst();
+
+    const [results, countResult] = await Promise.all([
+      query.execute(),
+      countQuery.executeTakeFirst(),
+    ]);
+
     const totalCount = Number(countResult?.count ?? 0);
+    const hasNextPage = results.length > limit;
+    const nodes = results.slice(0, limit);
 
-    // Apply pagination and get results
-    const results = await query.offset(offset).limit(limit).execute();
+    // Transform database results to GraphQL types and create edges
+    const edges: LocationEdge[] = nodes.map((row) => {
+      const location: Location = {
+        id: row.id,
+        name: row.name || 'Unknown Location',
+        address: this.buildAddress(row),
+        geo: {
+          latitude: row.latitude,
+          longitude: row.longitude,
+        },
+        sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
+      };
 
-    // Transform database results to GraphQL types
-    const nodes = results.map((row) => ({
-      id: row.id,
-      name: row.name || 'Unknown Location', // Handle nullable name
-      address: this.buildAddress(row),
-      geo: {
-        latitude: row.latitude,
-        longitude: row.longitude,
-      },
-      sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
-    }));
+      return {
+        node: location,
+        cursor: CursorUtil.createCursor(
+          row.id,
+          row.created_at ? new Date(row.created_at) : undefined,
+        ),
+      };
+    });
+
+    const pageInfo: PageInfo = {
+      hasNextPage,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : undefined,
+    };
 
     return {
-      nodes,
+      edges,
+      pageInfo,
       totalCount,
-      hasMore: offset + limit < totalCount,
     };
   }
 
@@ -125,7 +172,13 @@ export class LocationsService {
     }
 
     if (args.query) {
-      expressions.push(this.createTextSearchFilter(args.query, args.searchMode, args.similarityThreshold));
+      expressions.push(
+        this.createTextSearchFilter(
+          args.query,
+          args.searchMode,
+          args.similarityThreshold,
+        ),
+      );
     }
 
     // Handle region filter
@@ -146,25 +199,29 @@ export class LocationsService {
   }
 
   private createTextSearchFilter(
-    query: string, 
+    query: string,
     searchMode: string = 'combined',
-    similarityThreshold: number = 0.3
+    similarityThreshold: number = 0.3,
   ): Expression<SqlBool> {
     const cleanQuery = this.prepareSearchQuery(query);
-    
+
     switch (searchMode) {
       case 'exact':
         return this.createExactSearchFilter(query);
-      
+
       case 'fuzzy':
         return this.createFuzzySearchFilter(query, similarityThreshold);
-      
+
       case 'phrase':
         return this.createPhraseSearchFilter(cleanQuery);
-      
+
       case 'combined':
       default:
-        return this.createCombinedSearchFilter(query, cleanQuery, similarityThreshold);
+        return this.createCombinedSearchFilter(
+          query,
+          cleanQuery,
+          similarityThreshold,
+        );
     }
   }
 
@@ -178,7 +235,10 @@ export class LocationsService {
     )`;
   }
 
-  private createFuzzySearchFilter(query: string, threshold: number): Expression<SqlBool> {
+  private createFuzzySearchFilter(
+    query: string,
+    threshold: number,
+  ): Expression<SqlBool> {
     return sql<boolean>`(
       similarity(name, ${query}) > ${threshold}
       OR similarity(city, ${query}) > ${threshold}
@@ -190,7 +250,11 @@ export class LocationsService {
     return sql<boolean>`search_vector @@ phraseto_tsquery('english', ${cleanQuery})`;
   }
 
-  private createCombinedSearchFilter(query: string, cleanQuery: string, threshold: number): Expression<SqlBool> {
+  private createCombinedSearchFilter(
+    query: string,
+    cleanQuery: string,
+    threshold: number,
+  ): Expression<SqlBool> {
     return sql<boolean>`(
       -- Full-text search using search_vector (weighted by search configuration)
       search_vector @@ plainto_tsquery('english', ${cleanQuery})
@@ -208,7 +272,7 @@ export class LocationsService {
       OR
       -- Partial sport tag matching
       EXISTS (
-        SELECT 1 FROM unnest(sport_tags) AS tag 
+        SELECT 1 FROM unnest(sport_tags) AS tag
         WHERE tag ILIKE ${'%' + query.toLowerCase() + '%'}
       )
     )`;
@@ -224,16 +288,16 @@ export class LocationsService {
   }
 
   private buildSearchRankExpression(
-    query: string, 
-    searchMode: string, 
-    threshold: number
+    query: string,
+    searchMode: string,
+    threshold: number,
   ): string {
     const cleanQuery = this.prepareSearchQuery(query);
 
     switch (searchMode) {
       case 'exact':
         return `
-          CASE 
+          CASE
             WHEN name ILIKE '${query}' THEN 1.0
             WHEN city ILIKE '${query}' THEN 0.8
             WHEN street ILIKE '${query}' THEN 0.6
@@ -253,7 +317,7 @@ export class LocationsService {
 
       case 'phrase':
         return `
-          CASE 
+          CASE
             WHEN search_vector @@ phraseto_tsquery('english', '${cleanQuery}') THEN
               ts_rank_cd(search_vector, phraseto_tsquery('english', '${cleanQuery}')) * 1.2
             ELSE 0
@@ -264,7 +328,7 @@ export class LocationsService {
       default:
         return `
           -- Full-text search ranking
-          CASE 
+          CASE
             WHEN search_vector @@ plainto_tsquery('english', '${cleanQuery}') THEN
               ts_rank_cd(search_vector, plainto_tsquery('english', '${cleanQuery}')) * 1.0
             ELSE 0
@@ -276,17 +340,17 @@ export class LocationsService {
             COALESCE(similarity(street, '${query}'), 0) * 0.4
           ) +
           -- Exact prefix matching boost
-          CASE 
+          CASE
             WHEN name ILIKE '${query}%' THEN 0.9
             WHEN city ILIKE '${query}%' THEN 0.7
             WHEN street ILIKE '${query}%' THEN 0.5
             ELSE 0
           END +
           -- Sport tag matching boost
-          CASE 
+          CASE
             WHEN '${query.toLowerCase()}' = ANY(sport_tags) THEN 0.95
             WHEN EXISTS (
-              SELECT 1 FROM unnest(sport_tags) AS tag 
+              SELECT 1 FROM unnest(sport_tags) AS tag
               WHERE tag ILIKE '%${query.toLowerCase()}%'
             ) THEN 0.6
             ELSE 0
@@ -303,7 +367,7 @@ export class LocationsService {
     // - Combined search mode
     const wordCount = query.trim().split(/\s+/).length;
     const queryLength = query.trim().length;
-    
+
     return (
       (searchMode === 'combined' && wordCount >= 2) ||
       (searchMode === 'phrase' && wordCount >= 2) ||
@@ -316,7 +380,7 @@ export class LocationsService {
     query: string,
     searchMode: string,
     resultCount: number,
-    executionTime: number
+    executionTime: number,
   ): void {
     // Log slow searches for analysis (>100ms)
     if (executionTime > 100) {
@@ -325,27 +389,29 @@ export class LocationsService {
         searchMode,
         resultCount,
         executionTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
 
   // Enhanced search with performance tracking
-  async findLocationsWithMetrics(args: LocationsArgs): Promise<LocationsResponse & { searchMetrics?: any }> {
+  async findLocationsWithMetrics(
+    args: LocationsArgs,
+  ): Promise<LocationsConnection & { searchMetrics?: any }> {
     const startTime = Date.now();
     const result = await this.findLocations(args);
     const executionTime = Date.now() - startTime;
-    
+
     // Log performance for monitoring
     if (args.query) {
       this.logSearchPerformance(
-        args.query, 
+        args.query,
         args.searchMode || 'combined',
         result.totalCount,
-        executionTime
+        executionTime,
       );
     }
-    
+
     // In development, include metrics in response
     if (process.env.NODE_ENV === 'development') {
       return {
@@ -355,11 +421,11 @@ export class LocationsService {
           query: args.query,
           searchMode: args.searchMode,
           totalResults: result.totalCount,
-          hasTextSearch: Boolean(args.query)
-        }
+          hasTextSearch: Boolean(args.query),
+        },
       };
     }
-    
+
     return result;
   }
 
@@ -386,115 +452,6 @@ export class LocationsService {
       gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
       ${sql.literal(radiusMeters)}
     )`;
-  }
-
-  private extractLatitude(location: unknown): number {
-    if (!location) return 0;
-
-    // Handle PostGIS POINT geometry
-    // PostGIS returns POINT(longitude latitude) format
-    const locationStr = String(location);
-    const pointMatch = locationStr.match(/POINT\(([\d.-]+)\s+([\d.-]+)\)/);
-    if (pointMatch) {
-      const [, , latitude] = pointMatch;
-      return Number(latitude);
-    }
-
-    // Handle binary/hex format (WKB)
-    if (locationStr.startsWith('0101000000')) {
-      // For WKB format, you would need a proper parser
-      // This is a placeholder for proper WKB parsing
-      console.warn('WKB format detected, consider using ST_AsText in query');
-      return 0;
-    }
-
-    return 0;
-  }
-
-  private extractLongitude(location: unknown): number {
-    if (!location) return 0;
-
-    // Handle PostGIS POINT geometry
-    // PostGIS returns POINT(longitude latitude) format
-    const locationStr = String(location);
-    const pointMatch = locationStr.match(/POINT\(([\d.-]+)\s+([\d.-]+)\)/);
-    if (pointMatch) {
-      const [, longitude] = pointMatch;
-      return Number(longitude);
-    }
-
-    // Handle binary/hex format (WKB)
-    if (locationStr.startsWith('0101000000')) {
-      // For WKB format, you would need a proper parser
-      // This is a placeholder for proper WKB parsing
-      console.warn('WKB format detected, consider using ST_AsText in query');
-      return 0;
-    }
-
-    return 0;
-  }
-
-  // Alternative method: Use ST_X and ST_Y in the query for better performance
-  async findLocationsWithCoordinates(
-    args: LocationsArgs,
-  ): Promise<LocationsResponse> {
-    const { client } = this.databaseService;
-    const offset = args.offset ?? 0;
-    const limit = args.limit ?? 20;
-
-    let query = client
-      .selectFrom('locations')
-      .select([
-        'id',
-        'name',
-        'street',
-        'city',
-        'state',
-        'country',
-        'postal_code',
-        'sport_tags',
-        sql<number>`gis.ST_X(geo::gis.geometry)`.as('longitude'),
-        sql<number>`gis.ST_Y(geo::gis.geometry)`.as('latitude'),
-      ]);
-
-    // Apply filters using composable approach
-    const filterExpressions = this.buildFilterExpressions(args);
-    if (filterExpressions.length > 0) {
-      query = query.where((eb) => eb.and(filterExpressions));
-    }
-
-    // Get total count
-    const countQuery = client
-      .selectFrom('locations')
-      .select((eb) => eb.fn.count('id').as('count'));
-
-    if (filterExpressions.length > 0) {
-      countQuery.where((eb) => eb.and(filterExpressions));
-    }
-
-    const countResult = await countQuery.executeTakeFirst();
-    const totalCount = Number(countResult?.count ?? 0);
-
-    // Apply pagination and get results
-    const results = await query.offset(offset).limit(limit).execute();
-
-    // Transform database results to GraphQL types
-    const nodes = results.map((row) => ({
-      id: row.id,
-      name: row.name || 'Unknown Location', // Handle nullable name
-      address: this.buildAddress(row),
-      geo: {
-        latitude: row.latitude || 0,
-        longitude: row.longitude || 0,
-      },
-      sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
-    }));
-
-    return {
-      nodes,
-      totalCount,
-      hasMore: offset + limit < totalCount,
-    };
   }
 
   private buildAddress(row: any) {
