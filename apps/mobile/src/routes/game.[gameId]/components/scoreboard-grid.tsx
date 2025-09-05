@@ -1,21 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
-
-import { CalendarIcon } from "~/icons/calendar";
-import { PlusSmallIcon } from "~/icons/plus-small";
+import { View, Text, FlatList } from "react-native";
 
 import { GameStatus } from "~/gql/types";
 
-import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
-
 import { useGame } from "../use-game.hook";
 import { useAddScore } from "../use-add-score.hook";
-import { TeamPreviewCard } from "./team-preview-card";
+
+import { GridPreviewCard } from "./scoreboard-grid-preview-card";
+import { ScoreButton } from "./score-button";
+import { GameClock } from "./scoreboard-game-clock";
 
 import type { GameTeamNodeFragment } from "../queries/get-game.generated";
 import { cn } from "~/lib/utils";
 
-export function MultiTeamScoreboard() {
+export function ScoreboardGrid() {
   const [focusedTeamId, setFocusedTeamId] = useState<string | null>(null);
 
   const { data } = useGame({
@@ -61,7 +59,7 @@ export function MultiTeamScoreboard() {
         className={cn("p-1 flex-1 flex flex-row justify-space-between gap-2")}
         style={{ maxWidth: "33%" }}
       >
-        <TeamPreviewCard
+        <GridPreviewCard
           score={gameTeam.score}
           name={gameTeam.team.name}
           onPress={() => setFocusedTeamId(gameTeam.team.id)}
@@ -71,26 +69,23 @@ export function MultiTeamScoreboard() {
   }
 
   return (
-    <View className="flex flex-col gap-6 py-6">
+    <View className="flex flex-col gap-6 py-8">
       {/* Focused Team Display */}
       {focusedTeam ? (
-        <View className="flex flex-row items-center gap-4 px-4">
+        <View className="flex flex-row items-center gap-4 pr-4 pl-6">
           <Text className="text-foreground text-5xl font-bold">{`${focusedTeam.score}`}</Text>
+
           <Text
             numberOfLines={1}
             className="flex-1 text-foreground text-3xl"
           >{`${focusedTeam.team.name}`}</Text>
+
           {isLive ? (
-            <Pressable
-              className="opacity-100 active:opacity-50 transition-opacity"
+            <ScoreButton
+              sport={game.sport}
               onPress={handleAddScore}
               disabled={isAddingScore}
-            >
-              <Badge variant="outline">
-                <BadgeIcon Icon={PlusSmallIcon} />
-                <BadgeText>Score</BadgeText>
-              </Badge>
-            </Pressable>
+            />
           ) : null}
         </View>
       ) : null}
@@ -109,21 +104,7 @@ export function MultiTeamScoreboard() {
         />
       </View>
 
-      {/* Game Info */}
-      {game.scheduledAt ? (
-        <View className="flex flex-row items-center gap-1 self-center">
-          {game.status === GameStatus.Upcoming ? (
-            <CalendarIcon className="text-muted-foreground size-4" />
-          ) : null}
-          <Text className="text-sm text-muted-foreground text-center">
-            {new Date(game.scheduledAt as string).toLocaleDateString()} at{" "}
-            {new Date(game.scheduledAt as string).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-        </View>
-      ) : null}
+      <GameClock />
     </View>
   );
 }

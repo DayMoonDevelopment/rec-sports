@@ -220,4 +220,30 @@ export class GamesService {
 
     return game;
   }
+
+  async getGameStart(gameId: string) {
+    const { client } = this.databaseService;
+
+    const gameStartAction = await client
+      .selectFrom('game_actions')
+      .select(['occurred_at'])
+      .where('game_id', '=', gameId)
+      .where('type', '=', 'GAME_START')
+      .executeTakeFirst();
+
+    return gameStartAction;
+  }
+
+  async getGameEnd(gameId: string) {
+    const { client } = this.databaseService;
+
+    const gameStartAction = await client
+      .selectFrom('game_actions')
+      .select(['occurred_at'])
+      .where('game_id', '=', gameId)
+      .where('type', '=', 'GAME_End')
+      .executeTakeFirst();
+
+    return gameStartAction;
+  }
 }

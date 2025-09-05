@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { useGame } from "./use-game.hook";
 
 import { GameHeader } from "./components/game-header";
-import { LiveScoreboard } from "./components/live-scoreboard";
+import { Scoreboard } from "./components/scoreboard";
 import { GameActions } from "./components/game-actions";
 
 export function Component() {
@@ -16,7 +16,7 @@ export function Component() {
   return (
     <View className="flex-1 bg-background pt-safe">
       <GameHeader />
-      <LiveScoreboard />
+      <Scoreboard />
       <GameActions />
     </View>
   );

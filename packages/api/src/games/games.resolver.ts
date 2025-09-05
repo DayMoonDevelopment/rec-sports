@@ -77,4 +77,26 @@ export class GamesResolver {
 
     return null;
   }
+
+  @ResolveField(() => Date, { nullable: true })
+  async startedAt(@Parent() game: Game): Promise<Date | null> {
+    if (game.startedAt) {
+      return game.startedAt;
+    }
+
+    const gameStartAction = await this.gamesService.getGameStart(game.id);
+
+    return new Date(gameStartAction?.occurred_at) || null;
+  }
+
+  @ResolveField(() => Date, { nullable: true })
+  async endedAt(@Parent() game: Game): Promise<Date | null> {
+    if (game.endedAt) {
+      return game.endedAt;
+    }
+
+    const gameEndAction = await this.gamesService.getGameStart(game.id);
+
+    return new Date(gameEndAction?.occurred_at) || null;
+  }
 }
