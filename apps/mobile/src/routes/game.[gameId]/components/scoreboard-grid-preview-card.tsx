@@ -1,16 +1,16 @@
 import { Text, Pressable } from "react-native";
 
-interface TeamPreviewCardProps {
+interface GridPreviewCardProps {
   name: string;
   score: number | null;
   onPress: () => void;
 }
 
-export function TeamPreviewCard({
+export function GridPreviewCard({
   name,
   score,
   onPress,
-}: TeamPreviewCardProps) {
+}: GridPreviewCardProps) {
   return (
     <Pressable
       onPress={onPress}

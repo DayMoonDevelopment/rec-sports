@@ -3,16 +3,16 @@ import { View, Text } from "react-native";
 import { useGame } from "../use-game.hook";
 
 import { LoadingState } from "./loading-state";
-import { MultiTeamScoreboard } from "./multi-team-scoreboard";
-import { TwoTeamScoreboard } from "./two-team-scoreboard";
+import { ScoreboardGrid } from "./scoreboard-grid";
+import { ScoreboardColumns } from "./scoreboard-columns";
 
-export function LiveScoreboard() {
+export function Scoreboard() {
   const { data, loading, error } = useGame();
   const game = data?.game;
 
   if (loading) {
     return (
-      <View className="px-4 py-6 bg-gray-50">
+      <View className="px-4 py-6 bg-muted">
         <View className="flex-row items-center justify-center">
           <LoadingState message="Loading game..." size="large" />
         </View>
@@ -22,8 +22,10 @@ export function LiveScoreboard() {
 
   if (error || (!loading && !game)) {
     return (
-      <View className="px-4 py-6 bg-gray-50">
-        <Text className="text-center text-gray-500">Game not found</Text>
+      <View className="px-4 py-6 bg-muted">
+        <Text className="text-center text-muted-foreground">
+          Game not found
+        </Text>
       </View>
     );
   }
@@ -34,7 +36,7 @@ export function LiveScoreboard() {
 
   return (
     <View className="bg-muted">
-      {hasMultipleTeams ? <MultiTeamScoreboard /> : <TwoTeamScoreboard />}
+      {hasMultipleTeams ? <ScoreboardGrid /> : <ScoreboardColumns />}
     </View>
   );
 }
