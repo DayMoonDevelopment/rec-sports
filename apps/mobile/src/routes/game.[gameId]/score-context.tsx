@@ -7,16 +7,18 @@ import React, {
 } from "react";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
-import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { useGame } from "./use-game.hook";
-import { useAddScore } from "./use-add-score.hook";
-import { useUpdateScore } from "./use-update-score.hook";
 import {
   getSportScoringConfig,
   hasMultipleScoreTypes,
   getDefaultScoreType,
-  type ScoreType,
 } from "~/lib/sport-scoring";
+
+import { useGame } from "./use-game.hook";
+import { useAddScore } from "./use-add-score.hook";
+import { useUpdateScore } from "./use-update-score.hook";
+
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { ScoreType } from "~/lib/sport-scoring";
 
 export type TeamItemProps = {
   id: string;
@@ -177,23 +179,24 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
   const handleSubmit = useCallback(async () => {
     if (!selectedTeamId || !selectedScoreType || !game?.id) return;
 
-    const input = {
-      occurredToTeamId: selectedTeamId,
-      value: selectedScoreType.value,
-      key: selectedScoreType.actionKey,
-      occurredByUserId: selectedPlayerId || undefined,
-    };
-
     try {
       if (gameScoreActionId) {
         // Update existing score
+        const input = {
+          occurredToTeamId: selectedTeamId,
+          value: selectedScoreType.value,
+          key: selectedScoreType.actionKey,
+          occurredByUserId: selectedPlayerId || undefined,
+        };
         await updateScore({
           variables: { id: gameScoreActionId, input },
         });
       } else {
         // Add new score
         await addScore({
-          variables: { gameId: game.id, input },
+          teamId: selectedTeamId,
+          value: selectedScoreType.value,
+          key: selectedScoreType.actionKey,
         });
       }
       closeScoreSheet();
@@ -212,6 +215,7 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     addScore,
     updateScore,
     closeScoreSheet,
+    isUpdating,
   ]);
 
   const value: ScoreContextValue = {
