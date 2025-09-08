@@ -86,7 +86,7 @@ export class GamesResolver {
 
     const gameStartAction = await this.gamesService.getGameStart(game.id);
 
-    return new Date(gameStartAction?.occurred_at) || null;
+    return gameStartAction?.occurred_at ? new Date(gameStartAction.occurred_at) : null;
   }
 
   @ResolveField(() => Date, { nullable: true })
@@ -97,6 +97,6 @@ export class GamesResolver {
 
     const gameEndAction = await this.gamesService.getGameStart(game.id);
 
-    return new Date(gameEndAction?.occurred_at) || null;
+    return gameEndAction?.occurred_at ? new Date(gameEndAction.occurred_at) : null;
   }
 }
