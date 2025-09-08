@@ -18,7 +18,9 @@ export function ScoreBottomSheet() {
     scoreTypes,
     sportConfig,
     showScoreTypes,
-    handleAddScore,
+    isUpdating,
+    isProcessing,
+    handleSubmit,
   } = useScoreSheet();
 
   return (
@@ -33,7 +35,6 @@ export function ScoreBottomSheet() {
         },
         shadowOpacity: 0.41,
         shadowRadius: 9.11,
-
         elevation: 14,
       }}
     >
@@ -55,7 +56,7 @@ export function ScoreBottomSheet() {
           ? [
               <View key="divider" className="w-[75%] h-px bg-border" />,
               <View key="score-types" className="w-full flex-1 flex-col gap-2">
-                {scoreTypes.map((scoreType, index) => (
+                {scoreTypes.map((scoreType) => (
                   <ScoreTypeItem key={scoreType.actionKey} {...scoreType} />
                 ))}
               </View>,
@@ -64,9 +65,19 @@ export function ScoreBottomSheet() {
 
         <View className="w-[75%] h-px bg-border" />
 
-        <Button onPress={handleAddScore} className="w-full">
+        <Button
+          onPress={handleSubmit}
+          className="w-full"
+          disabled={isProcessing}
+        >
           <ButtonText>
-            {sportConfig?.addScoreButtonLabel || "Add Score"}
+            {isProcessing
+              ? isUpdating
+                ? "Updating Score..."
+                : "Adding Score..."
+              : isUpdating
+                ? "Update Score"
+                : sportConfig?.addScoreButtonLabel || "Add Score"}
           </ButtonText>
         </Button>
       </BottomSheetView>

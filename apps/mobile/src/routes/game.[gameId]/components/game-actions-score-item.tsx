@@ -1,10 +1,15 @@
 import { View, Text, Alert } from "react-native";
 import ContextMenuView from "react-native-context-menu-view";
 
-import type { GameScoreActionNodeFragment } from "../queries/get-game.generated";
 import { Sport } from "~/gql/types";
 import { getSportScoringConfig } from "~/lib/sport-scoring";
+
 import { useRemoveGameAction } from "../use-remove-game-action.hook";
+import { useScoreSheet } from "../score-context";
+
+import type { NativeSyntheticEvent } from "react-native";
+import type { ContextMenuOnPressNativeEvent } from "react-native-context-menu-view";
+import type { GameScoreActionNodeFragment } from "../queries/get-game.generated";
 
 function formatTime(occurredAt: string) {
   const date = new Date(occurredAt);
@@ -27,7 +32,7 @@ function formatTypeLabel(sport: Sport, actionKey: string | undefined | null) {
   return scoreType?.label || "Score";
 }
 
-const CONTEXT_MENU_INDEX_MAP = ["remove_action"];
+const CONTEXT_MENU_INDEX_MAP = ["edit_score", "remove_action"];
 
 export function GameScoreActionItem({
   sport,
@@ -37,6 +42,12 @@ export function GameScoreActionItem({
   action: GameScoreActionNodeFragment;
 }) {
   const [removeGameAction] = useRemoveGameAction();
+  const { openScoreSheet } = useScoreSheet();
+
+  const handleEditScore = () => {
+    // Open the score sheet for editing with the current team and action ID
+    openScoreSheet(action.occurredToTeam.id, action.id);
+  };
 
   const handleRemoveScore = async () => {
     Alert.alert("Remove Score", "Are you sure you want to remove this score?", [
@@ -63,25 +74,36 @@ export function GameScoreActionItem({
     ]);
   };
 
+  function handlePressContextMenuItem(
+    e: NativeSyntheticEvent<ContextMenuOnPressNativeEvent>,
+  ) {
+    switch (CONTEXT_MENU_INDEX_MAP[e.nativeEvent.index]) {
+      case "edit_score":
+        handleEditScore();
+        break;
+      case "remove_action":
+        handleRemoveScore();
+        break;
+      default:
+        console.warn("Unknown action");
+        break;
+    }
+  }
+
   return (
     <ContextMenuView
       actions={[
+        {
+          title: "Edit Score",
+          systemIcon: "pencil",
+        },
         {
           title: "Remove Score",
           systemIcon: "trash",
           destructive: true,
         },
       ]}
-      onPress={(e: any) => {
-        switch (CONTEXT_MENU_INDEX_MAP[e.nativeEvent.index]) {
-          case "remove_action":
-            handleRemoveScore();
-            break;
-          default:
-            console.warn("Unknown action");
-            break;
-        }
-      }}
+      onPress={handlePressContextMenuItem}
     >
       <View className="flex-row items-center justify-between py-3 px-4 border-b border-border">
         <View className="flex-1">

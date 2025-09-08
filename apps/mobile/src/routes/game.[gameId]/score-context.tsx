@@ -10,6 +10,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useGame } from "./use-game.hook";
 import { useAddScore } from "./use-add-score.hook";
+import { useUpdateScore } from "./use-update-score.hook";
 import {
   getSportScoringConfig,
   hasMultipleScoreTypes,
@@ -41,22 +42,33 @@ export type PlayerItemProps = {
 };
 
 interface ScoreContextValue {
+  // Selected state
   selectedTeamId: string | null;
   selectedPlayerId: string | null;
   selectedScoreType: ScoreType | null;
-  bottomSheetRef: React.RefObject<BottomSheetModal | null>;
+  gameScoreActionId: string | null;
+
+  // UI data
   teams: TeamItemProps[];
   players: PlayerItemProps[];
   scoreTypes: ScoreTypeItemProps[];
   sportConfig: any;
   showScoreTypes: boolean;
-  isAddingScore: boolean;
-  openScoreSheet: (teamId?: string) => void;
+
+  // Loading states
+  isProcessing: boolean;
+  isUpdating: boolean;
+
+  // Actions
+  openScoreSheet: (teamId?: string, gameScoreActionId?: string) => void;
   closeScoreSheet: () => void;
-  handleAddScore: () => void;
+  handleSubmit: () => void;
   setSelectedTeam: (teamId: string) => void;
   setSelectedPlayer: (playerId: string | null) => void;
   setSelectedScoreType: (scoreType: ScoreType) => void;
+
+  // Refs
+  bottomSheetRef: React.RefObject<BottomSheetModal | null>;
 }
 
 const ScoreContext = createContext<ScoreContextValue | undefined>(undefined);
@@ -75,86 +87,73 @@ interface ScoreProviderProps {
 
 export function ScoreProvider({ children }: ScoreProviderProps) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const [selectedTeamId, setSelectedTeamIdState] = useState<string | null>(
-    null,
-  );
-  const [selectedPlayerId, setSelectedPlayerIdState] = useState<string | null>(
-    null,
-  );
-  const [selectedScoreType, setSelectedScoreTypeState] =
-    useState<ScoreType | null>(null);
 
+  // Selected state
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [gameScoreActionId, setGameScoreActionId] = useState<string | null>(
+    null,
+  );
+  const [selectedScoreType, setSelectedScoreType] = useState<ScoreType | null>(
+    null,
+  );
+
+  // Hooks
   const { data } = useGame({
     fetchPolicy: "cache-only",
     onCompleted: (data) => {
-      const game = data?.game;
-      const sport = game?.sport;
-
-      if (sport) {
-        setSelectedScoreTypeState(getDefaultScoreType(sport));
+      const sport = data?.game?.sport;
+      if (sport && !selectedScoreType) {
+        setSelectedScoreType(getDefaultScoreType(sport));
       }
     },
   });
-  const [addScore, { loading: isAddingScore }] = useAddScore();
 
+  const [addScore, { loading: isAddingScore }] = useAddScore();
+  const [updateScore, { loading: isUpdatingScore }] = useUpdateScore();
+
+  // Derived data
   const game = data?.game;
   const sport = game?.sport;
   const sportConfig = sport ? getSportScoringConfig(sport) : null;
   const showScoreTypes = sport ? hasMultipleScoreTypes(sport) : false;
+  const isUpdating = Boolean(gameScoreActionId);
+  const isProcessing = isAddingScore || isUpdatingScore;
 
-  const setSelectedTeam = useCallback((teamId: string) => {
-    setSelectedTeamIdState(teamId);
-  }, []);
-
-  const setSelectedPlayer = useCallback((playerId: string | null) => {
-    setSelectedPlayerIdState(playerId);
-  }, []);
-
-  const setSelectedScoreType = useCallback((scoreType: ScoreType) => {
-    setSelectedScoreTypeState(scoreType);
-  }, []);
-
+  // Team data
   const teams: TeamItemProps[] =
-    game?.teams?.map((team) => ({
-      id: team.team.id,
-      name: team.team.name,
-      onPress: () => setSelectedTeam(team.team.id),
-      selected: team.team.id === selectedTeamId,
+    game?.teams?.map((gameTeam) => ({
+      id: gameTeam.team.id,
+      name: gameTeam.team.name,
+      onPress: () => setSelectedTeamId(gameTeam.team.id),
+      selected: gameTeam.team.id === selectedTeamId,
     })) || [];
 
+  // Player data
   const players: PlayerItemProps[] =
     game?.teams?.flatMap((gameTeam) => {
-      const selectedTeamPlayers =
-        gameTeam.team.id === selectedTeamId
-          ? gameTeam.team.members?.map((member) => ({
-              id: member.id,
-              teamId: gameTeam.team.id,
-              teamName: gameTeam.team.name,
-              onPress: () =>
-                setSelectedPlayer(
-                  selectedPlayerId === member.id ? null : member.id,
-                ),
-              selected: selectedPlayerId === member.id,
-            })) || []
-          : [];
-
-      const otherTeamPlayers =
-        gameTeam.team.id !== selectedTeamId
-          ? gameTeam.team.members?.map((member) => ({
-              id: member.id,
-              teamId: gameTeam.team.id,
-              teamName: gameTeam.team.name,
-              onPress: () =>
-                setSelectedPlayer(
-                  selectedPlayerId === member.id ? null : member.id,
-                ),
-              selected: selectedPlayerId === member.id,
-            })) || []
-          : [];
-
-      return [...selectedTeamPlayers, ...otherTeamPlayers];
+      return (
+        gameTeam.team.members?.map((member) => ({
+          id: member.id,
+          teamId: gameTeam.team.id,
+          teamName: gameTeam.team.name,
+          onPress: () =>
+            setSelectedPlayerId(
+              selectedPlayerId === member.id ? null : member.id,
+            ),
+          selected: selectedPlayerId === member.id,
+        })) || []
+      );
     }) || [];
 
+  // Sort players: selected team first, then others
+  const sortedPlayers = players.sort((a, b) => {
+    if (a.teamId === selectedTeamId && b.teamId !== selectedTeamId) return -1;
+    if (a.teamId !== selectedTeamId && b.teamId === selectedTeamId) return 1;
+    return 0;
+  });
+
+  // Score type data
   const scoreTypes: ScoreTypeItemProps[] =
     sportConfig?.scoreTypes.map((scoreType) => ({
       ...scoreType,
@@ -162,26 +161,12 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
       selected: selectedScoreType?.actionKey === scoreType.actionKey,
     })) || [];
 
-  const handleAddScore = useCallback(() => {
-    if (!selectedTeamId || !selectedScoreType) return;
-
-    addScore({
-      teamId: selectedTeamId,
-      value: selectedScoreType.value,
-      key: selectedScoreType.actionKey,
-    })
-      .then(() => {
-        closeScoreSheet();
-      })
-      .catch((error) => {
-        console.error("Failed to add score:", error);
-      });
-  }, [selectedTeamId, selectedScoreType, addScore]);
-
-  const openScoreSheet = useCallback((teamId?: string) => {
+  // Actions
+  const openScoreSheet = useCallback((teamId?: string, actionId?: string) => {
     if (teamId) {
-      setSelectedTeamIdState(teamId);
+      setSelectedTeamId(teamId);
     }
+    setGameScoreActionId(actionId || null);
     bottomSheetRef.current?.present();
   }, []);
 
@@ -189,23 +174,74 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     bottomSheetRef.current?.dismiss();
   }, []);
 
+  const handleSubmit = useCallback(async () => {
+    if (!selectedTeamId || !selectedScoreType || !game?.id) return;
+
+    const input = {
+      occurredToTeamId: selectedTeamId,
+      value: selectedScoreType.value,
+      key: selectedScoreType.actionKey,
+      occurredByUserId: selectedPlayerId || undefined,
+    };
+
+    try {
+      if (gameScoreActionId) {
+        // Update existing score
+        await updateScore({
+          variables: { id: gameScoreActionId, input },
+        });
+      } else {
+        // Add new score
+        await addScore({
+          variables: { gameId: game.id, input },
+        });
+      }
+      closeScoreSheet();
+    } catch (error) {
+      console.error(
+        isUpdating ? "Failed to update score:" : "Failed to add score:",
+        error,
+      );
+    }
+  }, [
+    selectedTeamId,
+    selectedScoreType,
+    selectedPlayerId,
+    gameScoreActionId,
+    game?.id,
+    addScore,
+    updateScore,
+    closeScoreSheet,
+  ]);
+
   const value: ScoreContextValue = {
+    // Selected state
     selectedTeamId,
     selectedPlayerId,
     selectedScoreType,
-    bottomSheetRef,
+    gameScoreActionId,
+
+    // UI data
     teams,
-    players,
+    players: sortedPlayers,
     scoreTypes,
     sportConfig,
     showScoreTypes,
-    isAddingScore,
+
+    // Loading states
+    isProcessing,
+    isUpdating,
+
+    // Actions
     openScoreSheet,
     closeScoreSheet,
-    handleAddScore,
-    setSelectedTeam,
-    setSelectedPlayer,
+    handleSubmit,
+    setSelectedTeam: setSelectedTeamId,
+    setSelectedPlayer: setSelectedPlayerId,
     setSelectedScoreType,
+
+    // Refs
+    bottomSheetRef,
   };
 
   return (
