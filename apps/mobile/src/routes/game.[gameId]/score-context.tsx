@@ -32,11 +32,21 @@ export type ScoreTypeItemProps = {
   selected: boolean;
 };
 
+export type PlayerItemProps = {
+  id: string;
+  teamId: string;
+  teamName: string;
+  onPress: () => void;
+  selected: boolean;
+};
+
 interface ScoreContextValue {
   selectedTeamId: string | null;
+  selectedPlayerId: string | null;
   selectedScoreType: ScoreType | null;
   bottomSheetRef: React.RefObject<BottomSheetModal | null>;
   teams: TeamItemProps[];
+  players: PlayerItemProps[];
   scoreTypes: ScoreTypeItemProps[];
   sportConfig: any;
   showScoreTypes: boolean;
@@ -45,6 +55,7 @@ interface ScoreContextValue {
   closeScoreSheet: () => void;
   handleAddScore: () => void;
   setSelectedTeam: (teamId: string) => void;
+  setSelectedPlayer: (playerId: string | null) => void;
   setSelectedScoreType: (scoreType: ScoreType) => void;
 }
 
@@ -65,6 +76,9 @@ interface ScoreProviderProps {
 export function ScoreProvider({ children }: ScoreProviderProps) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const [selectedTeamId, setSelectedTeamIdState] = useState<string | null>(
+    null,
+  );
+  const [selectedPlayerId, setSelectedPlayerIdState] = useState<string | null>(
     null,
   );
   const [selectedScoreType, setSelectedScoreTypeState] =
@@ -92,6 +106,10 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     setSelectedTeamIdState(teamId);
   }, []);
 
+  const setSelectedPlayer = useCallback((playerId: string | null) => {
+    setSelectedPlayerIdState(playerId);
+  }, []);
+
   const setSelectedScoreType = useCallback((scoreType: ScoreType) => {
     setSelectedScoreTypeState(scoreType);
   }, []);
@@ -103,6 +121,39 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
       onPress: () => setSelectedTeam(team.team.id),
       selected: team.team.id === selectedTeamId,
     })) || [];
+
+  const players: PlayerItemProps[] =
+    game?.teams?.flatMap((gameTeam) => {
+      const selectedTeamPlayers =
+        gameTeam.team.id === selectedTeamId
+          ? gameTeam.team.members?.map((member) => ({
+              id: member.id,
+              teamId: gameTeam.team.id,
+              teamName: gameTeam.team.name,
+              onPress: () =>
+                setSelectedPlayer(
+                  selectedPlayerId === member.id ? null : member.id,
+                ),
+              selected: selectedPlayerId === member.id,
+            })) || []
+          : [];
+
+      const otherTeamPlayers =
+        gameTeam.team.id !== selectedTeamId
+          ? gameTeam.team.members?.map((member) => ({
+              id: member.id,
+              teamId: gameTeam.team.id,
+              teamName: gameTeam.team.name,
+              onPress: () =>
+                setSelectedPlayer(
+                  selectedPlayerId === member.id ? null : member.id,
+                ),
+              selected: selectedPlayerId === member.id,
+            })) || []
+          : [];
+
+      return [...selectedTeamPlayers, ...otherTeamPlayers];
+    }) || [];
 
   const scoreTypes: ScoreTypeItemProps[] =
     sportConfig?.scoreTypes.map((scoreType) => ({
@@ -140,9 +191,11 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
 
   const value: ScoreContextValue = {
     selectedTeamId,
+    selectedPlayerId,
     selectedScoreType,
     bottomSheetRef,
     teams,
+    players,
     scoreTypes,
     sportConfig,
     showScoreTypes,
@@ -151,6 +204,7 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     closeScoreSheet,
     handleAddScore,
     setSelectedTeam,
+    setSelectedPlayer,
     setSelectedScoreType,
   };
 

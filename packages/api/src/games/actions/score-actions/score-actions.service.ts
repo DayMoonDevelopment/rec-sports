@@ -8,7 +8,6 @@ import { GameStatus } from '../../enums/game-status.enum';
 import { Game } from '../../models/game.model';
 import { AddGameScorePayload } from './dto/add-game-score.payload';
 import { GameScoreInput } from './dto/game-score.input';
-import { RemoveGameActionPayload } from './dto/remove-game-action.payload';
 import { UpdateGameScorePayload } from './dto/update-game-score.payload';
 import { GameScoreAction } from './models/game-score-action.model';
 
@@ -154,38 +153,6 @@ export class ScoreActionsService {
     }
 
     return { action };
-  }
-
-  async removeGameAction(id: string): Promise<RemoveGameActionPayload> {
-    const { client } = this.databaseService;
-
-    const existingAction = await this.findGameScoreActionById(id);
-    if (!existingAction) {
-      throw new Error('Game action not found');
-    }
-
-    // Get the game ID and team ID before deletion
-    const gameData = await client
-      .selectFrom('game_actions')
-      .select(['game_id', 'occurred_to_team_id'])
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    if (!gameData) {
-      throw new Error('Game action data not found');
-    }
-
-    await client.deleteFrom('game_actions').where('id', '=', id).execute();
-
-    // Recalculate the team's score after removing the score action
-    if (gameData.occurred_to_team_id) {
-      await this.recalculateTeamScore(
-        gameData.game_id,
-        gameData.occurred_to_team_id,
-      );
-    }
-
-    return { gameId: gameData.game_id, success: true };
   }
 
   async findGameScoreActionById(id: string): Promise<GameScoreAction | null> {

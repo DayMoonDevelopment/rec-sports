@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { CursorUtil } from '../../common/pagination/cursor.util';
 import { PageInfo } from '../../common/pagination/page-info.model';
 import { DatabaseService } from '../../database/database.service';
+import { RemoveGameActionPayload } from './dto/remove-game-action.payload';
 import { GameActionEdge } from './models/game-action-edge.model';
 import { GameActionsConnection } from './models/game-actions-connection.model';
 import { GameScoreAction } from './score-actions/models/game-score-action.model';
@@ -132,9 +133,7 @@ export class ActionsService {
     };
   }
 
-  async removeGameAction(
-    id: string,
-  ): Promise<{ gameId: string; success: boolean }> {
+  async removeGameAction(id: string): Promise<RemoveGameActionPayload> {
     const { client } = this.databaseService;
 
     // Get the game ID, team ID, and action type before deletion

@@ -9,6 +9,7 @@ import { useScoreSheet } from "../score-context";
 import { TeamItem } from "./score-bottom-sheet-team-item";
 import { ScoreTypeItem } from "./score-type-item";
 import { ScoreBottomSheetBackdrop } from "./score-bottom-sheet-backdrop";
+import { PlayerSelection } from "./player-selection";
 
 export function ScoreBottomSheet() {
   const {
@@ -45,6 +46,9 @@ export function ScoreBottomSheet() {
             </View>
           ))}
         </View>
+
+        {/* Player Selection */}
+        <PlayerSelection />
 
         {/* Score Type Selection - only show if sport has multiple score types */}
         {showScoreTypes
