@@ -62,7 +62,7 @@ export class ActionsService {
         'game_actions.id',
         'game_actions.occurred_at',
         'game_actions.point_value as value',
-        'game_actions.type as key',
+        'game_actions.details',
         'game_actions.occurred_by_user_id as user_id',
         'teams.id as team_id',
         'teams.name as team_name',
@@ -99,7 +99,10 @@ export class ActionsService {
         ? { id: result.team_id, name: result.team_name || '', members: [] }
         : ({} as any);
       gameScoreAction.value = result.value || 0;
-      gameScoreAction.key = result.key || '';
+
+      // Extract key from details JSONB field if it exists
+      const details = result.details as any;
+      gameScoreAction.key = details?.key || undefined;
 
       return {
         node: gameScoreAction,

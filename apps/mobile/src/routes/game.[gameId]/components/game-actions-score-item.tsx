@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 
 import type { GameScoreActionNodeFragment } from "../queries/get-game.generated";
 import { Sport } from "~/gql/types";
+import { getSportScoringConfig } from "~/lib/sport-scoring";
 
 function formatTime(occurredAt: string) {
   const date = new Date(occurredAt);
@@ -11,14 +12,17 @@ function formatTime(occurredAt: string) {
   });
 }
 
-function formatTypeLabel(sport: string, key: string | undefined | null) {
-  const normalizedRef = [sport, key].filter(Boolean).join(":");
-  switch (normalizedRef) {
-    case Sport.Soccer:
-      return "Goal";
-    default:
-      return "Score";
+function formatTypeLabel(sport: Sport, actionKey: string | undefined | null) {
+  if (!actionKey) {
+    return "Score";
   }
+
+  const sportConfig = getSportScoringConfig(sport);
+  const scoreType = sportConfig.scoreTypes.find(
+    (type) => type.actionKey === actionKey,
+  );
+
+  return scoreType?.label || "Score";
 }
 
 export function GameScoreActionItem({
@@ -28,6 +32,7 @@ export function GameScoreActionItem({
   sport: Sport;
   action: GameScoreActionNodeFragment;
 }) {
+  console.log(action);
   return (
     <View className="flex-row items-center justify-between py-3 px-4 border-b border-border">
       <View className="flex-1">

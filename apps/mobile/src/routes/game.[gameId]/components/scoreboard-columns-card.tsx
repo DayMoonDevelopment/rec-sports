@@ -2,7 +2,6 @@ import { View, Text } from "react-native";
 
 import { GameStatus, Sport } from "~/gql/types";
 
-import { useAddScore } from "../use-add-score.hook";
 import { ScoreButton } from "./score-button";
 
 import type { GameTeamNodeFragment } from "../queries/get-game.generated";
@@ -18,7 +17,6 @@ export function ColumnsScoreCard({
   sport,
   gameStatus,
 }: ColumnsCardProps) {
-  const [addScore, { loading: isAddingScore }] = useAddScore();
 
   const isLive = gameStatus === GameStatus.InProgress;
   const team = gameTeam.team;
@@ -26,19 +24,6 @@ export function ColumnsScoreCard({
 
   const getTeamDisplayName = (team: any) => {
     return team?.name || "Team";
-  };
-
-  const handleAddScore = async () => {
-    if (!gameTeam?.team?.id) return;
-
-    try {
-      await addScore({
-        teamId: gameTeam.team.id,
-        value: 1,
-      });
-    } catch (error) {
-      console.error("Failed to add score:", error);
-    }
   };
 
   return (
@@ -54,8 +39,7 @@ export function ColumnsScoreCard({
       {isLive ? (
         <ScoreButton
           sport={sport}
-          onPress={handleAddScore}
-          disabled={isAddingScore}
+          teamId={gameTeam.team.id}
         />
       ) : null}
     </View>

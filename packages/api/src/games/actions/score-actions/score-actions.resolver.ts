@@ -42,6 +42,17 @@ export class ScoreActionsResolver {
   ): Promise<RemoveGameActionPayload> {
     return this.scoreActionsService.removeGameAction(id);
   }
+
+  @ResolveField(() => String, { nullable: true })
+  async key(@Parent() action: GameScoreAction): Promise<string | null> {
+    // If the key is already set on the action (from the service layer), return it
+    if (action.key) {
+      return action.key;
+    }
+
+    // Fallback to default "SCORE" if no specific key is found
+    return 'SCORE';
+  }
 }
 
 @Resolver(() => AddGameScorePayload)
