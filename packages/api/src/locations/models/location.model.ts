@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 
 import { Sport } from '../../common/enums/sport.enum';
-import { Address } from './address.model';
+import { Address } from '../address';
 import { Point } from './point.model';
 
 @ObjectType()

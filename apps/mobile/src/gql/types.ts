@@ -102,6 +102,12 @@ export type GameActionsConnection = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type GameEdge = {
+  __typename: 'GameEdge';
+  cursor: Scalars['String']['output'];
+  node: Game;
+};
+
 export type GameScoreAction = GameAction & {
   __typename: 'GameScoreAction';
   id: Scalars['ID']['output'];
@@ -131,6 +137,13 @@ export type GameTeam = {
   id: Scalars['ID']['output'];
   score: Scalars['Int']['output'];
   team: Team;
+};
+
+export type GamesConnection = {
+  __typename: 'GamesConnection';
+  edges: Array<GameEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
 };
 
 export type Image = Media & {
@@ -339,9 +352,17 @@ export enum Sport {
 
 export type Team = {
   __typename: 'Team';
+  games: GamesConnection;
   id: Scalars['ID']['output'];
   members: Maybe<Array<User>>;
   name: Scalars['String']['output'];
+  sports: Array<Sport>;
+};
+
+
+export type TeamGamesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
 };
 
 export type TeamMemberInput = {

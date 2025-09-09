@@ -9,6 +9,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 
+import { TeamsService } from 'src/teams/teams.service';
 import { Sport } from '../common/enums/sport.enum';
 import { ActionsService } from './actions/actions.service';
 import { GameActionsConnection } from './actions/models/game-actions-connection.model';
@@ -16,6 +17,7 @@ import { CreateGameInput } from './dto/create-game.input';
 import { CreateGamePayload } from './dto/create-game.payload';
 import { UpdateGamePayload } from './dto/update-game.payload';
 import { GamesService } from './games.service';
+import { GameTeam } from './models/game-team.model';
 import { Game } from './models/game.model';
 
 @Resolver(() => Game)
@@ -23,6 +25,7 @@ export class GamesResolver {
   constructor(
     private readonly gamesService: GamesService,
     private readonly actionsService: ActionsService,
+    private readonly teamsService: TeamsService,
   ) {}
 
   @Query(() => Game, { nullable: true })
@@ -86,7 +89,9 @@ export class GamesResolver {
 
     const gameStartAction = await this.gamesService.getGameStart(game.id);
 
-    return gameStartAction?.occurred_at ? new Date(gameStartAction.occurred_at) : null;
+    return gameStartAction?.occurred_at
+      ? new Date(gameStartAction.occurred_at)
+      : null;
   }
 
   @ResolveField(() => Date, { nullable: true })
@@ -97,6 +102,19 @@ export class GamesResolver {
 
     const gameEndAction = await this.gamesService.getGameStart(game.id);
 
-    return gameEndAction?.occurred_at ? new Date(gameEndAction.occurred_at) : null;
+    return gameEndAction?.occurred_at
+      ? new Date(gameEndAction.occurred_at)
+      : null;
+  }
+
+  @ResolveField(() => [GameTeam])
+  async teams(@Parent() game: Game): Promise<GameTeam[]> {
+    // Check if teams are already populated
+    if (game.teams && game.teams.length > 0) {
+      return game.teams;
+    }
+
+    // Fetch teams if not populated
+    return this.teamsService.getGameTeams(game.id);
   }
 }

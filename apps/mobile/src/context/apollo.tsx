@@ -58,6 +58,9 @@ const cacheConfig: InMemoryCacheConfig = {
     },
     Team: {
       keyFields: ["id"],
+      fields: {
+        games: cursorPagination([]),
+      },
     },
     GameTeam: {
       keyFields: ["id"],

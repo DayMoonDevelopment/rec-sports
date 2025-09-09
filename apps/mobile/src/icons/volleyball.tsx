@@ -1,6 +1,5 @@
 import { Svg, Path } from "~/ui/svg";
 
-import { cn } from "~/lib/utils";
 import type { SvgProps } from "react-native-svg";
 
 export const VolleyballIcon = (props: SvgProps & { filled?: boolean }) => {
