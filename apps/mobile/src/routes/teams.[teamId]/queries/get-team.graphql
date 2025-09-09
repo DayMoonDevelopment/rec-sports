@@ -1,0 +1,64 @@
+fragment TeamMemberNode on User {
+  id
+  displayName
+  firstName
+  lastName
+  photo {
+    source
+  }
+}
+
+fragment GamePreviewNode on Game {
+  id
+  sport
+  status
+  scheduledAt
+  startedAt
+  endedAt
+  location {
+    id
+    name
+    address {
+      id
+      street
+      city
+      stateCode
+      postalCode
+    }
+  }
+  teams {
+    id
+    score
+    team {
+      id
+      name
+    }
+  }
+}
+
+fragment TeamDetailNode on Team {
+  id
+  name
+  sports
+  members {
+    ...TeamMemberNode
+  }
+  games(first: 10) {
+    edges {
+      node {
+        ...GamePreviewNode
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetTeam($id: ID!) {
+  team(id: $id) {
+    ...TeamDetailNode
+  }
+}

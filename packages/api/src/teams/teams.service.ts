@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
+import { Sport } from '../common/enums/sport.enum';
+import { CursorUtil } from '../common/pagination/cursor.util';
+import { PageInfo } from '../common/pagination/page-info.model';
 import { DatabaseService } from '../database/database.service';
+import { GamesConnection } from '../games/models/game-connection.model';
+import { GameEdge } from '../games/models/game-edge.model';
 import { GameTeam } from '../games/models/game-team.model';
+import { Game } from '../games/models/game.model';
 import { CreateTeamInput } from './dto/create-team.input';
 import { TeamMemberInput } from './dto/team-member.input';
 import { Team } from './models/team.model';
@@ -74,6 +80,9 @@ export class TeamsService {
       .where('team_members.team_id', '=', id)
       .execute();
 
+    const sports = await this.getTeamSports(id);
+    const games = await this.getTeamGames(id, 20);
+
     return {
       id: result.id,
       name: result.name || '',
@@ -88,6 +97,8 @@ export class TeamsService {
         updatedAt: new Date(m.updated_at),
         authId: m.auth_id,
       })),
+      sports,
+      games,
     };
   }
 
@@ -156,5 +167,145 @@ export class TeamsService {
     }
 
     return gameTeams;
+  }
+
+  async getTeamSports(teamId: string): Promise<Sport[]> {
+    const { client } = this.databaseService;
+
+    const results = await client
+      .selectFrom('game_teams')
+      .innerJoin('games', 'games.id', 'game_teams.game_id')
+      .select('games.sport')
+      .distinct()
+      .where('game_teams.team_id', '=', teamId)
+      .execute();
+
+    return results.map((result) => result.sport.toUpperCase() as Sport);
+  }
+
+  async getTeamGames(
+    teamId: string,
+    first: number,
+    after?: string,
+  ): Promise<GamesConnection> {
+    const { client } = this.databaseService;
+
+    let query = client
+      .selectFrom('game_teams')
+      .innerJoin('games', 'games.id', 'game_teams.game_id')
+      .leftJoin('locations', 'locations.id', 'games.location_id')
+      .select([
+        'games.id',
+        'games.sport',
+        'games.game_state',
+        'games.scheduled_at',
+        'games.created_at',
+        'locations.id as location_id',
+        'locations.name as location_name',
+        'locations.city',
+        'locations.state',
+        'locations.country',
+        'locations.street',
+        'locations.postal_code',
+        'locations.lat',
+        'locations.lon',
+        'locations.sport_tags',
+      ] as const)
+      .where('game_teams.team_id', '=', teamId)
+      // Sort by game status priority: live first, then upcoming, then finished
+      .orderBy((eb) =>
+        eb
+          .case()
+          .when('games.game_state', '=', 'in_progress')
+          .then(1)
+          .when('games.game_state', '=', 'scheduled')
+          .then(2)
+          .when('games.game_state', '=', 'finished')
+          .then(3)
+          .else(4)
+          .end(),
+      )
+      // Then by scheduled_at desc (most recent first within each status)
+      .orderBy('games.scheduled_at', 'desc');
+
+    if (after) {
+      const { timestamp } = CursorUtil.parseCursor(after);
+      if (timestamp) {
+        query = query.where(
+          'games.scheduled_at',
+          '<',
+          new Date(timestamp).toISOString(),
+        );
+      }
+    }
+
+    query = query.limit(first + 1);
+
+    const results = await query.execute();
+    const hasNextPage = results.length > first;
+    const nodes = results.slice(0, first);
+
+    const games: Game[] = nodes.map((result) => ({
+      id: result.id,
+      sport: result.sport.toUpperCase() as Sport,
+      status: result.game_state as any, // GameStatus enum
+      scheduledAt: result.scheduled_at
+        ? new Date(result.scheduled_at)
+        : undefined,
+      startedAt: undefined, // Not in database schema
+      endedAt: undefined, // Not in database schema
+      location: result.location_id
+        ? {
+            id: result.location_id,
+            name: result.location_name || '',
+            address: {
+              street: result.street || '',
+              city: result.city || '',
+              stateCode: result.state || '', // Database state column contains the 2-letter code
+              postalCode: result.postal_code || '',
+              // id and state (full name) will be resolved by AddressResolver
+            } as any,
+            geo: {
+              latitude: result.lat,
+              longitude: result.lon,
+            },
+            sports: result.sport_tags ? (result.sport_tags as Sport[]) : [],
+          }
+        : undefined,
+      teams: [], // Will be resolved by other resolvers
+      actions: {
+        nodes: [],
+        edges: [],
+        pageInfo: { hasNextPage: false, endCursor: null },
+        totalCount: 0,
+      }, // Will be resolved by other resolvers
+    }));
+
+    const edges: GameEdge[] = games.map((game, index) => ({
+      node: game,
+      cursor: CursorUtil.createCursor(
+        game.id,
+        nodes[index].scheduled_at
+          ? new Date(nodes[index].scheduled_at)
+          : new Date(nodes[index].created_at),
+      ),
+    }));
+
+    const totalCount = await client
+      .selectFrom('game_teams')
+      .select([(eb) => eb.fn.countAll().as('count')])
+      .where('game_teams.team_id', '=', teamId)
+      .executeTakeFirst();
+
+    const pageInfo: PageInfo = {
+      hasNextPage,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : undefined,
+    };
+
+    return {
+      edges,
+      pageInfo,
+      totalCount: Number(totalCount?.count ?? 0),
+    };
   }
 }
