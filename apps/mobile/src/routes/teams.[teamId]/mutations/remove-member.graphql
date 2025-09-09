@@ -1,0 +1,18 @@
+mutation RemoveMember($input: RemoveMemberInput!) {
+  removeMember(input: $input) {
+    team {
+      id
+      name
+      members {
+        id
+        email
+        firstName
+        lastName
+        displayName
+        photo {
+          source
+        }
+      }
+    }
+  }
+}

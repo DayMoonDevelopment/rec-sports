@@ -13,6 +13,7 @@ import { Sport } from '../common/enums/sport.enum';
 import { GamesConnection } from '../games/models/game-connection.model';
 import { CreateTeamInput } from './dto/create-team.input';
 import { CreateTeamPayload } from './dto/create-team.payload';
+import { RemoveMemberInput } from './dto/remove-member.input';
 import { TeamMemberInput } from './dto/team-member.input';
 import { UpdateTeamPayload } from './dto/update-team.payload';
 import { Team } from './models/team.model';
@@ -48,6 +49,14 @@ export class TeamsResolver {
     @Args('input') input: TeamMemberInput,
   ): Promise<UpdateTeamPayload> {
     const team = await this.teamsService.removeTeamMember(input);
+    return { team };
+  }
+
+  @Mutation(() => UpdateTeamPayload)
+  async removeMember(
+    @Args('input') input: RemoveMemberInput,
+  ): Promise<UpdateTeamPayload> {
+    const team = await this.teamsService.removeMember(input);
     return { team };
   }
 
