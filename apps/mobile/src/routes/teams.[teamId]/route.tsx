@@ -2,7 +2,6 @@ import { View } from "react-native";
 
 import { useTeam } from "./use-team.hook";
 
-import { TeamHeader } from "./components/team-header";
 import { TeamDetails } from "./components/team-details";
 import { TeamMembers } from "./components/team-members";
 
@@ -13,8 +12,7 @@ export function Component() {
   });
 
   return (
-    <View className="flex-1 bg-background pt-safe">
-      <TeamHeader />
+    <View className="flex-1 bg-background">
       <TeamDetails />
       <TeamMembers />
     </View>

@@ -3,76 +3,56 @@ import { useTeam } from "../use-team.hook";
 import { LoadingState } from "./loading-state";
 import { SportIcon } from "../../../components/sport-icon";
 import { GameCard } from "./game-card";
+import { CloseButton } from "./close-button";
+
+function ItemSeparatorComponent() {
+  return <View className="w-2" />;
+}
 
 export function TeamDetails() {
   const { data, loading, error } = useTeam({ fetchPolicy: "cache-first" });
   const team = data?.team;
 
-  if (loading) {
-    return (
-      <View className="px-4 py-6 bg-muted">
-        <View className="flex-row items-center justify-center">
-          <LoadingState message="Loading team..." size="large" />
-        </View>
-      </View>
-    );
-  }
-
-  if (error || (!loading && !team)) {
-    return (
-      <View className="px-4 py-6 bg-muted">
-        <Text className="text-center text-muted-foreground">
-          Team not found
-        </Text>
-      </View>
-    );
-  }
-
-  if (!team) return null;
-
-  const games = team.games?.edges?.map((edge) => edge.node) || [];
-
-  console.log(games);
-
   return (
-    <View className="bg-muted">
-      <View className="flex flex-col gap-2 py-8">
-        {/* Team Name Display */}
-        <View className="flex flex-row items-center justify-center">
-          <Text className="text-foreground text-5xl font-bold text-center">
-            {team.name}
-          </Text>
-        </View>
+    <View className="bg-muted pt-safe-offset-8 pb-8 flex flex-col gap-8">
+      <View className="flex flex-row gap-2 px-4">
+        <View className="flex-1 flex flex-col gap-2">
+          {loading ? (
+            <LoadingState message="Loading team..." size="large" />
+          ) : error || (!loading && !team) ? (
+            <Text className="text-center text-muted-foreground">
+              Team not found
+            </Text>
+          ) : team ? (
+            <>
+              {/* Team Name Display */}
+              <Text className="text-foreground text-5xl font-bold">
+                {team.name}
+              </Text>
 
-        {/* Sport Icons */}
-        <View className="flex flex-row items-center justify-center gap-2">
-          {team.sports?.map((sport, index) => (
-            <SportIcon key={index} sport={sport} />
-          ))}
+              {/* Sport Icons */}
+              <View className="flex flex-row items-center justify-start gap-2">
+                {team.sports?.map((sport, index) => (
+                  <SportIcon key={index} sport={sport} />
+                ))}
+              </View>
+            </>
+          ) : null}
         </View>
+        <CloseButton />
       </View>
 
-      {/* Games Section */}
-      {games.length > 0 && (
-        <View className="mb-6">
-          <View className="px-4 mb-3">
-            <Text className="text-foreground text-xl font-semibold">
-              Recent Games
-            </Text>
-            <Text className="text-muted-foreground text-sm">
-              {team.games?.totalCount || 0} games total
-            </Text>
-          </View>
-
-          <FlatList
-            data={games}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 8 }}
-            renderItem={({ item }) => <GameCard game={item} />}
-          />
-        </View>
+      {/* Games Section - only show when team data is available */}
+      {team && team.games?.edges?.length > 0 && (
+        <FlatList
+          data={team.games.edges.map((edge) => edge.node)}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="px-4"
+          renderItem={({ item }) => <GameCard game={item} />}
+          ItemSeparatorComponent={ItemSeparatorComponent}
+        />
       )}
     </View>
   );
