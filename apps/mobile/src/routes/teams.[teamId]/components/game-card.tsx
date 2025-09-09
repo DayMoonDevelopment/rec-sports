@@ -77,7 +77,7 @@ export function GameCard({ game }: { game: GamePreviewNodeFragment }) {
 
   const renderMultipleTeams = () => (
     <Card sport={game.sport} location={game.location} game={game}>
-      <View className="">
+      <View>
         {/* Show top 2 teams with highest scores */}
         {teams
           .sort((a, b) => (b.score || 0) - (a.score || 0))

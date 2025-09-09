@@ -12,7 +12,7 @@ const renderMember = ({ item }: { item: TeamMemberNodeFragment }) => (
 );
 
 export function TeamMembers() {
-  const { data } = useTeam({ fetchPolicy: "cache-only" });
+  const { data } = useTeam({ fetchPolicy: "cache-first" });
   const team = data?.team;
   const members = team?.members || [];
 
