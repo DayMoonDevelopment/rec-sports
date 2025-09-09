@@ -22,6 +22,11 @@ export type AddGameScorePayload = {
   game: Game;
 };
 
+export type AddMemberInput = {
+  teamId: Scalars['ID']['input'];
+  userInviteCode: Scalars['String']['input'];
+};
+
 export type Address = {
   __typename: 'Address';
   city: Scalars['String']['output'];
@@ -183,6 +188,7 @@ export type Media = {
 export type Mutation = {
   __typename: 'Mutation';
   addGameScore: AddGameScorePayload;
+  addMember: UpdateTeamPayload;
   addTeamMember: UpdateTeamPayload;
   createGame: CreateGamePayload;
   createTeam: CreateTeamPayload;
@@ -200,6 +206,11 @@ export type Mutation = {
 export type MutationAddGameScoreArgs = {
   gameId: Scalars['ID']['input'];
   input: GameScoreInput;
+};
+
+
+export type MutationAddMemberArgs = {
+  input: AddMemberInput;
 };
 
 

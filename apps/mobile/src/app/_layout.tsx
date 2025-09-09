@@ -66,6 +66,13 @@ export default function RootLayout() {
                   headerShown: false,
                 }}
               />
+              <Stack.Screen
+                name="teams/[teamId]/invite"
+                options={{
+                  presentation: "fullScreenModal",
+                  headerShown: false,
+                }}
+              />
             </Stack>
           </ApolloProvider>
         </AppProvider>
