@@ -4,7 +4,7 @@ import { MemberItem } from "./member-item";
 import type { TeamMemberNodeFragment } from "../queries/get-team.generated";
 
 function ItemSeparatorComponent() {
-  return <View className="ml-14 h-px w-full bg-border" />;
+  return <View className="ml-20 h-px w-full bg-border" />;
 }
 
 const renderMember = ({ item }: { item: TeamMemberNodeFragment }) => (

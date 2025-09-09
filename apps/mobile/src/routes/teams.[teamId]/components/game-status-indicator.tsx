@@ -5,6 +5,7 @@ import { GameStatus } from "~/gql/types";
 import { useGameClock } from "../../game.[gameId]/use-game-clock.hook";
 
 import { CircleSmallIcon } from "~/icons/circle-small";
+import { CheckIcon } from "~/icons/check";
 
 interface GameStatusIndicatorProps {
   status: GameStatus;
@@ -21,8 +22,9 @@ function GameStatusIcon({ status }: { status: GameStatus }) {
           <CircleSmallIcon className="size-3 text-red-500" filled />
         </View>
       );
-    case GameStatus.Upcoming:
     case GameStatus.Completed:
+      return <CheckIcon className="size-3 text-muted-foreground" />;
+    case GameStatus.Upcoming:
     default:
       return null;
   }

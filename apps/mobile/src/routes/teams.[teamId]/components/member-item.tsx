@@ -37,22 +37,23 @@ interface MemberItemProps {
 
 export function MemberItem({ member }: MemberItemProps) {
   return (
-    <View className="flex-row items-center px-4 py-3">
+    <View className="flex-row items-center px-4 py-4 gap-2">
       {/* User Avatar */}
-      <View className="mr-3">
-        <Avatar>
-          {member.photo?.source && (
-            <AvatarImage source={{ uri: member.photo.source }} />
-          )}
-          <AvatarFallback>{getUserInitials(member)}</AvatarFallback>
-        </Avatar>
-      </View>
+      <Avatar className="size-14">
+        {member.photo?.source && (
+          <AvatarImage source={{ uri: member.photo.source }} />
+        )}
+        <AvatarFallback className="text-2xl">
+          {getUserInitials(member)}
+        </AvatarFallback>
+      </Avatar>
 
-      <View className="flex-1">
-        <Text className="font-medium text-foreground text-lg">
-          {getUserDisplayName(member)}
-        </Text>
-      </View>
+      <Text
+        className="flex-1 font-medium text-foreground text-2xl"
+        numberOfLines={1}
+      >
+        {getUserDisplayName(member)}
+      </Text>
     </View>
   );
 }

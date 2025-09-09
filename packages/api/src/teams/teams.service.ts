@@ -212,6 +212,20 @@ export class TeamsService {
         'locations.sport_tags',
       ] as const)
       .where('game_teams.team_id', '=', teamId)
+      // Sort by game status priority: live first, then upcoming, then finished
+      .orderBy((eb) =>
+        eb
+          .case()
+          .when('games.game_state', '=', 'in_progress')
+          .then(1)
+          .when('games.game_state', '=', 'scheduled')
+          .then(2)
+          .when('games.game_state', '=', 'finished')
+          .then(3)
+          .else(4)
+          .end(),
+      )
+      // Then by scheduled_at desc (most recent first within each status)
       .orderBy('games.scheduled_at', 'desc');
 
     if (after) {
