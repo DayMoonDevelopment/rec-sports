@@ -45,7 +45,7 @@ function GameClock({
     endedAt: endedAt ? String(endedAt) : null,
   });
 
-  return <Text className="text-xs font-mono">{formattedTime}</Text>;
+  return <Text className="text-xs font-semibold">{formattedTime}</Text>;
 }
 
 function GameTime({
