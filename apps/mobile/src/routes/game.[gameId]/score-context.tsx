@@ -66,7 +66,11 @@ interface ScoreContextValue {
   isUpdating: boolean;
 
   // Actions
-  openScoreSheet: (teamId?: string, gameScoreActionId?: string) => void;
+  openScoreSheet: (
+    teamId?: string,
+    gameScoreActionId?: string,
+    userId?: string,
+  ) => void;
   closeScoreSheet: () => void;
   handleSubmit: () => void;
   setSelectedTeam: (teamId: string) => void;
@@ -172,13 +176,19 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     })) || [];
 
   // Actions
-  const openScoreSheet = useCallback((teamId?: string, actionId?: string) => {
-    if (teamId) {
-      setSelectedTeamId(teamId);
-    }
-    setGameScoreActionId(actionId || null);
-    bottomSheetRef.current?.present();
-  }, []);
+  const openScoreSheet = useCallback(
+    (teamId?: string, actionId?: string, userId?: string) => {
+      if (teamId) {
+        setSelectedTeamId(teamId);
+      }
+      if (userId) {
+        setSelectedPlayerId(userId);
+      }
+      setGameScoreActionId(actionId || null);
+      bottomSheetRef.current?.present();
+    },
+    [],
+  );
 
   const closeScoreSheet = useCallback(() => {
     bottomSheetRef.current?.dismiss();

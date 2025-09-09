@@ -68,8 +68,12 @@ export function GameScoreActionItem({
   const { openScoreSheet } = useScoreSheet();
 
   const handleEditScore = () => {
-    // Open the score sheet for editing with the current team and action ID
-    openScoreSheet(action.occurredToTeam.id, action.id);
+    // Open the score sheet for editing with the current team, action ID, and user
+    openScoreSheet(
+      action.occurredToTeam.id,
+      action.id,
+      action.occurredByUser?.id,
+    );
   };
 
   const handleRemoveScore = async () => {
