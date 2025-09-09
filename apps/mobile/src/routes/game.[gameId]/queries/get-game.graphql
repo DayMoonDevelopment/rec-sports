@@ -1,6 +1,15 @@
 fragment TeamNode on Team {
   id
   name
+  members {
+    id
+    displayName
+    firstName
+    lastName
+    photo {
+      source
+    }
+  }
 }
 
 fragment GameTeamNode on GameTeam {
@@ -16,6 +25,12 @@ fragment GameScoreActionNode on GameScoreAction {
   occurredAt
   occurredByUser {
     id
+    displayName
+    firstName
+    lastName
+    photo {
+      source
+    }
   }
   occurredToTeam {
     ...TeamNode

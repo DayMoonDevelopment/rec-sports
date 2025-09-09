@@ -8,7 +8,6 @@ import { GameStatus } from '../../enums/game-status.enum';
 import { Game } from '../../models/game.model';
 import { AddGameScorePayload } from './dto/add-game-score.payload';
 import { GameScoreInput } from './dto/game-score.input';
-import { RemoveGameActionPayload } from './dto/remove-game-action.payload';
 import { UpdateGameScorePayload } from './dto/update-game-score.payload';
 import { GameScoreAction } from './models/game-score-action.model';
 
@@ -156,50 +155,27 @@ export class ScoreActionsService {
     return { action };
   }
 
-  async removeGameAction(id: string): Promise<RemoveGameActionPayload> {
-    const { client } = this.databaseService;
-
-    const existingAction = await this.findGameScoreActionById(id);
-    if (!existingAction) {
-      throw new Error('Game action not found');
-    }
-
-    // Get the game ID and team ID before deletion
-    const gameData = await client
-      .selectFrom('game_actions')
-      .select(['game_id', 'occurred_to_team_id'])
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    if (!gameData) {
-      throw new Error('Game action data not found');
-    }
-
-    await client.deleteFrom('game_actions').where('id', '=', id).execute();
-
-    // Recalculate the team's score after removing the score action
-    if (gameData.occurred_to_team_id) {
-      await this.recalculateTeamScore(
-        gameData.game_id,
-        gameData.occurred_to_team_id,
-      );
-    }
-
-    return { gameId: gameData.game_id, success: true };
-  }
-
   async findGameScoreActionById(id: string): Promise<GameScoreAction | null> {
     const { client } = this.databaseService;
 
     const result = await client
       .selectFrom('game_actions')
       .leftJoin('teams', 'teams.id', 'game_actions.occurred_to_team_id')
+      .leftJoin('users', 'users.id', 'game_actions.occurred_by_user_id')
       .select([
         'game_actions.id',
         'game_actions.occurred_at',
         'game_actions.point_value as value',
         'game_actions.details',
-        'game_actions.occurred_by_user_id as user_id',
+        'users.id as user_id',
+        'users.email as user_email',
+        'users.first_name as user_first_name',
+        'users.last_name as user_last_name',
+        'users.photo as user_photo',
+        'users.display_name as user_display_name',
+        'users.created_at as user_created_at',
+        'users.updated_at as user_updated_at',
+        'users.auth_id as user_auth_id',
         'teams.id as team_id',
         'teams.name as team_name',
       ])
@@ -214,7 +190,17 @@ export class ScoreActionsService {
     gameScoreAction.id = result.id;
     gameScoreAction.occurredAt = new Date(result.occurred_at);
     gameScoreAction.occurredByUser = result.user_id
-      ? { id: result.user_id }
+      ? {
+          id: result.user_id,
+          email: result.user_email,
+          firstName: result.user_first_name,
+          lastName: result.user_last_name,
+          photo: result.user_photo ? { source: result.user_photo } : undefined,
+          displayName: result.user_display_name,
+          createdAt: new Date(result.user_created_at),
+          updatedAt: new Date(result.user_updated_at),
+          authId: result.user_auth_id,
+        }
       : undefined;
     gameScoreAction.occurredToTeam = result.team_id
       ? { id: result.team_id, name: result.team_name || '', members: [] }

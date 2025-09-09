@@ -1,6 +1,7 @@
 -- Creates 10 synthetic test users with generated email addresses
 -- Uses UUID generation, password encryption, and metadata creation
 -- Ensures consistent user creation for testing purposes
+-- Note: public.users records will be automatically created via trigger
 INSERT INTO
     auth.users(
         instance_id,
@@ -32,12 +33,18 @@ INSERT INTO
             CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP,
             '{"provider":"email","providers":["email"]}',
-            jsonb_build_object(
-                'first_name',
-                'User' || (ROW_NUMBER() OVER ())::text,
-                'last_name',
-                'Example' || (ROW_NUMBER() OVER ())::text
-            ),
+            CASE (ROW_NUMBER() OVER ())
+                WHEN 1 THEN jsonb_build_object('first_name', 'Lightning', 'last_name', 'Bolt', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=lightning')
+                WHEN 2 THEN jsonb_build_object('first_name', 'Thunder', 'last_name', 'Strike', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=thunder')
+                WHEN 3 THEN jsonb_build_object('first_name', 'Rocket', 'last_name', 'Slam', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=rocket')
+                WHEN 4 THEN jsonb_build_object('first_name', 'Ace', 'last_name', 'Shooter', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=ace')
+                WHEN 5 THEN jsonb_build_object('first_name', 'Blaze', 'last_name', 'Runner', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=blaze')
+                WHEN 6 THEN jsonb_build_object('first_name', 'Storm', 'last_name', 'Chaser', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=storm')
+                WHEN 7 THEN jsonb_build_object('first_name', 'Flash', 'last_name', 'Gordon', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=flash')
+                WHEN 8 THEN jsonb_build_object('first_name', 'Spike', 'last_name', 'Master', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=spike')
+                WHEN 9 THEN jsonb_build_object('first_name', 'Dash', 'last_name', 'Champion', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=dash')
+                WHEN 10 THEN jsonb_build_object('first_name', 'Turbo', 'last_name', 'Force', 'photo', 'https://api.dicebear.com/7.x/avataaars/svg?seed=turbo')
+            END,
             CURRENT_TIMESTAMP,
             CURRENT_TIMESTAMP,
             '',

@@ -28,9 +28,29 @@ export class UserService {
       throw new Error('Invalid response from Supabase auth');
     }
 
+    // Fetch the user from public.users table
+    const { data: userData, error: userError } =
+      await this.supabaseService.client
+        .from('users')
+        .select('*')
+        .eq('auth_id', data.user.id)
+        .single();
+
+    if (userError || !userData) {
+      throw new Error(`Failed to fetch user data: ${userError?.message}`);
+    }
+
     return {
       user: {
-        id: data.user.id,
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        photo: userData.photo ? { source: userData.photo } : undefined,
+        displayName: userData.display_name,
+        createdAt: new Date(userData.created_at),
+        updatedAt: new Date(userData.updated_at),
+        authId: userData.auth_id,
       },
       session: {
         accessToken: data.session.access_token,
@@ -60,9 +80,29 @@ export class UserService {
       throw new Error('Invalid response from Supabase auth');
     }
 
+    // Fetch the user from public.users table
+    const { data: userData, error: userError } =
+      await this.supabaseService.client
+        .from('users')
+        .select('*')
+        .eq('auth_id', data.user.id)
+        .single();
+
+    if (userError || !userData) {
+      throw new Error(`Failed to fetch user data: ${userError?.message}`);
+    }
+
     return {
       user: {
-        id: data.user.id,
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        photo: userData.photo ? { source: userData.photo } : undefined,
+        displayName: userData.display_name,
+        createdAt: new Date(userData.created_at),
+        updatedAt: new Date(userData.updated_at),
+        authId: userData.auth_id,
       },
       session: {
         accessToken: data.session.access_token,

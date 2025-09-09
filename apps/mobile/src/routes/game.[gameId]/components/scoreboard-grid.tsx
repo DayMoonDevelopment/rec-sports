@@ -4,7 +4,6 @@ import { View, Text, FlatList } from "react-native";
 import { GameStatus } from "~/gql/types";
 
 import { useGame } from "../use-game.hook";
-import { useAddScore } from "../use-add-score.hook";
 
 import { GridPreviewCard } from "./scoreboard-grid-preview-card";
 import { ScoreButton } from "./score-button";
@@ -24,7 +23,6 @@ export function ScoreboardGrid() {
       }
     },
   });
-  const [addScore, { loading: isAddingScore }] = useAddScore();
 
   const game = data?.game;
 
@@ -38,19 +36,6 @@ export function ScoreboardGrid() {
   const teamsList = game.teams.filter(
     (team) => team.team.id !== focusedTeam?.team.id,
   );
-
-  const handleAddScore = async () => {
-    if (!focusedTeam?.team?.id) return;
-
-    try {
-      await addScore({
-        teamId: focusedTeam.team.id,
-        value: 1,
-      });
-    } catch (error) {
-      console.error("Failed to add score:", error);
-    }
-  };
 
   function Item({ item: gameTeam }: { item: GameTeamNodeFragment }) {
     return (
@@ -83,8 +68,7 @@ export function ScoreboardGrid() {
           {isLive ? (
             <ScoreButton
               sport={game.sport}
-              onPress={handleAddScore}
-              disabled={isAddingScore}
+              teamId={focusedTeam.team.id}
             />
           ) : null}
         </View>

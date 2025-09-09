@@ -8,7 +8,7 @@ import { GameScoreActionItem } from "./game-actions-score-item";
 import type { GameScoreActionNodeFragment } from "../queries/get-game.generated";
 import { Sport } from "~/gql/types";
 
-const renderEvent = ({
+const renderAction = ({
   item,
 }: {
   item: { sport: Sport; action: GameScoreActionNodeFragment };
@@ -30,7 +30,7 @@ export function GameActions() {
 
       <FlatList
         data={actions} // Show newest events first
-        renderItem={renderEvent}
+        renderItem={renderAction}
         keyExtractor={(item) => item.action.id}
         className="flex-1 bg-background"
         showsVerticalScrollIndicator={false}

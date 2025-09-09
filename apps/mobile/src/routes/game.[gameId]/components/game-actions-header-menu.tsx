@@ -124,7 +124,7 @@ export function GameActionsHeaderMenu({
           }
         }}
       >
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" hitSlop={16}>
           <ButtonIcon Icon={MenuDotsVerticalIcon} />
         </Button>
       </ContextMenu>
@@ -134,6 +134,7 @@ export function GameActionsHeaderMenu({
   if (status === GameStatus.Completed) {
     return (
       <ContextMenu
+        dropdownMenuMode
         actions={[{ title: "Resume Game" }]}
         onPress={(e) => {
           if (e.nativeEvent.index === 0) {
@@ -141,7 +142,7 @@ export function GameActionsHeaderMenu({
           }
         }}
       >
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" hitSlop={16}>
           <ButtonIcon Icon={MenuDotsVerticalIcon} />
         </Button>
       </ContextMenu>

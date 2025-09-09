@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet from "@gorhom/bottom-sheet";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import { cssInterop, remapProps } from "nativewind";
 
@@ -47,30 +46,28 @@ export function Component() {
 
   return (
     <MapProvider>
-      <GestureHandlerRootView className="flex-1">
-        <MapViewComponent />
+      <MapViewComponent />
 
-        <StyledBottomSheet
-          ref={bottomSheetRef}
-          index={0}
-          enableDynamicSizing={false}
-          snapPoints={snapPoints}
-          topInset={topInset}
-          enableBlurKeyboardOnGesture
-          enablePanDownToClose={false}
-          enableOverDrag={false}
-          backgroundClassName="bg-background"
-          handleComponent={BottomSheetHandle}
-        >
-          <StyledStack
-            contentClassName="bg-background"
-            screenOptions={{
-              headerShown: false,
-              animation: "slide_from_bottom",
-            }}
-          />
-        </StyledBottomSheet>
-      </GestureHandlerRootView>
+      <StyledBottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        enableDynamicSizing={false}
+        snapPoints={snapPoints}
+        topInset={topInset}
+        enableBlurKeyboardOnGesture
+        enablePanDownToClose={false}
+        enableOverDrag={false}
+        backgroundClassName="bg-background"
+        handleComponent={BottomSheetHandle}
+      >
+        <StyledStack
+          contentClassName="bg-background"
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_bottom",
+          }}
+        />
+      </StyledBottomSheet>
     </MapProvider>
   );
 }

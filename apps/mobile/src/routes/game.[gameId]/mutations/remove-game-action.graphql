@@ -1,0 +1,6 @@
+mutation RemoveGameAction($id: ID!) {
+  removeGameAction(id: $id) {
+    gameId
+    success
+  }
+}
