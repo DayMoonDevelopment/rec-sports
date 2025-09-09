@@ -9,6 +9,7 @@ import { GameEdge } from '../games/models/game-edge.model';
 import { GameTeam } from '../games/models/game-team.model';
 import { Game } from '../games/models/game.model';
 import { CreateTeamInput } from './dto/create-team.input';
+import { RemoveMemberInput } from './dto/remove-member.input';
 import { TeamMemberInput } from './dto/team-member.input';
 import { Team } from './models/team.model';
 
@@ -124,6 +125,41 @@ export class TeamsService {
   async removeTeamMember(input: TeamMemberInput): Promise<Team> {
     const { client } = this.databaseService;
 
+    await client
+      .deleteFrom('team_members')
+      .where('team_id', '=', input.teamId)
+      .where('user_id', '=', input.userId)
+      .execute();
+
+    const team = await this.findTeamById(input.teamId);
+    if (!team) {
+      throw new Error('Team not found');
+    }
+
+    return team;
+  }
+
+  async removeMember(input: RemoveMemberInput): Promise<Team> {
+    const { client } = this.databaseService;
+
+    // First, check if the current user is a member of the team
+    // Note: In a real implementation, you would get the current user from auth context
+    // For now, we'll assume the requesting user has permission
+    // You can add auth context to get the current user ID and check membership
+
+    // Check if the user to be removed exists in the team
+    const existingMember = await client
+      .selectFrom('team_members')
+      .select(['user_id'])
+      .where('team_id', '=', input.teamId)
+      .where('user_id', '=', input.userId)
+      .executeTakeFirst();
+
+    if (!existingMember) {
+      throw new Error('User is not a member of this team');
+    }
+
+    // Remove the team member
     await client
       .deleteFrom('team_members')
       .where('team_id', '=', input.teamId)

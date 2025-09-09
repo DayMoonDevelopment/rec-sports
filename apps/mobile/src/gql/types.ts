@@ -188,6 +188,7 @@ export type Mutation = {
   createTeam: CreateTeamPayload;
   endGame: UpdateGamePayload;
   removeGameAction: RemoveGameActionPayload;
+  removeMember: UpdateTeamPayload;
   removeTeamMember: UpdateTeamPayload;
   signInWithApple: UserAuth;
   signInWithGoogle: UserAuth;
@@ -224,6 +225,11 @@ export type MutationEndGameArgs = {
 
 export type MutationRemoveGameActionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveMemberArgs = {
+  input: RemoveMemberInput;
 };
 
 
@@ -312,6 +318,11 @@ export type RemoveGameActionPayload = {
   __typename: 'RemoveGameActionPayload';
   gameId: Scalars['ID']['output'];
   success: Scalars['Boolean']['output'];
+};
+
+export type RemoveMemberInput = {
+  teamId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 export type Session = {
