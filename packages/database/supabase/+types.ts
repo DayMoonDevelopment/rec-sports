@@ -79,6 +79,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "game_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "game_actions_game_id_fkey"
             columns: ["game_id"]
             isOneToOne: false
@@ -86,10 +93,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "game_actions_occurred_by_user_id_fkey"
+            columns: ["occurred_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "game_actions_occurred_to_team_id_fkey"
             columns: ["occurred_to_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -172,10 +193,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "games_created_up_fkey"
+            columns: ["created_up"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "games_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -343,10 +378,31 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "team_members_created_up_fkey"
+            columns: ["created_up"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "team_members_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -381,6 +437,57 @@ export type Database = {
           team_type?: string
           updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_created_up_fkey"
+            columns: ["created_up"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          auth_id: string | null
+          created_at: string | null
+          display_name: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          photo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auth_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          photo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auth_id?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          photo?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -425,9 +532,9 @@ export type Database = {
         Args: { "": string }
         Returns: string[]
       }
-      update_game_team_score: {
-        Args: { p_game_id: string; p_team_id: string }
-        Returns: undefined
+      uid: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       user_is_in_game: {
         Args: { game_id_param: string }

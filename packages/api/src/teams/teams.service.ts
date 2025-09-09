@@ -59,14 +59,35 @@ export class TeamsService {
 
     const members = await client
       .selectFrom('team_members')
-      .select(['user_id as id'])
+      .innerJoin('users', 'users.id', 'team_members.user_id')
+      .select([
+        'users.id',
+        'users.email',
+        'users.first_name',
+        'users.last_name',
+        'users.photo',
+        'users.display_name',
+        'users.created_at',
+        'users.updated_at',
+        'users.auth_id',
+      ])
       .where('team_members.team_id', '=', id)
       .execute();
 
     return {
       id: result.id,
       name: result.name || '',
-      members: members.map((m) => ({ id: m.id, teams: [], games: [] })),
+      members: members.map((m) => ({
+        id: m.id,
+        email: m.email,
+        firstName: m.first_name,
+        lastName: m.last_name,
+        photo: m.photo ? { source: m.photo } : undefined,
+        displayName: m.display_name,
+        createdAt: new Date(m.created_at),
+        updatedAt: new Date(m.updated_at),
+        authId: m.auth_id,
+      })),
     };
   }
 

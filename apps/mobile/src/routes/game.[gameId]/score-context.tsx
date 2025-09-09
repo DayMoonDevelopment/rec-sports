@@ -39,6 +39,10 @@ export type PlayerItemProps = {
   id: string;
   teamId: string;
   teamName: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  photoSource?: string;
   onPress: () => void;
   selected: boolean;
 };
@@ -139,6 +143,10 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
           id: member.id,
           teamId: gameTeam.team.id,
           teamName: gameTeam.team.name,
+          displayName: member.displayName || undefined,
+          firstName: member.firstName || undefined,
+          lastName: member.lastName || undefined,
+          photoSource: member.photo?.source || undefined,
           onPress: () =>
             setSelectedPlayerId(
               selectedPlayerId === member.id ? null : member.id,
@@ -218,6 +226,11 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     isUpdating,
   ]);
 
+  const handleTeamChange = useCallback((teamId: string) => {
+    setSelectedTeamId(teamId);
+    setSelectedPlayerId(null); // Clear selected player when team changes
+  }, []);
+
   const value: ScoreContextValue = {
     // Selected state
     selectedTeamId,
@@ -240,7 +253,7 @@ export function ScoreProvider({ children }: ScoreProviderProps) {
     openScoreSheet,
     closeScoreSheet,
     handleSubmit,
-    setSelectedTeam: setSelectedTeamId,
+    setSelectedTeam: handleTeamChange,
     setSelectedPlayer: setSelectedPlayerId,
     setSelectedScoreType,
 

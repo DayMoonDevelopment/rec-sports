@@ -1,10 +1,10 @@
--- Helper Function: Get User ID by Email
+-- Helper Function: Get Public User ID by Email
 CREATE OR REPLACE FUNCTION get_user_id(user_email TEXT)
-RETURNS UUID AS $$
+RETURNS TEXT AS $$
 DECLARE
-    user_id UUID;
+    user_id TEXT;
 BEGIN
-    SELECT id INTO user_id FROM auth.users WHERE email = user_email;
+    SELECT id INTO user_id FROM public.users WHERE email = user_email;
     RETURN user_id;
 END;
 $$ LANGUAGE plpgsql;

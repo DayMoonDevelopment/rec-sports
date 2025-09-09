@@ -1,44 +1,67 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Image } from "react-native";
 import { cn } from "~/lib/utils";
+
+import { Button, ButtonText } from "~/ui/button";
 
 import type { PlayerItemProps } from "../score-context";
 
 export function PlayerItem({
   id,
   teamName,
+  displayName,
+  firstName,
+  lastName,
+  photoSource,
   selected,
   onPress,
 }: PlayerItemProps) {
+  // Create display name with fallback logic
+  const getDisplayName = () => {
+    if (displayName) return displayName;
+    if (firstName && lastName) return `${firstName} ${lastName}`;
+    if (firstName) return firstName;
+    if (lastName) return lastName;
+    return id.slice(-4); // fallback to last 4 characters of ID
+  };
+
+  const playerDisplayName = getDisplayName();
+
   return (
-    <TouchableOpacity onPress={onPress}>
-      <View
-        className={cn(
-          "px-4 py-3 rounded-lg border-2 min-w-[80px] items-center justify-center",
-          selected
-            ? "bg-primary border-primary"
-            : "bg-background border-border",
+    <Button
+      onPress={onPress}
+      variant={selected ? "default" : "outline"}
+      className="w-48 justify-start pl-2"
+    >
+      {/* Profile Image */}
+      <View className="">
+        {photoSource ? (
+          <Image
+            source={{ uri: photoSource }}
+            className="size-8 rounded-full bg-muted"
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            className={cn(
+              "size-8 rounded-full items-center justify-center",
+              selected ? "bg-primary-foreground/20" : "bg-muted",
+            )}
+          >
+            <Text
+              className={cn(
+                "text-xs font-semibold",
+                selected ? "text-primary-foreground" : "text-muted-foreground",
+              )}
+            >
+              {playerDisplayName.charAt(0).toUpperCase()}
+            </Text>
+          </View>
         )}
-      >
-        <Text
-          className={cn(
-            "text-sm font-medium text-center",
-            selected ? "text-primary-foreground" : "text-foreground",
-          )}
-          numberOfLines={1}
-        >
-          {id.slice(-4)}
-        </Text>
-        <Text
-          className={cn(
-            "text-xs mt-1 text-center",
-            selected ? "text-primary-foreground/80" : "text-muted-foreground",
-          )}
-          numberOfLines={1}
-        >
-          {teamName}
-        </Text>
       </View>
-    </TouchableOpacity>
+
+      {/* Display Name */}
+      <ButtonText numberOfLines={1}>{playerDisplayName}</ButtonText>
+    </Button>
   );
 }

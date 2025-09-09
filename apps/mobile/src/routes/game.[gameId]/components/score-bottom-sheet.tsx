@@ -38,9 +38,9 @@ export function ScoreBottomSheet() {
         elevation: 14,
       }}
     >
-      <BottomSheetView className="flex-1 px-4 pb-safe flex flex-col items-center gap-6">
+      <BottomSheetView className="flex-1 pb-safe flex flex-col items-center gap-6">
         {/* Team Selection */}
-        <View className="flex-row flex-wrap gap-2">
+        <View className="px-4 flex-row flex-wrap gap-2">
           {teams.map((team) => (
             <View key={team.id} className="flex-1 min-w-[45%]">
               <TeamItem {...team} />
@@ -55,7 +55,10 @@ export function ScoreBottomSheet() {
         {showScoreTypes
           ? [
               <View key="divider" className="w-[75%] h-px bg-border" />,
-              <View key="score-types" className="w-full flex-1 flex-col gap-2">
+              <View
+                key="score-types"
+                className="px-4 w-full flex-1 flex-col gap-2"
+              >
                 {scoreTypes.map((scoreType) => (
                   <ScoreTypeItem key={scoreType.actionKey} {...scoreType} />
                 ))}
@@ -65,21 +68,23 @@ export function ScoreBottomSheet() {
 
         <View className="w-[75%] h-px bg-border" />
 
-        <Button
-          onPress={handleSubmit}
-          className="w-full"
-          disabled={isProcessing}
-        >
-          <ButtonText>
-            {isProcessing
-              ? isUpdating
-                ? "Updating Score..."
-                : "Adding Score..."
-              : isUpdating
-                ? "Update Score"
-                : sportConfig?.addScoreButtonLabel || "Add Score"}
-          </ButtonText>
-        </Button>
+        <View className="px-4 w-full">
+          <Button
+            onPress={handleSubmit}
+            className="w-full"
+            disabled={isProcessing}
+          >
+            <ButtonText>
+              {isProcessing
+                ? isUpdating
+                  ? "Updating Score..."
+                  : "Adding Score..."
+                : isUpdating
+                  ? "Update Score"
+                  : sportConfig?.addScoreButtonLabel || "Add Score"}
+            </ButtonText>
+          </Button>
+        </View>
       </BottomSheetView>
     </BottomSheetModal>
   );

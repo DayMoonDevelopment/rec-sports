@@ -3,6 +3,7 @@ import ContextMenuView from "react-native-context-menu-view";
 
 import { Sport } from "~/gql/types";
 import { getSportScoringConfig } from "~/lib/sport-scoring";
+import { Avatar, AvatarImage, AvatarFallback } from "~/ui/avatar";
 
 import { useRemoveGameAction } from "../use-remove-game-action.hook";
 import { useScoreSheet } from "../score-context";
@@ -30,6 +31,28 @@ function formatTypeLabel(sport: Sport, actionKey: string | undefined | null) {
   );
 
   return scoreType?.label || "Score";
+}
+
+function getUserInitials(user: GameScoreActionNodeFragment["occurredByUser"]) {
+  if (!user) return "?";
+
+  const firstName = user.firstName || "";
+  const lastName = user.lastName || "";
+  const displayName = user.displayName || "";
+
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+
+  if (displayName) {
+    const parts = displayName.split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return displayName[0].toUpperCase();
+  }
+
+  return "?";
 }
 
 const CONTEXT_MENU_INDEX_MAP = ["edit_score", "remove_action"];
@@ -106,6 +129,20 @@ export function GameScoreActionItem({
       onPress={handlePressContextMenuItem}
     >
       <View className="flex-row items-center justify-between py-3 px-4 border-b border-border">
+        {/* User Avatar */}
+        <View className="mr-3">
+          <Avatar size={32}>
+            {action.occurredByUser?.photo?.source && (
+              <AvatarImage
+                source={{ uri: action.occurredByUser.photo.source }}
+              />
+            )}
+            <AvatarFallback>
+              {getUserInitials(action.occurredByUser)}
+            </AvatarFallback>
+          </Avatar>
+        </View>
+
         <View className="flex-1">
           <Text className="font-medium text-foreground">
             {action.occurredToTeam.name}

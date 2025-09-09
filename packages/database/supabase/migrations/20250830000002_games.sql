@@ -9,9 +9,9 @@ CREATE TABLE teams (
     team_type text NOT NULL CHECK (team_type IN ('individual', 'group')),
     sport_tags text ARRAY,
     created_at timestamp with time zone DEFAULT now(),
-    created_up uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    created_up text NULL REFERENCES public.users ON DELETE SET NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    updated_by uuid NULL REFERENCES auth.users ON DELETE SET NULL
+    updated_by text NULL REFERENCES public.users ON DELETE SET NULL
 );
 COMMENT ON TABLE teams IS 'Teams participate in games and are made up of members.';
 COMMENT ON COLUMN teams.team_type IS 'For a solo play, a user would have a team where they are the only member (individual) and all other teams are denoted as "groups"';
@@ -20,11 +20,11 @@ COMMENT ON COLUMN teams.sport_tags IS 'Tagging system for easy lookup. Not inten
 CREATE TABLE team_members (
     id text PRIMARY KEY DEFAULT nanoid('tmmb'),
     team_id text NOT NULL REFERENCES teams ON DELETE CASCADE,
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    user_id text NOT NULL REFERENCES public.users ON DELETE CASCADE,
     created_at timestamp with time zone DEFAULT now(),
-    created_up uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    created_up text NULL REFERENCES public.users ON DELETE SET NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    updated_by uuid NULL REFERENCES auth.users ON DELETE SET NULL
+    updated_by text NULL REFERENCES public.users ON DELETE SET NULL
 );
 COMMENT ON TABLE team_members IS 'Assigns a user to a team.';
 
@@ -35,9 +35,9 @@ CREATE TABLE games (
     scheduled_at timestamp with time zone NULL,
     location_id text NULL REFERENCES locations ON DELETE SET NULL,
     created_at timestamp with time zone DEFAULT now(),
-    created_up uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    created_up text NULL REFERENCES public.users ON DELETE SET NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    updated_by uuid NULL REFERENCES auth.users ON DELETE SET NULL
+    updated_by text NULL REFERENCES public.users ON DELETE SET NULL
 );
 COMMENT ON TABLE games IS 'Tracks a specific game played for a specific sport';
 COMMENT ON COLUMN games.game_state IS '[upcoming] the game has yet to start. [in_progress] the game is active, [completed] the game is finished';
@@ -61,12 +61,12 @@ CREATE TABLE game_actions (
     point_value numeric NULL, -- Points for SCORE events, NULL for GAME_START/GAME_END
     details jsonb NULL, -- Additional event details (e.g., period info, descriptions)
     occurred_at timestamp with time zone DEFAULT NOW(),
-    occurred_by_user_id uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    occurred_by_user_id text NULL REFERENCES public.users ON DELETE SET NULL,
     occurred_to_team_id text NULL REFERENCES teams ON DELETE SET NULL,
     created_at timestamp with time zone DEFAULT now(),
-    created_by uuid NULL REFERENCES auth.users ON DELETE SET NULL,
+    created_by text NULL REFERENCES public.users ON DELETE SET NULL,
     updated_at timestamp with time zone DEFAULT now(),
-    updated_by uuid NULL REFERENCES auth.users ON DELETE SET NULL
+    updated_by text NULL REFERENCES public.users ON DELETE SET NULL
 );
 COMMENT ON TABLE game_actions IS 'Determines the flow of the gameplay as is tracked by users in realtime';
 COMMENT ON COLUMN game_actions.type IS '[GAME_START/GAME_END] manages game timers. [SCORE] manages team scores';
@@ -82,7 +82,7 @@ BEGIN
     RETURN EXISTS (
         SELECT 1 FROM team_members
         WHERE team_id = team_id_param
-        AND user_id = auth.uid()
+        AND user_id = public.uid()
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -94,7 +94,7 @@ BEGIN
         SELECT 1 FROM game_teams gt
         JOIN team_members tm ON gt.team_id = tm.team_id
         WHERE gt.game_id = game_id_param
-        AND tm.user_id = auth.uid()
+        AND tm.user_id = public.uid()
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -140,34 +140,34 @@ ALTER TABLE game_actions ENABLE ROW LEVEL SECURITY;
 -- RLS policies: Anyone can read, writing protected by game/team participation
 -- Teams policies
 CREATE POLICY "teams_read" ON teams FOR SELECT USING (TRUE);
-CREATE POLICY "teams_insert" ON teams FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "teams_insert" ON teams FOR INSERT WITH CHECK (public.uid() IS NOT NULL);
 CREATE POLICY "teams_update" ON teams FOR UPDATE USING (user_is_in_team(id));
 CREATE POLICY "teams_delete" ON teams FOR DELETE USING (user_is_in_team(id));
 
 -- Team members policies
 CREATE POLICY "team_members_read" ON team_members FOR SELECT USING (TRUE);
 CREATE POLICY "team_members_insert" ON team_members FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL AND (
-        user_id = auth.uid() OR -- Users can add themselves
+    public.uid() IS NOT NULL AND (
+        user_id = public.uid() OR -- Users can add themselves
         user_is_in_team(team_id) -- Team members can add others
     )
 );
 CREATE POLICY "team_members_update" ON team_members FOR UPDATE USING (user_is_in_team(team_id));
 CREATE POLICY "team_members_delete" ON team_members FOR DELETE USING (
-    user_id = auth.uid() OR -- Users can remove themselves
+    user_id = public.uid() OR -- Users can remove themselves
     user_is_in_team(team_id) -- Team members can remove others
 );
 
 -- Games policies
 CREATE POLICY "games_read" ON games FOR SELECT USING (TRUE);
-CREATE POLICY "games_insert" ON games FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "games_insert" ON games FOR INSERT WITH CHECK (public.uid() IS NOT NULL);
 CREATE POLICY "games_update" ON games FOR UPDATE USING (user_is_in_game(id));
 CREATE POLICY "games_delete" ON games FOR DELETE USING (user_is_in_game(id));
 
 -- Game teams policies
 CREATE POLICY "game_teams_read" ON game_teams FOR SELECT USING (TRUE);
 CREATE POLICY "game_teams_insert" ON game_teams FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL AND (
+    public.uid() IS NOT NULL AND (
         user_is_in_game(game_id) OR -- Game participants can add teams
         user_is_in_team(team_id) -- Team members can join games
     )
@@ -182,13 +182,13 @@ CREATE POLICY "game_teams_delete" ON game_teams FOR DELETE USING (
 -- Game actions policies
 CREATE POLICY "game_actions_read" ON game_actions FOR SELECT USING (TRUE);
 CREATE POLICY "game_actions_insert" ON game_actions FOR INSERT WITH CHECK (
-    auth.uid() IS NOT NULL AND user_is_in_game(game_id)
+    public.uid() IS NOT NULL AND user_is_in_game(game_id)
 );
 CREATE POLICY "game_actions_update" ON game_actions FOR UPDATE USING (
-    user_is_in_game(game_id) AND created_by = auth.uid()
+    user_is_in_game(game_id) AND created_by = public.uid()
 );
 CREATE POLICY "game_actions_delete" ON game_actions FOR DELETE USING (
-    user_is_in_game(game_id) AND created_by = auth.uid()
+    user_is_in_game(game_id) AND created_by = public.uid()
 );
 
 --

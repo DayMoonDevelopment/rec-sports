@@ -133,6 +133,14 @@ export type GameTeam = {
   team: Team;
 };
 
+export type Image = Media & {
+  __typename: 'Image';
+  blurHash: Maybe<Scalars['String']['output']>;
+  height: Maybe<Scalars['Int']['output']>;
+  source: Scalars['String']['output'];
+  width: Maybe<Scalars['Int']['output']>;
+};
+
 export type Location = {
   __typename: 'Location';
   address: Maybe<Address>;
@@ -153,6 +161,10 @@ export type LocationsConnection = {
   edges: Array<LocationEdge>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int']['output'];
+};
+
+export type Media = {
+  source: Scalars['String']['output'];
 };
 
 export type Mutation = {
@@ -354,7 +366,15 @@ export type UpdateTeamPayload = {
 
 export type User = {
   __typename: 'User';
+  authId: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  displayName: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  firstName: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  lastName: Maybe<Scalars['String']['output']>;
+  photo: Maybe<Image>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type UserAuth = {
