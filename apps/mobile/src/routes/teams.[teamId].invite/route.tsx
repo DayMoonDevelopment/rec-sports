@@ -6,20 +6,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TextInput,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+
 import { useMutation } from "@apollo/client";
-import { OtpInput } from "react-native-otp-entry";
 import { CrossIcon } from "~/icons/cross";
-import { AddMemberDocument } from "../teams.[teamId]/mutations/add-member.generated";
+import { AddMemberDocument } from "./mutations/add-member.generated";
+import { Button, ButtonText } from "~/ui/button";
+import { cn } from "~/lib/utils";
 
 function CloseButton() {
   return (
     <Pressable
       onPress={() => router.back()}
-      className="p-2 rounded-full bg-gray-100"
+      className="p-3 rounded-full bg-secondary active:bg-muted transition-colors"
     >
-      <CrossIcon className="size-5 text-gray-600" />
+      <CrossIcon className="size-5 text-muted-foreground" />
     </Pressable>
   );
 }
@@ -45,7 +48,7 @@ export function Component() {
       await addMember({
         variables: {
           input: {
-            userInviteCode: inviteCode.trim(),
+            userInviteCode: inviteCode.trim().toUpperCase(),
             teamId: teamId,
           },
         },
@@ -56,7 +59,7 @@ export function Component() {
     } catch (error) {
       Alert.alert(
         "Error",
-        error instanceof Error ? error.message : "Failed to add member",
+        error instanceof Error ? error.message : "Failed to add player",
       );
     } finally {
       setIsLoading(false);
@@ -68,78 +71,48 @@ export function Component() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-background"
     >
-      <View className="flex-1 px-6 pt-safe-offset-4">
+      <View className="flex-1 px-6 pt-safe-offset-6">
         {/* Header */}
-        <View className="flex-row items-center justify-between mb-8">
-          <View className="flex-1">
-            <Text className="text-3xl font-bold text-foreground mb-2">
-              Add Team Member
+        <View className="flex-row items-start justify-between mb-12">
+          <View className="flex-1 pr-4">
+            <Text className="text-4xl font-bold text-foreground mb-3 leading-tight">
+              Add a player
             </Text>
-            <Text className="text-muted-foreground">
-              Enter the invite code for the member you want to add
+            <Text className="text-base text-muted-foreground leading-relaxed">
+              Enter the invite code for the new player you want to add. They can
+              find this on their profile.
             </Text>
           </View>
           <CloseButton />
         </View>
 
         {/* Form */}
-        <View className="flex-1">
-          <Text className="text-lg font-semibold text-foreground mb-6 text-center">
-            Invite Code
-          </Text>
+        <View className="flex-1 flex flex-col justify-between pb-safe-offset-4">
+          <TextInput
+            value={inviteCode}
+            onChangeText={handleInviteCodeChange}
+            placeholder={Array(9).fill("-").join("")}
+            maxLength={9}
+            autoCapitalize="characters"
+            autoComplete="off"
+            autoCorrect={false}
+            editable={!isLoading}
+            accessibilityLabel="User invite code"
+            textAlign="center"
+            numberOfLines={1}
+            className={cn(
+              `text-2xl tracking-[8px] text-foreground border-b-2 py-4 px-5 placeholder:text-muted-foreground`,
+              inviteCode.length > 0 ? "border-primary" : "border-border",
+            )}
+            returnKeyType="done"
+          />
 
-          <View className="mb-8">
-            <OtpInput
-              numberOfDigits={9}
-              onTextChange={handleInviteCodeChange}
-              onFilled={handleAddMember}
-              blurOnFilled
-              autoFocus
-              disabled={isLoading}
-              theme={{
-                containerStyle: {
-                  width: "100%",
-                  justifyContent: "center",
-                },
-                inputsContainerStyle: {
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                },
-                pinCodeContainerStyle: {
-                  borderWidth: 1,
-                  borderColor: "#d1d5db",
-                  borderRadius: 8,
-                  backgroundColor: "transparent",
-                  width: 35,
-                  height: 50,
-                },
-                pinCodeTextStyle: {
-                  fontSize: 18,
-                  fontFamily: "monospace",
-                  fontWeight: "600",
-                  textTransform: "uppercase",
-                },
-                focusStickStyle: {
-                  backgroundColor: "#3b82f6",
-                },
-                focusedPinCodeContainerStyle: {
-                  borderColor: "#3b82f6",
-                  borderWidth: 2,
-                },
-              }}
-            />
-          </View>
-
-          {/* Action Button */}
-          <Pressable
+          <Button
             onPress={handleAddMember}
             disabled={inviteCode.length !== 9 || isLoading}
-            className="py-4 px-6 rounded-lg bg-primary active:opacity-70 disabled:opacity-50"
           >
-            <Text className="text-center font-semibold text-lg text-primary-foreground">
-              {isLoading ? "Adding Member..." : "Add Member"}
-            </Text>
-          </Pressable>
+            <ButtonText>Add to team</ButtonText>
+          </Button>
         </View>
       </View>
     </KeyboardAvoidingView>
