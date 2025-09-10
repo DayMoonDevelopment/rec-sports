@@ -22,10 +22,6 @@ export class LocationsService {
     const result = await client
       .selectFrom('locations')
       .selectAll()
-      .select([
-        sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
-        sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
-      ])
       .where('id', '=', id)
       .executeTakeFirst();
 
@@ -39,12 +35,15 @@ export class LocationsService {
       name: result.name || 'Unknown Location', // Handle nullable name
       address: this.buildAddress(result),
       geo: {
-        latitude: result.latitude,
-        longitude: result.longitude,
+        latitude: result.lat,
+        longitude: result.lon,
       },
       sports: (result.sport_tags || []).map(
         (tag) => tag.toUpperCase() as Sport,
       ),
+      bounds: (
+        result.bounds as { geometry: { lat: number; lon: number }[] }
+      ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
     };
   }
 
@@ -57,11 +56,7 @@ export class LocationsService {
     let query = client
       .selectFrom('locations')
       .selectAll()
-      .select([
-        sql<number>`gis.st_x(geo::gis.geometry)`.as('longitude'),
-        sql<number>`gis.st_y(geo::gis.geometry)`.as('latitude'),
-        'created_at',
-      ]);
+      .select(['created_at']);
 
     // Add search ranking if there's a text query
     if (hasTextSearch) {
@@ -137,10 +132,13 @@ export class LocationsService {
         name: row.name || 'Unknown Location',
         address: this.buildAddress(row),
         geo: {
-          latitude: row.latitude,
-          longitude: row.longitude,
+          latitude: row.lat,
+          longitude: row.lon,
         },
         sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
+        bounds: (
+          row.bounds as { geometry: { lat: number; lon: number }[] }
+        ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
       };
 
       return {
