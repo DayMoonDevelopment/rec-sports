@@ -10,12 +10,12 @@ import { SportIcon } from "~/components/sport-icon";
 import { useCreateGameForm } from "../create-game-context";
 
 const cardStyles = cva(
-  "rounded-2xl px-2 py-4 flex flex-col items-center justify-center gap-2 border-2",
+  "rounded-2xl px-2 py-4 flex flex-col items-center justify-center gap-2 border-2 transition-colors",
   {
     variants: {
       selected: {
-        true: "border-primary",
-        false: "border-border",
+        true: "border-primary bg-card",
+        false: "border-border bg-transparent",
       },
     },
     defaultVariants: {

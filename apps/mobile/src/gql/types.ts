@@ -49,8 +49,8 @@ export type CenterPoint = {
 };
 
 export type CreateGameInput = {
-  locationId: Scalars['ID']['input'];
-  scheduledAt: Scalars['DateTime']['input'];
+  locationId?: InputMaybe<Scalars['ID']['input']>;
+  scheduledAt?: InputMaybe<Scalars['DateTime']['input']>;
   sport: Sport;
   teamIds: Array<Scalars['ID']['input']>;
 };

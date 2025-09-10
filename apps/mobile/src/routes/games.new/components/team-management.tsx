@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 
 import { UsersIcon } from "~/icons/users";
 import { PlusSmallIcon } from "~/icons/plus-small";
@@ -15,27 +15,26 @@ type SelectedTeam = NonNullable<
   SuggestedTeamsQuery["suggestedTeams"]["edges"][0]["node"]
 >;
 
+function getMemberText(members: SelectedTeam["members"]) {
+  if (!members || members.length === 0) return "No members";
+  if (members.length === 1)
+    return members[0].firstName || members[0].displayName || "Unknown";
+  if (members.length === 2) {
+    const first = members[0].firstName || members[0].displayName || "Unknown";
+    const second = members[1].firstName || members[1].displayName || "Unknown";
+    return `${first} and ${second}`;
+  }
+
+  const first = members[0].firstName || members[0].displayName || "Unknown";
+  const second = members[1].firstName || members[1].displayName || "Unknown";
+  const othersCount = members.length - 2;
+  const othersText = othersCount === 1 ? "other" : "others";
+  return `${first}, ${second} and ${othersCount} ${othersText}`;
+}
+
 export function TeamManagement() {
   const { selectedTeams, removeSelectedTeam, openTeamSelection } =
     useCreateGameForm();
-
-  const getMemberText = (members: SelectedTeam["members"]) => {
-    if (!members || members.length === 0) return "No members";
-    if (members.length === 1)
-      return members[0].firstName || members[0].displayName || "Unknown";
-    if (members.length === 2) {
-      const first = members[0].firstName || members[0].displayName || "Unknown";
-      const second =
-        members[1].firstName || members[1].displayName || "Unknown";
-      return `${first} and ${second}`;
-    }
-
-    const first = members[0].firstName || members[0].displayName || "Unknown";
-    const second = members[1].firstName || members[1].displayName || "Unknown";
-    const othersCount = members.length - 2;
-    const othersText = othersCount === 1 ? "other" : "others";
-    return `${first}, ${second} and ${othersCount} ${othersText}`;
-  };
 
   const renderSelectedTeam = (team: SelectedTeam) => {
     const members = team.members || [];
@@ -44,7 +43,7 @@ export function TeamManagement() {
     return (
       <View
         key={team.id}
-        className="flex-row items-center p-4 bg-card border border-border rounded-xl"
+        className="flex-row items-center p-4 bg-card border border-border rounded-2xl"
       >
         <View className="flex-1">
           <Text className="font-semibold text-foreground text-lg">
@@ -55,7 +54,7 @@ export function TeamManagement() {
             <View className="flex-row items-center gap-1">
               {/* Member Avatars */}
               <View className="flex-row gap-0 pl-3">
-                {firstThreeMembers.map((member, index) => (
+                {firstThreeMembers.map((member) => (
                   <Avatar
                     key={member.id}
                     className="size-8 border-2 border-background -ml-3"
@@ -76,9 +75,13 @@ export function TeamManagement() {
           )}
         </View>
 
-        <Pressable onPress={() => removeSelectedTeam(team.id)} className="p-2">
-          <CrossSmallIcon className="size-5 text-muted-foreground" />
-        </Pressable>
+        <Button
+          variant="ghost"
+          size="icon"
+          onPress={() => removeSelectedTeam(team.id)}
+        >
+          <ButtonIcon Icon={CrossSmallIcon} />
+        </Button>
       </View>
     );
   };
@@ -86,28 +89,30 @@ export function TeamManagement() {
   return (
     <>
       {selectedTeams.length === 0 ? (
-        <View className="p-8 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-4">
+        <View className="p-8 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
           <UsersIcon className="text-muted-foreground size-16 opacity-75" />
+          <Text className="text-muted-foreground mb-4 mt-1">
+            {"Who's playing?"}
+          </Text>
           <Button onPress={openTeamSelection}>
             <ButtonIcon Icon={PlusSmallIcon} />
             <ButtonText>Add teams</ButtonText>
           </Button>
         </View>
       ) : (
-        <View className="flex flex-col gap-4">
+        <View className="flex flex-col gap-2">
           <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-semibold text-foreground">
+            <Text className="text-lg font-semibold text-foreground pl-1">
               Teams ({selectedTeams.length})
             </Text>
+
             <Button size="sm" onPress={openTeamSelection}>
               <ButtonIcon Icon={PlusSmallIcon} />
-              <ButtonText className="text-primary-foreground font-medium">
-                Add Team
-              </ButtonText>
+              <ButtonText>Add Team</ButtonText>
             </Button>
           </View>
 
-          <View className="flex flex-col gap-3">
+          <View className="flex flex-col gap-2">
             {selectedTeams.map(renderSelectedTeam)}
           </View>
         </View>

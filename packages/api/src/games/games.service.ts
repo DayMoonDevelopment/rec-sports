@@ -79,9 +79,10 @@ export class GamesService {
         .insertInto('games')
         .values({
           sport: input.sport,
-          location_id: input.locationId,
-          scheduled_at: input.scheduledAt.toISOString(),
-          game_state: 'scheduled',
+          location_id: input.locationId ? input.locationId : undefined,
+          scheduled_at: input.scheduledAt
+            ? input.scheduledAt.toISOString()
+            : undefined,
         })
         .returning(['id'])
         .executeTakeFirstOrThrow();

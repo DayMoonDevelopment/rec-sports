@@ -20,14 +20,16 @@ interface CreateGameFormState {
   selectedSport: Sport | null;
   selectedTeams: SelectedTeam[];
   locationName: string;
-  scheduledDate: string;
+  scheduledDate: Date;
+  isScheduleEnabled: boolean;
 }
 
 interface CreateGameContextValue extends CreateGameFormState {
   setSelectedSport: (sport: Sport | null) => void;
   setSelectedTeams: (teams: SelectedTeam[]) => void;
   setLocationName: (name: string) => void;
-  setScheduledDate: (date: string) => void;
+  setScheduledDate: (date: Date) => void;
+  setIsScheduleEnabled: (enabled: boolean) => void;
   addSelectedTeam: (team: SelectedTeam) => void;
   removeSelectedTeam: (teamId: string) => void;
   openTeamSelection: () => void;
@@ -43,11 +45,18 @@ interface CreateGameProviderProps {
   children: ReactNode;
 }
 
+function getDefaultDate() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow;
+}
+
 export function CreateGameProvider({ children }: CreateGameProviderProps) {
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
   const [locationName, setLocationName] = useState("");
-  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date>(getDefaultDate());
+  const [isScheduleEnabled, setIsScheduleEnabled] = useState(false);
 
   const bottomSheetRef = useRef<TeamSelectionBottomSheetRef>(null);
 
@@ -69,21 +78,19 @@ export function CreateGameProvider({ children }: CreateGameProviderProps) {
     bottomSheetRef.current?.dismiss();
   };
 
-  const canCreateGame =
-    selectedSport &&
-    selectedTeams.length >= 2 &&
-    locationName.trim() &&
-    scheduledDate;
+  const canCreateGame = selectedSport && selectedTeams.length >= 1;
 
   const value: CreateGameContextValue = {
     selectedSport,
     selectedTeams,
     locationName,
     scheduledDate,
+    isScheduleEnabled,
     setSelectedSport,
     setSelectedTeams,
     setLocationName,
     setScheduledDate,
+    setIsScheduleEnabled,
     addSelectedTeam,
     removeSelectedTeam,
     openTeamSelection,

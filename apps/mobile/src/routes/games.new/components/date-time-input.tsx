@@ -1,26 +1,51 @@
-import { View, Text, TextInput } from "react-native";
+import { View, Text, Switch } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useCreateGameForm } from "../create-game-context";
 
-export function DateTimeInput() {
-  const { selectedSport, scheduledDate, setScheduledDate } = useCreateGameForm();
+// Default to tomorrow at current time
+function getDefaultDate() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow;
+}
 
-  if (!selectedSport) return null;
+export function DateTimeInput() {
+  const {
+    scheduledDate,
+    setScheduledDate,
+    isScheduleEnabled,
+    setIsScheduleEnabled,
+  } = useCreateGameForm();
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    console.log(selectedDate);
+    if (selectedDate && isScheduleEnabled) {
+      setScheduledDate(selectedDate.toISOString());
+    }
+  };
 
   return (
-    <View className="space-y-3">
-      <Text className="text-lg font-semibold text-foreground">
-        Scheduled Date
+    <View className="flex flex-col gap-1">
+      <Text className="text-lg font-semibold text-foreground pl-1">
+        Schedule a time to play
       </Text>
-      <TextInput
-        value={scheduledDate}
-        onChangeText={setScheduledDate}
-        placeholder="YYYY-MM-DD HH:mm (e.g., 2024-12-25 15:30)"
-        className="p-3 bg-card border border-muted rounded-lg text-foreground"
-        placeholderTextColor="#9CA3AF"
-      />
-      <Text className="text-sm text-muted-foreground">
-        Date/time picker integration coming soon
-      </Text>
+      <View className="flex-row items-center justify-between">
+        <View className="-ml-3">
+          <DateTimePicker
+            value={scheduledDate}
+            mode="datetime"
+            display="default"
+            onChange={handleDateChange}
+            disabled={!isScheduleEnabled}
+            minimumDate={new Date()}
+          />
+        </View>
+
+        <Switch
+          value={isScheduleEnabled}
+          onValueChange={setIsScheduleEnabled}
+        />
+      </View>
     </View>
   );
 }

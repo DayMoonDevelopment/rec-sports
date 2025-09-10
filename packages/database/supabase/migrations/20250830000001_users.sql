@@ -5,7 +5,6 @@ create table public.users (
   last_name text null,
   photo text null,
   display_name text null,
-  invite_code text null unique,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now(),
   auth_id uuid null unique references auth.users on delete cascade
@@ -104,26 +103,6 @@ CREATE TRIGGER on_auth_user_insert_or_update
     AFTER INSERT OR UPDATE ON auth.users
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_user_insert_trigger();
-
--- Generate invite code from the actual user ID
-CREATE OR REPLACE FUNCTION public.generate_invite_code()
-RETURNS TRIGGER
-LANGUAGE PLPGSQL
-SECURITY DEFINER
-AS $$
-BEGIN
-    -- Only generate invite code if it's null (allows manual removal/regeneration)
-    IF NEW.invite_code IS NULL THEN
-        NEW.invite_code := upper(left(encode(sha256(NEW.id::bytea), 'hex'), 9));
-    END IF;
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER generate_invite_code_trigger
-    BEFORE INSERT OR UPDATE ON public.users
-    FOR EACH ROW
-    EXECUTE FUNCTION public.generate_invite_code();
 
 -- Create public.uid() function to get the public user ID from the authenticated user
 CREATE OR REPLACE FUNCTION public.uid()
