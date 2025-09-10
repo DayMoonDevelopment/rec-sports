@@ -217,31 +217,34 @@ export type Database = {
       }
       location_facilities: {
         Row: {
+          bounds: Json | null
           details: Json | null
           geo: unknown
           id: string
           lat: number
           location_id: string
           lon: number
-          sport_tags: string[] | null
+          sport: string
         }
         Insert: {
+          bounds?: Json | null
           details?: Json | null
           geo: unknown
           id?: string
           lat: number
           location_id: string
           lon: number
-          sport_tags?: string[] | null
+          sport: string
         }
         Update: {
+          bounds?: Json | null
           details?: Json | null
           geo?: unknown
           id?: string
           lat?: number
           location_id?: string
           lon?: number
-          sport_tags?: string[] | null
+          sport?: string
         }
         Relationships: [
           {
@@ -290,6 +293,7 @@ export type Database = {
       }
       locations: {
         Row: {
+          bounds: Json | null
           city: string | null
           country: string | null
           county: string | null
@@ -309,6 +313,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          bounds?: Json | null
           city?: string | null
           country?: string | null
           county?: string | null
@@ -328,6 +333,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          bounds?: Json | null
           city?: string | null
           country?: string | null
           county?: string | null
