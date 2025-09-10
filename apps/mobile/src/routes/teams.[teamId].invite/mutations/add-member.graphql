@@ -1,0 +1,18 @@
+mutation AddMember($input: AddMemberInput!) {
+  addMember(input: $input) {
+    team {
+      id
+      name
+      members {
+        id
+        email
+        firstName
+        lastName
+        displayName
+        photo {
+          source
+        }
+      }
+    }
+  }
+}

@@ -469,6 +469,7 @@ export type Database = {
           email: string
           first_name: string | null
           id: string
+          invite_code: string | null
           last_name: string | null
           photo: string | null
           updated_at: string | null
@@ -480,6 +481,7 @@ export type Database = {
           email: string
           first_name?: string | null
           id?: string
+          invite_code?: string | null
           last_name?: string | null
           photo?: string | null
           updated_at?: string | null
@@ -491,6 +493,7 @@ export type Database = {
           email?: string
           first_name?: string | null
           id?: string
+          invite_code?: string | null
           last_name?: string | null
           photo?: string | null
           updated_at?: string | null

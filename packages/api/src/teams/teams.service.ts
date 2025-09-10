@@ -8,6 +8,7 @@ import { GamesConnection } from '../games/models/game-connection.model';
 import { GameEdge } from '../games/models/game-edge.model';
 import { GameTeam } from '../games/models/game-team.model';
 import { Game } from '../games/models/game.model';
+import { AddMemberInput } from './dto/add-member.input';
 import { CreateTeamInput } from './dto/create-team.input';
 import { RemoveMemberInput } from './dto/remove-member.input';
 import { TeamMemberInput } from './dto/team-member.input';
@@ -129,6 +130,49 @@ export class TeamsService {
       .deleteFrom('team_members')
       .where('team_id', '=', input.teamId)
       .where('user_id', '=', input.userId)
+      .execute();
+
+    const team = await this.findTeamById(input.teamId);
+    if (!team) {
+      throw new Error('Team not found');
+    }
+
+    return team;
+  }
+
+  async addMember(input: AddMemberInput): Promise<Team> {
+    const { client } = this.databaseService;
+
+    // Look up user by invite code
+    const user = await client
+      .selectFrom('users')
+      .select(['id'])
+      .where('invite_code', '=', input.userInviteCode)
+      .executeTakeFirst();
+
+    if (!user) {
+      throw new Error('Invalid invite code');
+    }
+
+    // Check if user is already a member
+    const existingMember = await client
+      .selectFrom('team_members')
+      .select(['user_id'])
+      .where('team_id', '=', input.teamId)
+      .where('user_id', '=', user.id)
+      .executeTakeFirst();
+
+    if (existingMember) {
+      throw new Error('User is already a member of this team');
+    }
+
+    // Add the user to the team
+    await client
+      .insertInto('team_members')
+      .values({
+        team_id: input.teamId,
+        user_id: user.id,
+      })
       .execute();
 
     const team = await this.findTeamById(input.teamId);

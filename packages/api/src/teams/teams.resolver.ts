@@ -11,6 +11,7 @@ import {
 
 import { Sport } from '../common/enums/sport.enum';
 import { GamesConnection } from '../games/models/game-connection.model';
+import { AddMemberInput } from './dto/add-member.input';
 import { CreateTeamInput } from './dto/create-team.input';
 import { CreateTeamPayload } from './dto/create-team.payload';
 import { RemoveMemberInput } from './dto/remove-member.input';
@@ -41,6 +42,14 @@ export class TeamsResolver {
     @Args('input') input: TeamMemberInput,
   ): Promise<UpdateTeamPayload> {
     const team = await this.teamsService.addTeamMember(input);
+    return { team };
+  }
+
+  @Mutation(() => UpdateTeamPayload)
+  async addMember(
+    @Args('input') input: AddMemberInput,
+  ): Promise<UpdateTeamPayload> {
+    const team = await this.teamsService.addMember(input);
     return { team };
   }
 

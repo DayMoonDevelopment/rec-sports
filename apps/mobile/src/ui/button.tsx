@@ -26,7 +26,7 @@ function useButtonContext() {
 }
 
 const buttonVariants = cva(
-  "flex-row items-center justify-center gap-2 rounded-full",
+  "flex-row items-center justify-center gap-2 rounded-full transition-opacity",
   {
     variants: {
       variant: {
@@ -44,6 +44,11 @@ const buttonVariants = cva(
         sm: "h-8 px-3 py-1.5",
         lg: "h-10 px-6 py-3",
         icon: "size-12",
+        "icon-sm": "size-8",
+      },
+      disabled: {
+        true: "opacity-50 cursor-not-allowed",
+        false: "opacity-100",
       },
     },
     defaultVariants: {
@@ -70,6 +75,7 @@ const buttonTextVariants = cva("text-sm font-medium text-center", {
       sm: "text-sm",
       lg: "text-base",
       icon: "text-lg",
+      "icon-sm": "text-sm",
     },
   },
   defaultVariants: {
@@ -95,6 +101,7 @@ const buttonIconVariants = cva("text-sm font-medium", {
       sm: "size-4",
       lg: "size-5",
       icon: "size-6",
+      "icon-sm": "size-6",
     },
   },
   defaultVariants: {
@@ -123,6 +130,7 @@ function Button({
   variant: propVariant,
   size: propSize,
   children,
+  disabled,
   ...props
 }: ButtonProps) {
   const contextValue = { variant: propVariant, size: propSize };
@@ -131,9 +139,10 @@ function Button({
     <ButtonContext.Provider value={contextValue}>
       <Pressable
         className={cn(
-          buttonVariants({ variant: propVariant, size: propSize }),
+          buttonVariants({ variant: propVariant, size: propSize, disabled }),
           className,
         )}
+        disabled={disabled}
         {...props}
       >
         {children}
