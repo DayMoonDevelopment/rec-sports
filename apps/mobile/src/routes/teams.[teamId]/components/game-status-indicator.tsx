@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import { format } from "date-fns";
 import { GameStatus } from "~/gql/types";
 
-import { useGameClock } from "../../game.[gameId]/use-game-clock.hook";
+import { useGameClock } from "../../games.[gameId]/use-game-clock.hook";
 
 import { CircleSmallIcon } from "~/icons/circle-small";
 import { CheckIcon } from "~/icons/check";

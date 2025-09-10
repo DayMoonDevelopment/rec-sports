@@ -15,9 +15,11 @@ import { AddMemberInput } from './dto/add-member.input';
 import { CreateTeamInput } from './dto/create-team.input';
 import { CreateTeamPayload } from './dto/create-team.payload';
 import { RemoveMemberInput } from './dto/remove-member.input';
+import { SuggestedTeamsArgs } from './dto/suggested-teams.input';
 import { TeamMemberInput } from './dto/team-member.input';
 import { UpdateTeamPayload } from './dto/update-team.payload';
 import { Team } from './models/team.model';
+import { TeamsConnection } from './models/teams-connection.model';
 import { TeamsService } from './teams.service';
 
 @Resolver(() => Team)
@@ -27,6 +29,13 @@ export class TeamsResolver {
   @Query(() => Team, { nullable: true })
   async team(@Args('id', { type: () => ID }) id: string): Promise<Team | null> {
     return this.teamsService.findTeamById(id);
+  }
+
+  @Query(() => TeamsConnection)
+  async suggestedTeams(
+    @Args() args: SuggestedTeamsArgs,
+  ): Promise<TeamsConnection> {
+    return this.teamsService.getSuggestedTeams(args.first, args.after);
   }
 
   @Mutation(() => CreateTeamPayload)

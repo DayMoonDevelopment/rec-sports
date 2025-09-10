@@ -291,6 +291,7 @@ export type Query = {
   game: Maybe<Game>;
   location: Maybe<Location>;
   locations: LocationsConnection;
+  suggestedTeams: TeamsConnection;
   team: Maybe<Team>;
 };
 
@@ -313,6 +314,12 @@ export type QueryLocationsArgs = {
   searchMode?: InputMaybe<Scalars['String']['input']>;
   similarityThreshold?: InputMaybe<Scalars['Float']['input']>;
   sports?: InputMaybe<Array<Sport>>;
+};
+
+
+export type QuerySuggestedTeamsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
 };
 
 
@@ -387,9 +394,22 @@ export type TeamGamesArgs = {
   first?: Scalars['Int']['input'];
 };
 
+export type TeamEdge = {
+  __typename: 'TeamEdge';
+  cursor: Scalars['String']['output'];
+  node: Team;
+};
+
 export type TeamMemberInput = {
   teamId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
+};
+
+export type TeamsConnection = {
+  __typename: 'TeamsConnection';
+  edges: Array<TeamEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Float']['output'];
 };
 
 export type UpdateGamePayload = {

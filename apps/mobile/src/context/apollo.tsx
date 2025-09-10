@@ -48,6 +48,7 @@ const cacheConfig: InMemoryCacheConfig = {
           "teamId",
           "userId",
         ]),
+        suggestedTeams: cursorPagination([]),
       },
     },
     Location: {

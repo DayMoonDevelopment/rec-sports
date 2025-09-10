@@ -1,0 +1,26 @@
+query SuggestedTeams($first: Int!, $after: String) {
+  suggestedTeams(first: $first, after: $after) {
+    edges {
+      node {
+        id
+        name
+        sports
+        members {
+          id
+          displayName
+          firstName
+          lastName
+          photo {
+            source
+          }
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    totalCount
+  }
+}
