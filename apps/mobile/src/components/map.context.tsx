@@ -55,9 +55,13 @@ const MapContext = createContext<MapContextType | null>(null);
 
 interface MapProviderProps {
   children: ReactNode;
+  onRegionChange?: (region: Region) => void;
 }
 
-export function MapProvider({ children }: MapProviderProps) {
+export function MapProvider({
+  children,
+  onRegionChange: onRegionChangeCallback,
+}: MapProviderProps) {
   const mapRef = useRef<MapView>(null);
   const markerRefs = useRef<MarkerRef[]>([]);
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
@@ -109,10 +113,14 @@ export function MapProvider({ children }: MapProviderProps) {
     [],
   );
 
-  const onRegionChange = useCallback((region: Region) => {
-    const roundedRegion = roundRegionForCaching(region);
-    setCurrentRegion(roundedRegion);
-  }, []);
+  const onRegionChange = useCallback(
+    (region: Region) => {
+      const roundedRegion = roundRegionForCaching(region);
+      setCurrentRegion(roundedRegion);
+      onRegionChangeCallback?.(roundedRegion);
+    },
+    [onRegionChangeCallback],
+  );
 
   const zoomOut = useCallback(async (multiplier: number = 5) => {
     if (mapRef.current) {

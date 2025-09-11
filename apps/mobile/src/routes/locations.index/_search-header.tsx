@@ -7,15 +7,15 @@ import { CrossIcon } from "~/icons/cross";
 
 interface SearchHeaderProps {
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  onSearchQueryChange: (query: string) => void;
   isSearchMode: boolean;
-  setIsSearchMode: (isSearchMode: boolean) => void;
+  onSearchModeChange: (isSearchMode: boolean) => void;
 }
 
 export function SearchHeader({
   searchQuery,
-  setSearchQuery,
-  setIsSearchMode,
+  onSearchQueryChange,
+  onSearchModeChange,
 }: SearchHeaderProps) {
   const inputRef = useRef<TextInput>(null);
   const { snapToIndex } = useBottomSheet();
@@ -28,18 +28,18 @@ export function SearchHeader({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (inputValue !== searchQuery) {
-        setSearchQuery(inputValue);
+        onSearchQueryChange(inputValue);
       }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [inputValue, searchQuery, setSearchQuery]);
+  }, [inputValue, searchQuery, onSearchQueryChange]);
 
   function handleBlur() {
     setFocused(false);
     // Only exit search mode if there's no query
     if (!searchQuery.trim()) {
-      setIsSearchMode(false);
+      onSearchModeChange(false);
       snapToIndex(0); // Return to original position
     }
   }
@@ -50,8 +50,8 @@ export function SearchHeader({
 
   function handleClear() {
     setInputValue("");
-    setSearchQuery("");
-    setIsSearchMode(false);
+    onSearchQueryChange("");
+    onSearchModeChange(false);
   }
 
   function handleCancel() {
@@ -61,7 +61,7 @@ export function SearchHeader({
 
   function handleFocus() {
     setFocused(true);
-    setIsSearchMode(true);
+    onSearchModeChange(true);
     snapToIndex(1); // Expand bottom sheet
   }
 
