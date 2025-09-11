@@ -20,5 +20,13 @@ query GetLocation($id: String!) {
       latitude
       longitude
     }
+    facilities {
+      id
+      sport
+      geo {
+        latitude
+        longitude
+      }
+    }
   }
 }

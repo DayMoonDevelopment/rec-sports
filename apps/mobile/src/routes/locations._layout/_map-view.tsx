@@ -74,10 +74,9 @@ export function MapViewComponent() {
       rotateEnabled={false}
       pitchEnabled={false}
     >
-      {!bounds &&
-        locations.map((location) => {
-          return <MapMarker key={location.id} location={location} />;
-        })}
+      {locations.map((location) => {
+        return <MapMarker key={location.id} location={location} />;
+      })}
 
       {bounds && bounds.length > 0 && (
         <Polygon

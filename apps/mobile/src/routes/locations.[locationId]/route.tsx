@@ -41,8 +41,19 @@ export function Component() {
     skip: !locationId,
     onCompleted: (data) => {
       if (data.location) {
-        // Update map with the current location
-        setLocations([data.location]);
+        // Create facility markers for individual sports fields/courts within the location
+        const facilityMarkers =
+          data.location.facilities?.map((facility) => ({
+            id: facility.id,
+            name: `${facility.sport} facility`,
+            geo: facility.geo,
+            sports: [facility.sport],
+          })) || [];
+
+        console.log("FACILITY MARKERS:", facilityMarkers);
+
+        // Set only the facility markers on the map (not the location itself)
+        setLocations(facilityMarkers);
 
         // Set bounds if location has bounds
         if (data.location.bounds && data.location.bounds.length > 0) {
