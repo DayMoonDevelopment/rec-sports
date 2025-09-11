@@ -22,7 +22,7 @@ export function Component() {
 
           <TeamManagement />
 
-          {/*<LocationInput />*/}
+          <LocationInput />
           <DateTimeInput />
         </ScrollView>
 

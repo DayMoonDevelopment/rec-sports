@@ -7,10 +7,15 @@ import React, {
 } from "react";
 import { Sport } from "~/gql/types";
 import type { SuggestedTeamsQuery } from "./queries/suggested-teams.generated";
+import type { LocationNodeFragment } from "~/routes/(map).index/queries/get-search-locations.generated";
 import {
   TeamSelectionBottomSheet,
   type TeamSelectionBottomSheetRef,
 } from "./components/team-selection-bottom-sheet";
+import {
+  LocationSelectionBottomSheet,
+  type LocationSelectionBottomSheetRef,
+} from "./components/location-selection-bottom-sheet";
 
 type SelectedTeam = NonNullable<
   SuggestedTeamsQuery["suggestedTeams"]["edges"][0]["node"]
@@ -19,6 +24,7 @@ type SelectedTeam = NonNullable<
 interface CreateGameFormState {
   selectedSport: Sport | null;
   selectedTeams: SelectedTeam[];
+  selectedLocation: LocationNodeFragment | null;
   locationName: string;
   scheduledDate: Date;
   isScheduleEnabled: boolean;
@@ -27,6 +33,7 @@ interface CreateGameFormState {
 interface CreateGameContextValue extends CreateGameFormState {
   setSelectedSport: (sport: Sport | null) => void;
   setSelectedTeams: (teams: SelectedTeam[]) => void;
+  setSelectedLocation: (location: LocationNodeFragment | null) => void;
   setLocationName: (name: string) => void;
   setScheduledDate: (date: Date) => void;
   setIsScheduleEnabled: (enabled: boolean) => void;
@@ -34,6 +41,8 @@ interface CreateGameContextValue extends CreateGameFormState {
   removeSelectedTeam: (teamId: string) => void;
   openTeamSelection: () => void;
   closeTeamSelection: () => void;
+  openLocationSelection: () => void;
+  closeLocationSelection: () => void;
   canCreateGame: boolean;
 }
 
@@ -54,11 +63,14 @@ function getDefaultDate() {
 export function CreateGameProvider({ children }: CreateGameProviderProps) {
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
+  const [selectedLocation, setSelectedLocation] =
+    useState<LocationNodeFragment | null>(null);
   const [locationName, setLocationName] = useState("");
   const [scheduledDate, setScheduledDate] = useState<Date>(getDefaultDate());
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(false);
 
-  const bottomSheetRef = useRef<TeamSelectionBottomSheetRef>(null);
+  const teamBottomSheetRef = useRef<TeamSelectionBottomSheetRef>(null);
+  const locationBottomSheetRef = useRef<LocationSelectionBottomSheetRef>(null);
 
   const addSelectedTeam = (team: SelectedTeam) => {
     if (!selectedTeams.find((t) => t.id === team.id)) {
@@ -71,23 +83,33 @@ export function CreateGameProvider({ children }: CreateGameProviderProps) {
   };
 
   const openTeamSelection = () => {
-    bottomSheetRef.current?.present();
+    teamBottomSheetRef.current?.present();
   };
 
   const closeTeamSelection = () => {
-    bottomSheetRef.current?.dismiss();
+    teamBottomSheetRef.current?.dismiss();
   };
 
-  const canCreateGame = selectedSport && selectedTeams.length >= 1;
+  const openLocationSelection = () => {
+    locationBottomSheetRef.current?.present();
+  };
+
+  const closeLocationSelection = () => {
+    locationBottomSheetRef.current?.dismiss();
+  };
+
+  const canCreateGame = Boolean(selectedSport && selectedTeams.length >= 1);
 
   const value: CreateGameContextValue = {
     selectedSport,
     selectedTeams,
+    selectedLocation,
     locationName,
     scheduledDate,
     isScheduleEnabled,
     setSelectedSport,
     setSelectedTeams,
+    setSelectedLocation,
     setLocationName,
     setScheduledDate,
     setIsScheduleEnabled,
@@ -95,6 +117,8 @@ export function CreateGameProvider({ children }: CreateGameProviderProps) {
     removeSelectedTeam,
     openTeamSelection,
     closeTeamSelection,
+    openLocationSelection,
+    closeLocationSelection,
     canCreateGame,
   };
 
@@ -104,10 +128,19 @@ export function CreateGameProvider({ children }: CreateGameProviderProps) {
 
       {/* Team Selection Bottom Sheet - renders on top of all children */}
       <TeamSelectionBottomSheet
-        ref={bottomSheetRef}
+        ref={teamBottomSheetRef}
         selectedTeamIds={selectedTeams.map((t) => t.id)}
         onTeamSelect={addSelectedTeam}
         onTeamDeselect={removeSelectedTeam}
+      />
+
+      {/* Location Selection Bottom Sheet - renders on top of all children */}
+      <LocationSelectionBottomSheet
+        ref={locationBottomSheetRef}
+        onLocationSelect={(location) => {
+          setSelectedLocation(location);
+          setLocationName(location.name);
+        }}
       />
     </CreateGameContext.Provider>
   );
