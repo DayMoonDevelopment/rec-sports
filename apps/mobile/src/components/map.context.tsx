@@ -31,7 +31,7 @@ interface LocationData {
     stateCode: string;
     postalCode: string;
   } | null;
-  sports: Array<string>;
+  sports: string[];
 }
 
 interface MapContextType {
@@ -42,6 +42,7 @@ interface MapContextType {
   showMarkerCallout: (id: string) => void;
   hideMarkerCallout: (id: string) => void;
   animateToLocation: (latitude: number, longitude: number) => void;
+  animateToBounds: (bounds: { latitude: number; longitude: number }[]) => void;
   zoomOut: (multiplier?: number) => void;
   focusedMarkerId: string | null;
   setFocusedMarkerId: (id: string | null) => void;
@@ -49,14 +50,21 @@ interface MapContextType {
   onRegionChange: (region: Region) => void;
   locations: LocationData[];
   setLocations: (locations: LocationData[]) => void;
+  bounds: { latitude: number; longitude: number }[] | null;
+  setBounds: (bounds: { latitude: number; longitude: number }[] | null) => void;
 }
-
-const MapContext = createContext<MapContextType | null>(null);
 
 interface MapProviderProps {
   children: ReactNode;
   onRegionChange?: (region: Region) => void;
 }
+
+const MapContext = createContext<MapContextType | null>(null);
+
+// Add fixed margin of roughly 100 meters
+// 1 degree latitude ≈ 111,000 meters, so 100m ≈ 0.0009 degrees
+const one_hundreds_meters = 0.0009;
+const marginDegrees = one_hundreds_meters / 4;
 
 export function MapProvider({
   children,
@@ -67,6 +75,13 @@ export function MapProvider({
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [locations, setLocations] = useState<LocationData[]>([]);
+  const [bounds, setBounds] = useState<
+    | {
+        latitude: number;
+        longitude: number;
+      }[]
+    | null
+  >(null);
 
   const addMarkerRef = useCallback(
     (id: string, ref: React.RefObject<typeof Marker>) => {
@@ -105,6 +120,39 @@ export function MapProvider({
             longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
+          },
+          1000,
+        );
+      }
+    },
+    [],
+  );
+
+  const animateToBounds = useCallback(
+    (bounds: { latitude: number; longitude: number }[]) => {
+      if (mapRef.current && bounds.length > 0) {
+        // Calculate bounding box
+        const latitudes = bounds.map((point) => point.latitude);
+        const longitudes = bounds.map((point) => point.longitude);
+
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+
+        // Calculate center point
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+
+        const latDelta = maxLat - minLat + marginDegrees;
+        const lngDelta = maxLng - minLng + marginDegrees;
+
+        mapRef.current.animateToRegion(
+          {
+            latitude: centerLat,
+            longitude: centerLng,
+            latitudeDelta: latDelta,
+            longitudeDelta: lngDelta,
           },
           1000,
         );
@@ -170,6 +218,7 @@ export function MapProvider({
         showMarkerCallout,
         hideMarkerCallout,
         animateToLocation,
+        animateToBounds,
         zoomOut,
         focusedMarkerId,
         setFocusedMarkerId,
@@ -177,6 +226,8 @@ export function MapProvider({
         onRegionChange,
         locations,
         setLocations,
+        bounds,
+        setBounds,
       }}
     >
       {children}

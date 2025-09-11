@@ -29,7 +29,9 @@ export function Component() {
     hideMarkerCallout,
     zoomOut,
     animateToLocation,
+    animateToBounds,
     setLocations,
+    setBounds,
   } = useMap();
 
   // Use Apollo query to fetch location by ID
@@ -42,12 +44,22 @@ export function Component() {
         // Update map with the current location
         setLocations([data.location]);
 
-        // Only animate from query if no lat/lng provided via params
-        if (!lat && !lng) {
-          animateToLocation(
-            data.location.geo.latitude,
-            data.location.geo.longitude,
-          );
+        // Set bounds if location has bounds
+        if (data.location.bounds && data.location.bounds.length > 0) {
+          setBounds(data.location.bounds);
+
+          // Only animate from query if no lat/lng provided via params
+          if (!lat && !lng) {
+            animateToBounds(data.location.bounds);
+          }
+        } else {
+          // Fallback to point-based animation if no bounds
+          if (!lat && !lng) {
+            animateToLocation(
+              data.location.geo.latitude,
+              data.location.geo.longitude,
+            );
+          }
         }
       }
     },
@@ -62,17 +74,34 @@ export function Component() {
 
       // If lat/lng provided via params, animate immediately
       if (lat && lng) {
-        animateToLocation(parseFloat(lat), parseFloat(lng));
+        if (location?.bounds && location.bounds.length > 0) {
+          animateToBounds(location.bounds);
+        } else {
+          animateToLocation(parseFloat(lat), parseFloat(lng));
+        }
       } else if (location) {
         // Otherwise use location data from query
-        animateToLocation(location.geo.latitude, location.geo.longitude);
+        if (location.bounds && location.bounds.length > 0) {
+          animateToBounds(location.bounds);
+        } else {
+          animateToLocation(location.geo.latitude, location.geo.longitude);
+        }
       }
     }
-  }, [location, locationId, lat, lng, setFocusedMarkerId, animateToLocation]);
+  }, [
+    location,
+    locationId,
+    lat,
+    lng,
+    setFocusedMarkerId,
+    animateToLocation,
+    animateToBounds,
+  ]);
 
   function handleClose() {
     hideMarkerCallout(locationId);
     setFocusedMarkerId(null);
+    setBounds(null); // Clear polygon bounds
     zoomOut(5);
 
     // Check if there are screens in the navigation stack to go back to

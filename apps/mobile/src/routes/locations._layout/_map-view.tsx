@@ -1,6 +1,6 @@
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import MapView from "react-native-maps";
+import MapView, { Polygon } from "react-native-maps";
 import { router } from "expo-router";
 
 import { useMap } from "~/components/map.context";
@@ -27,6 +27,7 @@ export function MapViewComponent() {
     zoomOut,
     onRegionChange,
     locations,
+    bounds,
   } = useMap();
 
   const mapBottomPadding =
@@ -44,7 +45,7 @@ export function MapViewComponent() {
     if (focusedMarkerId) {
       hideMarkerCallout(focusedMarkerId);
       setFocusedMarkerId(null);
-      zoomOut(5);
+      zoomOut(2);
 
       // Check if there are screens in the navigation stack to go back to
       if (router.canGoBack()) {
@@ -59,6 +60,7 @@ export function MapViewComponent() {
   return (
     <MapView
       ref={mapRef}
+      mapType="satellite"
       style={StyleSheet.absoluteFillObject}
       initialRegion={US_INITIAL_REGION}
       mapPadding={{
@@ -69,10 +71,22 @@ export function MapViewComponent() {
       }}
       onRegionChangeComplete={handleRegionChange}
       onPress={handleMapPress}
+      rotateEnabled={false}
+      pitchEnabled={false}
     >
-      {locations.map((location) => {
-        return <MapMarker key={location.id} location={location} />;
-      })}
+      {!bounds &&
+        locations.map((location) => {
+          return <MapMarker key={location.id} location={location} />;
+        })}
+
+      {bounds && bounds.length > 0 && (
+        <Polygon
+          coordinates={bounds}
+          fillColor="rgba(0, 0, 0, 0.1)"
+          strokeColor="rgba(0, 0, 0, 1)"
+          strokeWidth={2}
+        />
+      )}
     </MapView>
   );
 }
