@@ -125,14 +125,6 @@ function SearchEmptyComponent({
       <Text className="text-muted-foreground text-center mb-4">
         Try adjusting your search or zoom out on the map.
       </Text>
-      <Pressable
-        className="bg-secondary px-4 py-2 rounded-lg active:opacity-75"
-        onPress={onRefetch}
-      >
-        <Text className="text-secondary-foreground font-medium">
-          Search Again
-        </Text>
-      </Pressable>
     </View>
   );
 }
