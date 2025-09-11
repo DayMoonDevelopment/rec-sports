@@ -60,6 +60,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="games/new"
+                options={{
+                  presentation: "fullScreenModal",
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
                 name="teams/[teamId]"
                 options={{
                   presentation: "fullScreenModal",

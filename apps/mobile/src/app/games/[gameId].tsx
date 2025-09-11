@@ -1,1 +1,1 @@
-export { Component as default } from "~/routes/game.[gameId]/route";
+export { Component as default } from "~/routes/games.[gameId]/route";

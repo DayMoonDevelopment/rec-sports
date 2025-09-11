@@ -12,7 +12,9 @@ import { AddMemberInput } from './dto/add-member.input';
 import { CreateTeamInput } from './dto/create-team.input';
 import { RemoveMemberInput } from './dto/remove-member.input';
 import { TeamMemberInput } from './dto/team-member.input';
+import { TeamEdge } from './models/team-edge.model';
 import { Team } from './models/team.model';
+import { TeamsConnection } from './models/teams-connection.model';
 
 @Injectable()
 export class TeamsService {
@@ -392,6 +394,159 @@ export class TeamsService {
       edges,
       pageInfo,
       totalCount: Number(totalCount?.count ?? 0),
+    };
+  }
+
+  async getSuggestedTeams(
+    first: number,
+    after?: string,
+  ): Promise<TeamsConnection> {
+    const { client } = this.databaseService;
+
+    // Hardcoded current user ID for testing
+    const currentUserId = 'usr_JEqdfwjyhgI2kmsEECMr'; // Replace with actual user ID
+
+    // Query to get teams the user is in or has played against
+    // ordered by recency and number of games played
+    let query = client
+      .with('user_teams', (db) =>
+        // Teams the user is a member of
+        db
+          .selectFrom('team_members')
+          .select(['team_id'])
+          .where('user_id', '=', currentUserId),
+      )
+      .with('opponent_teams', (db) =>
+        // Teams the user has played AGAINST
+        // Find games where user's teams played, then get the opposing teams
+        db
+          .selectFrom('team_members')
+          .innerJoin(
+            'game_teams as user_gt',
+            'user_gt.team_id',
+            'team_members.team_id',
+          )
+          .innerJoin(
+            'game_teams as opponent_gt',
+            'opponent_gt.game_id',
+            'user_gt.game_id',
+          )
+          .select(['opponent_gt.team_id'])
+          .where('team_members.user_id', '=', currentUserId)
+          .where('user_gt.team_id', '!=', (eb) => eb.ref('opponent_gt.team_id'))
+          .distinct(),
+      )
+      .with('all_relevant_teams', (db) =>
+        // Union of user's teams and opponent teams
+        db
+          .selectFrom('user_teams')
+          .select(['team_id'])
+          .union(db.selectFrom('opponent_teams').select(['team_id'])),
+      )
+      .with('team_game_stats', (db) =>
+        // Calculate stats for each relevant team
+        db
+          .selectFrom('all_relevant_teams')
+          .innerJoin('teams', 'teams.id', 'all_relevant_teams.team_id')
+          .leftJoin('game_teams', 'game_teams.team_id', 'teams.id')
+          .leftJoin('games', 'games.id', 'game_teams.game_id')
+          .select([
+            'teams.id',
+            'teams.name',
+            'teams.created_at',
+            (eb) => eb.fn.count('games.id').as('game_count'),
+            (eb) => eb.fn.max('games.scheduled_at').as('last_game_date'),
+          ])
+          .groupBy(['teams.id', 'teams.name', 'teams.created_at']),
+      )
+      .selectFrom('team_game_stats')
+      .select(['id', 'name', 'created_at', 'game_count', 'last_game_date'])
+      // Order by recency (most recent games first, fallback to team creation)
+      .orderBy((eb) => eb.fn.coalesce('last_game_date', 'created_at'), 'desc')
+      // Then by number of games (more games first)
+      .orderBy('game_count', 'desc');
+
+    if (after) {
+      const { timestamp } = CursorUtil.parseCursor(after);
+      if (timestamp) {
+        query = query.where(
+          (eb) => eb.fn.coalesce('last_game_date', 'created_at'),
+          '<',
+          new Date(timestamp).toISOString(),
+        );
+      }
+    }
+
+    query = query.limit(first + 1);
+
+    const results = await query.execute();
+    const hasNextPage = results.length > first;
+    const nodes = results.slice(0, first);
+
+    // Convert results to Team objects
+    const teams: Team[] = [];
+    for (const result of nodes) {
+      const team = await this.findTeamById(result.id);
+      if (team) {
+        teams.push(team);
+      }
+    }
+
+    const edges: TeamEdge[] = teams.map((team, index) => ({
+      node: team,
+      cursor: CursorUtil.createCursor(
+        team.id,
+        nodes[index].last_game_date
+          ? new Date(nodes[index].last_game_date)
+          : new Date(nodes[index].created_at),
+      ),
+    }));
+
+    // Get total count of relevant teams
+    const totalCountResult = await client
+      .with('user_teams', (db) =>
+        db
+          .selectFrom('team_members')
+          .select(['team_id'])
+          .where('user_id', '=', currentUserId),
+      )
+      .with('opponent_teams', (db) =>
+        db
+          .selectFrom('team_members')
+          .innerJoin(
+            'game_teams as user_gt',
+            'user_gt.team_id',
+            'team_members.team_id',
+          )
+          .innerJoin(
+            'game_teams as opponent_gt',
+            'opponent_gt.game_id',
+            'user_gt.game_id',
+          )
+          .select(['opponent_gt.team_id'])
+          .where('team_members.user_id', '=', currentUserId)
+          .where('user_gt.team_id', '!=', (eb) => eb.ref('opponent_gt.team_id'))
+          .distinct(),
+      )
+      .with('all_relevant_teams', (db) =>
+        db
+          .selectFrom('user_teams')
+          .select(['team_id'])
+          .union(db.selectFrom('opponent_teams').select(['team_id'])),
+      )
+      .selectFrom('all_relevant_teams')
+      .select([(eb) => eb.fn.countAll().as('count')])
+      .executeTakeFirst();
+
+    const pageInfo: PageInfo = {
+      hasNextPage,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : undefined,
+    };
+
+    return {
+      edges,
+      pageInfo,
+      totalCount: Number(totalCountResult?.count ?? 0),
     };
   }
 }

@@ -13,11 +13,9 @@ export class CreateGameInput {
   @IsNotEmpty()
   teamIds: string[];
 
-  @Field(() => ID)
-  @IsNotEmpty()
-  locationId: string;
+  @Field(() => ID, { nullable: true })
+  locationId?: string;
 
-  @Field()
-  @IsNotEmpty()
-  scheduledAt: Date;
+  @Field({ nullable: true })
+  scheduledAt?: Date;
 }
