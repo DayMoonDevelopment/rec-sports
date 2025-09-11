@@ -30,12 +30,9 @@ export class GamesService {
         'games.scheduled_at',
         'locations.id as location_id',
         'locations.name as location_name',
-        sql<number>`gis.st_x(locations.geo::gis.geometry)`.as(
-          'location_longitude',
-        ),
-        sql<number>`gis.st_y(locations.geo::gis.geometry)`.as(
-          'location_latitude',
-        ),
+        'locations.lon as location_longitude',
+        'locations.lat as location_latitude',
+        'locations.bounds as location_bounds',
       ])
       .where('games.id', '=', id)
       .executeTakeFirst();
@@ -57,6 +54,11 @@ export class GamesService {
               longitude: gameResult.location_longitude || 0,
             },
             sports: [],
+            bounds: (
+              gameResult.location_bounds as {
+                geometry: { lat: number; lon: number }[];
+              }
+            ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
           }
         : null,
       sport: gameResult.sport as Sport,

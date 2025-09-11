@@ -4,6 +4,7 @@ import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 
 import { Sport } from '../../common/enums/sport.enum';
 import { Address } from '../address';
+import { Facility } from '../facilities/models/facility.model';
 import { Point } from './point.model';
 
 @ObjectType()
@@ -31,4 +32,15 @@ export class Location {
   @IsArray()
   @IsNotEmpty()
   sports: Sport[];
+
+  @Field(() => [Point])
+  @IsArray()
+  @IsNotEmpty()
+  bounds: Point[];
+
+  @Field(() => [Facility], { nullable: true })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Facility)
+  facilities?: Facility[];
 }

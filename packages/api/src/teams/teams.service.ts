@@ -292,6 +292,7 @@ export class TeamsService {
         'locations.lat',
         'locations.lon',
         'locations.sport_tags',
+        'locations.bounds',
       ] as const)
       .where('game_teams.team_id', '=', teamId)
       // Sort by game status priority: live first, then upcoming, then finished
@@ -352,6 +353,11 @@ export class TeamsService {
               longitude: result.lon,
             },
             sports: result.sport_tags ? (result.sport_tags as Sport[]) : [],
+            bounds: (
+              result.bounds as {
+                geometry: { lat: number; lon: number }[];
+              }
+            ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
           }
         : undefined,
       teams: [], // Will be resolved by other resolvers

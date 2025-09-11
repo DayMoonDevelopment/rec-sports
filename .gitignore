@@ -133,3 +133,5 @@ tmp/
 temp/
 .tmp/
 .temp/
+
+*.tar.gz
