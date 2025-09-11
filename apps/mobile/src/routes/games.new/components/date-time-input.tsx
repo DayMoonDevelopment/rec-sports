@@ -2,13 +2,6 @@ import { View, Text, Switch } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useCreateGameForm } from "../create-game-context";
 
-// Default to tomorrow at current time
-function getDefaultDate() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow;
-}
-
 export function DateTimeInput() {
   const {
     scheduledDate,
@@ -18,9 +11,8 @@ export function DateTimeInput() {
   } = useCreateGameForm();
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    console.log(selectedDate);
     if (selectedDate && isScheduleEnabled) {
-      setScheduledDate(selectedDate.toISOString());
+      setScheduledDate(selectedDate);
     }
   };
 
