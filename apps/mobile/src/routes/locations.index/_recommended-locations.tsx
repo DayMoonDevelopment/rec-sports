@@ -16,7 +16,7 @@ function HorizontalItemSeparatorComponent() {
 }
 
 export function RecommendedLocations() {
-  const { currentRegion } = useMap();
+  const { currentRegion, setLocations } = useMap();
 
   // Convert current map region to API region format
   const apiRegion: Region | undefined = currentRegion
@@ -33,6 +33,11 @@ export function RecommendedLocations() {
       after: null, // Start from beginning
     },
     skip: !currentRegion, // Skip query until we have a region
+    onCompleted: (data) => {
+      // Update map with recommended locations
+      const locations = data?.locations.edges?.map((edge) => edge.node) || [];
+      setLocations(locations);
+    },
   });
 
   const suggestedItems = data?.locations.edges?.map((edge) => edge.node) || [];

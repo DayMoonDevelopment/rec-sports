@@ -1,12 +1,7 @@
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { useMap } from "~/components/map.context";
 import { SportIcon } from "~/components/sport-icon";
@@ -76,7 +71,8 @@ function SearchLocationItem({ location, onPress }: SearchLocationItemProps) {
 }
 
 export function SearchFeed({ searchQuery }: SearchFeedProps) {
-  const { currentRegion, animateToLocation, setFocusedMarkerId } = useMap();
+  const { currentRegion, animateToLocation, setFocusedMarkerId, setLocations } =
+    useMap();
 
   // Create expanded region for search (add margins)
   const searchRegion = currentRegion
@@ -104,6 +100,11 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
         first: 20,
       },
       skip: !searchQuery.trim(),
+      onCompleted: (data) => {
+        // Update map with search results
+        const locations = data?.locations.edges?.map((edge) => edge.node) || [];
+        setLocations(locations);
+      },
     },
   );
 
@@ -186,7 +187,7 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
           No results found
         </Text>
         <Text className="text-muted-foreground text-center">
-          We couldn't find any locations matching "{searchQuery}" in this area.
+          {`We couldn't find any locations matching "${searchQuery}" in this area.`}
         </Text>
         <Text className="text-muted-foreground text-center mt-2">
           Try adjusting your search or zoom out on the map.
@@ -196,32 +197,24 @@ export function SearchFeed({ searchQuery }: SearchFeedProps) {
   }
 
   return (
-    <View className="flex-1">
-      <View className="px-4 py-3 border-b border-border bg-muted/30">
-        <Text className="text-muted-foreground text-sm">
-          {data?.locations.totalCount} result
-          {data?.locations.totalCount !== 1 ? "s" : ""} for "{searchQuery}"
-        </Text>
-      </View>
-
-      <FlatList
-        data={searchResults}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <SearchLocationItem location={item} onPress={handleLocationPress} />
-        )}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loading && searchResults.length > 0 ? (
-            <View className="py-4 items-center">
-              <ActivityIndicator size="small" className="text-primary" />
-            </View>
-          ) : null
-        }
-      />
-    </View>
+    <BottomSheetFlatList
+      className="border-t border-border bg-muted"
+      contentContainerClassName="pt-4 pb-safe-offset-4"
+      data={searchResults}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <SearchLocationItem location={item} onPress={handleLocationPress} />
+      )}
+      showsVerticalScrollIndicator={false}
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        loading && searchResults.length > 0 ? (
+          <View className="py-4 items-center">
+            <ActivityIndicator size="small" className="text-primary" />
+          </View>
+        ) : null
+      }
+    />
   );
 }

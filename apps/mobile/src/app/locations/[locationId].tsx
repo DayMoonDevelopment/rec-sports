@@ -1,1 +1,1 @@
-export { Component as default } from "~/routes/(map).[locationId]/route";
+export { Component as default } from "~/routes/locations.[locationId]/route";

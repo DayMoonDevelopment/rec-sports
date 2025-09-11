@@ -1,1 +1,1 @@
-export { Component as default } from "~/routes/(map)._layout/route";
+export { Component as default } from "~/routes/locations._layout/route";

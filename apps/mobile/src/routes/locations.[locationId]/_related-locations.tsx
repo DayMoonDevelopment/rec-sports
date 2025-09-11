@@ -24,7 +24,7 @@ interface RelatedLocationsProps {
 export function RelatedLocations({
   reference: currentLocation,
 }: RelatedLocationsProps) {
-  const { animateToLocation, showMarkerCallout } = useMap();
+  const { animateToLocation, showMarkerCallout, setLocations } = useMap();
 
   const { data, loading, error } = useQuery(GetRelatedLocationsDocument, {
     fetchPolicy: "cache-and-network",
@@ -35,6 +35,15 @@ export function RelatedLocations({
       after: null,
     },
     skip: !currentLocation.geo?.latitude || !currentLocation.geo?.longitude,
+    onCompleted: (data) => {
+      if (data?.relatedLocations.edges) {
+        // Include both current location and related locations on the map
+        const relatedLocations = data.relatedLocations.edges
+          .map((edge) => edge.node)
+          .filter(({ id }) => id !== currentLocation.id);
+        setLocations([currentLocation, ...relatedLocations]);
+      }
+    },
   });
 
   const relatedLocations =

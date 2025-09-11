@@ -1,4 +1,10 @@
-import { createContext, useContext, useRef, useCallback, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useCallback,
+  useState,
+} from "react";
 import MapView, { Marker } from "react-native-maps";
 import { roundRegionForCaching } from "~/lib/region-utils";
 
@@ -8,6 +14,24 @@ import type { Region } from "react-native-maps";
 interface MarkerRef {
   id: string;
   ref: React.RefObject<typeof Marker>;
+}
+
+interface LocationData {
+  id: string;
+  name: string;
+  geo: {
+    latitude: number;
+    longitude: number;
+  };
+  address?: {
+    id: string;
+    street: string;
+    city: string;
+    state: string;
+    stateCode: string;
+    postalCode: string;
+  } | null;
+  sports: Array<string>;
 }
 
 interface MapContextType {
@@ -23,10 +47,8 @@ interface MapContextType {
   setFocusedMarkerId: (id: string | null) => void;
   currentRegion: Region | null;
   onRegionChange: (region: Region) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  isSearchMode: boolean;
-  setIsSearchMode: (isSearchMode: boolean) => void;
+  locations: LocationData[];
+  setLocations: (locations: LocationData[]) => void;
 }
 
 const MapContext = createContext<MapContextType | null>(null);
@@ -40,8 +62,7 @@ export function MapProvider({ children }: MapProviderProps) {
   const markerRefs = useRef<MarkerRef[]>([]);
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
+  const [locations, setLocations] = useState<LocationData[]>([]);
 
   const addMarkerRef = useCallback(
     (id: string, ref: React.RefObject<typeof Marker>) => {
@@ -60,30 +81,33 @@ export function MapProvider({ children }: MapProviderProps) {
   const showMarkerCallout = useCallback((id: string) => {
     const markerRef = markerRefs.current.find((m) => m.id === id);
     if (markerRef?.ref.current) {
-      markerRef.ref.current.showCallout();
+      (markerRef.ref.current as any).showCallout();
     }
   }, []);
 
   const hideMarkerCallout = useCallback((id: string) => {
     const markerRef = markerRefs.current.find((m) => m.id === id);
     if (markerRef?.ref.current) {
-      markerRef.ref.current.hideCallout();
+      (markerRef.ref.current as any).hideCallout();
     }
   }, []);
 
-  const animateToLocation = useCallback((latitude: number, longitude: number) => {
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000,
-      );
-    }
-  }, []);
+  const animateToLocation = useCallback(
+    (latitude: number, longitude: number) => {
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          1000,
+        );
+      }
+    },
+    [],
+  );
 
   const onRegionChange = useCallback((region: Region) => {
     const roundedRegion = roundRegionForCaching(region);
@@ -95,10 +119,12 @@ export function MapProvider({ children }: MapProviderProps) {
       try {
         // Get the current region
         const currentRegion = await mapRef.current.getCamera();
-        
+
         // Calculate new deltas (zoom out by multiplying deltas)
-        const newLatitudeDelta = (currentRegion.zoom ? 
-          0.01 * Math.pow(2, 20 - currentRegion.zoom) : 0.01) * multiplier;
+        const newLatitudeDelta =
+          (currentRegion.zoom
+            ? 0.01 * Math.pow(2, 20 - currentRegion.zoom)
+            : 0.01) * multiplier;
         const newLongitudeDelta = newLatitudeDelta;
 
         mapRef.current.animateToRegion(
@@ -141,10 +167,8 @@ export function MapProvider({ children }: MapProviderProps) {
         setFocusedMarkerId,
         currentRegion,
         onRegionChange,
-        searchQuery,
-        setSearchQuery,
-        isSearchMode,
-        setIsSearchMode,
+        locations,
+        setLocations,
       }}
     >
       {children}

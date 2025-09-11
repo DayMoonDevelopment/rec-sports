@@ -3,10 +3,26 @@ import { Marker } from "react-native-maps";
 import { router } from "expo-router";
 import { useMap } from "~/components/map.context";
 
-import type { LocationNodeFragment } from "~/routes/(map).index/queries/get-search-locations.generated";
+interface LocationData {
+  id: string;
+  name: string;
+  geo: {
+    latitude: number;
+    longitude: number;
+  };
+  address?: {
+    id: string;
+    street: string;
+    city: string;
+    state: string;
+    stateCode: string;
+    postalCode: string;
+  } | null;
+  sports: Array<string>;
+}
 
 interface MapMarkerProps {
-  location: LocationNodeFragment;
+  location: LocationData;
 }
 
 export function MapMarker({ location }: MapMarkerProps) {

@@ -24,8 +24,13 @@ export function Component() {
     lat?: string;
     lng?: string;
   }>();
-  const { setFocusedMarkerId, hideMarkerCallout, zoomOut, animateToLocation } =
-    useMap();
+  const {
+    setFocusedMarkerId,
+    hideMarkerCallout,
+    zoomOut,
+    animateToLocation,
+    setLocations,
+  } = useMap();
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GetLocationDocument, {
@@ -33,12 +38,17 @@ export function Component() {
     variables: { id: locationId },
     skip: !locationId,
     onCompleted: (data) => {
-      // Only animate from query if no lat/lng provided via params
-      if (data.location && !lat && !lng) {
-        animateToLocation(
-          data.location.geo.latitude,
-          data.location.geo.longitude,
-        );
+      if (data.location) {
+        // Update map with the current location
+        setLocations([data.location]);
+
+        // Only animate from query if no lat/lng provided via params
+        if (!lat && !lng) {
+          animateToLocation(
+            data.location.geo.latitude,
+            data.location.geo.longitude,
+          );
+        }
       }
     },
   });
