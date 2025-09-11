@@ -1,6 +1,4 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native";
-
-import { cn } from "~/lib/utils";
+import { View, Text, Alert } from "react-native";
 
 import { Button, ButtonText } from "~/ui/button";
 
@@ -11,10 +9,10 @@ export function CreateGameButton() {
   const {
     selectedSport,
     selectedTeams,
-    locationName,
     scheduledDate,
     canCreateGame,
     isScheduleEnabled,
+    selectedLocation,
   } = useCreateGameForm();
   const { createGame, loading, error } = useCreateGame();
 
@@ -24,12 +22,10 @@ export function CreateGameButton() {
     try {
       // For now, using a placeholder location ID since we don't have location selection implemented
       // In a real app, you'd have location search/selection
-      const mockLocationId = undefined;
-
       await createGame({
         sport: selectedSport,
         teamIds: selectedTeams.map((t) => t.id),
-        locationId: mockLocationId,
+        locationId: selectedLocation ? selectedLocation.id : undefined,
         scheduledAt: isScheduleEnabled
           ? scheduledDate.toISOString()
           : undefined,
