@@ -26,14 +26,12 @@ export function Component() {
       query: searchQuery,
       region: currentRegion
         ? {
-            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.25), // Add buffer
+            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.1), // Add buffer
           }
         : undefined,
       first: 100,
     },
-    skip: !searchQuery.trim(),
     onCompleted: (data) => {
-      // Update map with search results when in search mode
       const locations = data?.locations.edges?.map((edge) => edge.node) || [];
       setLocations(locations);
     },

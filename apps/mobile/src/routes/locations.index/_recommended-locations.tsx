@@ -31,11 +31,6 @@ export function RecommendedLocations() {
       after: null, // Start from beginning
     },
     skip: !currentRegion, // Skip query until we have a region
-    onCompleted: (data) => {
-      // Update map with recommended locations
-      const locations = data?.locations.edges?.map((edge) => edge.node) || [];
-      setLocations(locations);
-    },
   });
 
   const locations = data?.locations.edges?.map((edge) => edge.node) || [];
@@ -47,11 +42,12 @@ export function RecommendedLocations() {
 
   return (
     <View>
-      <Text className="text-lg font-semibold text-foreground pb-2">
+      <Text className="text-lg font-semibold text-foreground pb-2 px-5">
         Recommended
       </Text>
 
       <FlatList
+        contentContainerClassName="px-4"
         horizontal
         data={locations}
         keyExtractor={(item) => item.id}

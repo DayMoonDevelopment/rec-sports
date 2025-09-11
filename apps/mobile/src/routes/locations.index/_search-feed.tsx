@@ -74,12 +74,10 @@ function SearchEmptyComponent({
   searchQuery,
   loading,
   error,
-  onRefetch,
 }: {
   searchQuery: string;
   loading: boolean;
   error: ApolloError | undefined;
-  onRefetch: () => void;
 }) {
   // No search query entered yet
   if (!searchQuery.trim()) {
@@ -99,14 +97,6 @@ function SearchEmptyComponent({
         <Text className="text-muted-foreground text-center mb-4">
           Unable to search locations. Please try again.
         </Text>
-        <Pressable
-          className="bg-primary px-4 py-2 rounded-lg active:opacity-75"
-          onPress={onRefetch}
-        >
-          <Text className="text-primary-foreground font-medium">
-            Retry Search
-          </Text>
-        </Pressable>
       </View>
     );
   }
@@ -167,7 +157,6 @@ export function SearchFeed({
           searchQuery={searchQuery}
           loading={loading}
           error={error}
-          onRefetch={onRefetch}
         />
       }
       refreshing={loading && searchResults.length > 0}
