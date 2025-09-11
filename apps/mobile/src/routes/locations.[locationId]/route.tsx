@@ -80,7 +80,7 @@ export function Component() {
       router.back();
     } else {
       // If no screens in stack, reset to the index route
-      router.replace("/(map)");
+      router.replace("/locations");
     }
   }
 
@@ -128,14 +128,20 @@ export function Component() {
 
         {location.address ? (
           <View className="flex-1 mb-4">
-            <Text className="text-muted-foreground text-base">
-              {location.address.street}
-            </Text>
-            {location.address ? (
-              <Text className="text-muted-foreground text-base">
-                {`${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`}
-              </Text>
-            ) : null}
+            {[
+              location.address.street,
+              location.address.street2,
+              `${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`,
+            ]
+              .filter(Boolean)
+              .map((addressPart, index) => (
+                <Text
+                  className="text-muted-foreground text-base"
+                  key={`address-part-${index}`}
+                >
+                  {addressPart}
+                </Text>
+              ))}
           </View>
         ) : null}
 

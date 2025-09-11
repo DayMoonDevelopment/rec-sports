@@ -5,6 +5,7 @@ query GetLocation($id: String!) {
     address {
       id
       street
+      street2
       city
       state
       stateCode
