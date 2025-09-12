@@ -16,7 +16,7 @@ fragment LocationNode on Location {
   sports
 }
 
-query GetSearchLocations(
+query GetGameLocations(
   $query: String!
   $region: Region
   $first: Int

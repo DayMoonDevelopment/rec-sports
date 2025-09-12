@@ -21,8 +21,15 @@ query GetSearchLocations(
   $region: Region
   $first: Int
   $after: String
+  $requiredSports: [Sport!]
 ) {
-  locations(query: $query, region: $region, first: $first, after: $after) {
+  locations(
+    query: $query
+    region: $region
+    first: $first
+    after: $after
+    requiredSports: $requiredSports
+  ) {
     edges {
       node {
         ...LocationNode

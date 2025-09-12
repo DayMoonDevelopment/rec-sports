@@ -4,25 +4,30 @@ import { useState, useRef, useEffect } from "react";
 
 import { SearchIcon } from "~/icons/search";
 import { CrossIcon } from "~/icons/cross";
+import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
+import { sportLabel } from "~/lib/utils";
+import { Sport } from "~/gql/types";
 
 interface SearchHeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   isSearchMode: boolean;
   onSearchModeChange: (isSearchMode: boolean) => void;
+  sportFilters: Sport[];
+  onSportFilterChange: (sport: Sport) => void;
 }
 
 export function SearchHeader({
   searchQuery,
   onSearchQueryChange,
   onSearchModeChange,
+  isSearchMode,
+  sportFilters,
+  onSportFilterChange,
 }: SearchHeaderProps) {
   const inputRef = useRef<TextInput>(null);
   const { snapToIndex } = useBottomSheet();
-  const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState(searchQuery);
-
-  const isQuerying = searchQuery.trim().length > 0;
 
   // Debounce search query updates
   useEffect(() => {
@@ -36,7 +41,6 @@ export function SearchHeader({
   }, [inputValue, searchQuery, onSearchQueryChange]);
 
   function handleBlur() {
-    setFocused(false);
     if (!searchQuery.trim()) {
       snapToIndex(0); // Return to original position
     }
@@ -47,18 +51,19 @@ export function SearchHeader({
   }
 
   function handleClear() {
+    inputRef.current?.clear();
     setInputValue("");
     onSearchQueryChange("");
-    onSearchModeChange(false);
   }
 
   function handleCancel() {
     inputRef.current?.blur();
     handleClear();
+    onSearchModeChange(false);
+    snapToIndex(0);
   }
 
   function handleFocus() {
-    setFocused(true);
     onSearchModeChange(true);
     snapToIndex(1); // Expand bottom sheet
   }
@@ -68,41 +73,57 @@ export function SearchHeader({
   }
 
   return (
-    <View className="flex flex-row items-center gap-2 p-4">
-      <View className="flex-1 flex flex-row gap-1 items-center justify-start bg-card border border-border rounded-full px-4 h-14">
-        <SearchIcon className="size-4" />
-        <BottomSheetTextInput
-          ref={inputRef}
-          value={inputValue}
-          placeholder="Find a place to play..."
-          className="flex-1 text-foreground placeholder:text-muted-foreground"
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          onChangeText={handleChangeText}
-          onSubmitEditing={handleSubmit}
-          returnKeyType="search"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {inputValue ? (
+    <View>
+      <View className="flex flex-row items-center gap-2 p-4">
+        <View className="flex-1 flex flex-row gap-1 items-center justify-start bg-card border border-border rounded-full px-4 h-14">
+          <SearchIcon className="size-4" />
+          <BottomSheetTextInput
+            ref={inputRef}
+            value={inputValue}
+            placeholder="Find a place to play..."
+            className="flex-1 text-foreground placeholder:text-muted-foreground"
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            onChangeText={handleChangeText}
+            onSubmitEditing={handleSubmit}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+
+          {inputValue?.length ? (
+            <Pressable
+              className="active:opacity-50 transition-opacity"
+              hitSlop={4}
+              onPress={handleClear}
+            >
+              <CrossIcon className="size-3 text-muted-foreground" />
+            </Pressable>
+          ) : null}
+        </View>
+
+        {isSearchMode ? (
           <Pressable
-            className="active:opacity-50 transition-opacity"
-            hitSlop={4}
-            onPress={handleClear}
+            className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
+            onPress={handleCancel}
           >
-            <CrossIcon className="size-3 text-muted-foreground" />
+            <CrossIcon className="size-6" />
           </Pressable>
         ) : null}
       </View>
 
-      {isQuerying || focused ? (
-        <Pressable
-          className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
-          onPress={handleCancel}
-        >
-          <CrossIcon className="size-6" />
-        </Pressable>
-      ) : null}
+      {sportFilters.length > 0 && (
+        <View className="px-4 pb-4">
+          {sportFilters.map((sport) => (
+            <Badge key={sport} variant={sport}>
+              <BadgeText>{sportLabel(sport)}</BadgeText>
+              <Pressable onPress={() => onSportFilterChange(sport)} hitSlop={8}>
+                <BadgeIcon Icon={CrossIcon} />
+              </Pressable>
+            </Badge>
+          ))}
+        </View>
+      )}
     </View>
   );
 }

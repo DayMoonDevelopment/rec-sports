@@ -189,7 +189,7 @@ export class LocationsService {
 
   private createSportsFilter(sports: Sport[]): Expression<SqlBool> {
     const sportTags = sports.map((sport) => sport.toLowerCase());
-    return sql<boolean>`sport_tags && ${JSON.stringify(sportTags)}::text[]`;
+    return sql<boolean>`sport_tags && ${sportTags}`;
   }
 
   private createTextSearchFilter(

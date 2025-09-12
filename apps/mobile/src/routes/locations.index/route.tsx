@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useIsFocused } from "@react-navigation/native";
+import { useBottomSheet } from "@gorhom/bottom-sheet";
 
 import { SearchHeader } from "./_search-header";
 import { Feed } from "./_feed";
@@ -9,10 +10,13 @@ import { SearchFeed } from "./_search-feed";
 import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 import { GetSearchLocationsDocument } from "./queries/get-search-locations.generated";
+import { Sport } from "~/gql/types";
 
 export function Component() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
+  const [sportFilters, setSportFilters] = useState<Sport[]>([]);
+  const { snapToIndex } = useBottomSheet();
 
   const { currentRegion, setMarkers } = useMap();
   const isFocused = useIsFocused();
@@ -25,6 +29,7 @@ export function Component() {
     refetch: refetchSearch,
   } = useQuery(GetSearchLocationsDocument, {
     variables: {
+      requiredSports: sportFilters,
       query: searchQuery,
       region: currentRegion
         ? {
@@ -74,6 +79,25 @@ export function Component() {
     }
   };
 
+  const handleSportFilterChange = (sport: Sport) => {
+    setSportFilters((existingSports) => {
+      if (existingSports.includes(sport)) {
+        if (isSearchMode && !searchQuery.length) {
+          setIsSearchMode(false);
+          snapToIndex(0);
+        }
+
+        return existingSports.filter((s) => s !== sport);
+      }
+
+      if (!isSearchMode) {
+        setIsSearchMode(true);
+      }
+
+      return [...existingSports, sport];
+    });
+  };
+
   return (
     <View className="flex-1">
       <SearchHeader
@@ -81,7 +105,10 @@ export function Component() {
         onSearchQueryChange={handleSearchQueryChange}
         isSearchMode={isSearchMode}
         onSearchModeChange={handleSearchModeChange}
+        sportFilters={sportFilters}
+        onSportFilterChange={handleSportFilterChange}
       />
+
       {isSearchMode ? (
         <SearchFeed
           searchQuery={searchQuery}
@@ -91,7 +118,7 @@ export function Component() {
           onRefetch={refetchSearch}
         />
       ) : (
-        <Feed />
+        <Feed onSportFilterChange={handleSportFilterChange} />
       )}
     </View>
   );
