@@ -28,6 +28,7 @@ export function RelatedLocations({
     variables: {
       latitude: currentLocation.geo?.latitude || 0,
       longitude: currentLocation.geo?.longitude || 0,
+      radiusMiles: 100,
       first: 6,
       after: null,
     },

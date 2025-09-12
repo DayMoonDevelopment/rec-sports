@@ -327,9 +327,7 @@ export type QueryLocationsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   query?: InputMaybe<Scalars['String']['input']>;
   region?: InputMaybe<Region>;
-  searchMode?: InputMaybe<Scalars['String']['input']>;
-  similarityThreshold?: InputMaybe<Scalars['Float']['input']>;
-  sports?: InputMaybe<Array<Sport>>;
+  requiredSports?: InputMaybe<Array<Sport>>;
 };
 
 

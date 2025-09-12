@@ -17,8 +17,6 @@ export function Component() {
   const { currentRegion, setMarkers } = useMap();
   const isFocused = useIsFocused();
 
-  console.log({ isFocused });
-
   // Query for search locations
   const {
     data: searchData,
@@ -30,7 +28,7 @@ export function Component() {
       query: searchQuery,
       region: currentRegion
         ? {
-            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.1), // Add buffer
+            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.05), // Add buffer
           }
         : undefined,
       first: 100,
