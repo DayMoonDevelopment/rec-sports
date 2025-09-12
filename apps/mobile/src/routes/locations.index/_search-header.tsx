@@ -61,6 +61,7 @@ export function SearchHeader({
     handleClear();
     onSearchModeChange(false);
     snapToIndex(0);
+    sportFilters.forEach(onSportFilterChange);
   }
 
   function handleFocus() {
