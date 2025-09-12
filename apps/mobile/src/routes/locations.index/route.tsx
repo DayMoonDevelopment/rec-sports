@@ -36,7 +36,7 @@ export function Component() {
             boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.05), // Add buffer
           }
         : undefined,
-      first: 100,
+      first: 25,
     },
     skip: !isFocused, // Skip query if route is not focused or no search query
     onCompleted: (data) => {

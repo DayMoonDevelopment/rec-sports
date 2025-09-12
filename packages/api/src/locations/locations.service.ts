@@ -48,28 +48,42 @@ export class LocationsService {
   }
 
   async findLocations(args: LocationsArgs): Promise<LocationsConnection> {
+    // Smart query optimization based on search parameters
+    const searchOptimization = this.analyzeSearchComplexity(args);
+
+    // Apply intelligent optimizations instead of hard rejections
+    this.applySearchOptimizations(args, searchOptimization);
+
     const { client } = this.databaseService;
 
-    const limit = args.first ?? 20;
+    // Apply intelligent result limiting based on search complexity
+    const limit = this.calculateOptimalLimit(args, searchOptimization);
     const hasTextSearch = Boolean(args.query?.trim());
 
-    let query = client
-      .selectFrom('locations')
-      .selectAll()
-      .select(['created_at']);
+    // Use more efficient base query - only select needed fields initially
+    let query = client.selectFrom('locations').select([
+      'id',
+      'name',
+      'lat',
+      'lon',
+      'created_at',
+      'street',
+      'city',
+      'state',
+      'postal_code',
+      'sport_tags',
+      'bounds', // Still need bounds but we'll optimize the transformation
+    ]);
 
-    // Add search ranking if there's a text query
+    // Simplified search ranking for better performance on large datasets
     if (hasTextSearch) {
-      const searchRank = this.buildSearchRankExpression(
-        args.query!,
-        'combined',
-        0.3,
-      );
+      const searchRank = this.buildSimpleSearchRankExpression(args.query!);
       query = query.select([sql<number>`(${searchRank})`.as('search_rank')]);
     }
 
     // Apply filters using composable approach
     const filterExpressions = this.buildFilterExpressions(args);
+
     if (filterExpressions.length > 0) {
       query = query.where((eb) => eb.and(filterExpressions));
     }
@@ -106,39 +120,47 @@ export class LocationsService {
     // Get one extra result to check if there are more pages
     query = query.limit(limit + 1);
 
-    // Get total count with a separate simpler query
-    let countQuery = client
-      .selectFrom('locations')
-      .select((eb) => eb.fn.count('id').as('count'));
+    // Execute only the main query - skip expensive count query for better performance
+    // Add query timeout to prevent hanging queries
+    const queryPromise = query.execute();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(new Error('Query timeout: Request took too long to execute')),
+        30000,
+      ); // 30 second timeout
+    });
 
-    // Apply the same filters to count query
-    if (filterExpressions.length > 0) {
-      countQuery = countQuery.where((eb) => eb.and(filterExpressions));
-    }
+    const results = (await Promise.race([
+      queryPromise,
+      timeoutPromise,
+    ])) as any[];
 
-    const [results, countResult] = await Promise.all([
-      query.execute(),
-      countQuery.executeTakeFirst(),
-    ]);
-
-    const totalCount = Number(countResult?.count ?? 0);
+    // For large datasets, we skip total count to improve performance
+    // Clients should use cursor-based pagination instead
+    const totalCount = -1; // Indicate unknown count
     const hasNextPage = results.length > limit;
     const nodes = results.slice(0, limit);
 
-    // Transform database results to GraphQL types and create edges
+    // Optimized data transformation for better performance
     const edges: LocationEdge[] = nodes.map((row) => {
+      // Pre-calculate expensive operations
+      const sports = (row.sport_tags || []).map(
+        (tag) => tag.toUpperCase() as Sport,
+      );
+      const bounds = this.transformBoundsOptimized(row.bounds);
+      const address = this.buildAddress(row);
+
       const location: Location = {
         id: row.id,
         name: row.name || 'Unknown Location',
-        address: this.buildAddress(row),
+        address,
         geo: {
           latitude: row.lat,
           longitude: row.lon,
         },
-        sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
-        bounds: (
-          row.bounds as { geometry: { lat: number; lon: number }[] }
-        ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
+        sports,
+        bounds,
       };
 
       return {
@@ -281,6 +303,32 @@ export class LocationsService {
       .toLowerCase();
   }
 
+  // Simplified, high-performance search ranking for large datasets
+  private buildSimpleSearchRankExpression(query: string): string {
+    const cleanQuery = this.prepareSearchQuery(query);
+
+    // Use only the most essential ranking factors to avoid expensive calculations
+    return `
+      CASE
+        -- Exact name match gets highest priority
+        WHEN LOWER(name) = '${cleanQuery}' THEN 100
+        -- Name prefix match (very fast with index)
+        WHEN LOWER(name) LIKE '${cleanQuery}%' THEN 80
+        -- City exact match
+        WHEN LOWER(city) = '${cleanQuery}' THEN 70
+        -- City prefix match
+        WHEN LOWER(city) LIKE '${cleanQuery}%' THEN 60
+        -- Sport tag exact match
+        WHEN '${cleanQuery}' = ANY(sport_tags) THEN 90
+        -- Full-text search using built-in index (most efficient for text search)
+        WHEN search_vector @@ plainto_tsquery('english', '${cleanQuery}') THEN
+          ts_rank_cd(search_vector, plainto_tsquery('english', '${cleanQuery}')) * 50
+        ELSE 0
+      END
+    `;
+  }
+
+  // Keep original complex function for reference but mark as deprecated
   private buildSearchRankExpression(
     query: string,
     searchMode: string,
@@ -428,10 +476,30 @@ export class LocationsService {
     southWest: { latitude: number; longitude: number };
   }): Expression<SqlBool> {
     const { northEast, southWest } = boundingBox;
-    return sql<boolean>`gis.ST_Within(
-      geo::gis.geometry,
-      gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
-    )`;
+
+    // Smart optimization based on bounding box size
+    const latDiff = Math.abs(northEast.latitude - southWest.latitude);
+    const lngDiff = Math.abs(northEast.longitude - southWest.longitude);
+
+    // Progressive optimization strategy:
+    // - Small areas (< 5°): Use precise PostGIS for accuracy
+    // - Medium areas (5°-20°): Use simple bounds for speed
+    // - Large areas (20°+): Use simple bounds + early termination hints
+
+    if (latDiff <= 5 && lngDiff <= 5) {
+      // Small area: Use precise PostGIS for best accuracy
+      return sql<boolean>`gis.ST_Within(
+        geo::gis.geometry,
+        gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
+      )`;
+    } else {
+      // Medium to large areas: Use fast index-friendly bounds
+      // This works well for multi-state or country-wide searches
+      return sql<boolean>`(
+        lat BETWEEN ${sql.literal(southWest.latitude)} AND ${sql.literal(northEast.latitude)} AND
+        lon BETWEEN ${sql.literal(southWest.longitude)} AND ${sql.literal(northEast.longitude)}
+      )`;
+    }
   }
 
   private createRadiusFilter(centerPoint: {
@@ -439,13 +507,48 @@ export class LocationsService {
     radiusMiles: number;
   }): Expression<SqlBool> {
     const { point, radiusMiles } = centerPoint;
-    // Convert miles to meters: 1 mile = 1609.344 meters
-    const radiusMeters = radiusMiles * 1609.344;
-    return sql<boolean>`gis.ST_DWithin(
-      geo::gis.geography,
-      gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
-      ${sql.literal(radiusMeters)}
-    )`;
+
+    // Progressive optimization for radius searches
+    // - Small radius (≤100 miles): Use precise PostGIS distance
+    // - Medium radius (100-500 miles): Use bounding box approximation
+    // - Large radius (500+ miles): Use bounding box (good for multi-state searches)
+
+    if (radiusMiles <= 100) {
+      // Small radius: Use precise PostGIS distance functions for accuracy
+      const radiusMeters = radiusMiles * 1609.344;
+      return sql<boolean>`gis.ST_DWithin(
+        geo::gis.geography,
+        gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
+        ${sql.literal(radiusMeters)}
+      )`;
+    } else {
+      // Medium to large radius: Use fast bounding box approximation
+      // Rough approximation: 1 degree ≈ 69 miles
+      // Add small buffer to account for approximation errors
+      const degreeBuffer = (radiusMiles * 1.1) / 69;
+      return sql<boolean>`(
+        lat BETWEEN ${sql.literal(point.latitude - degreeBuffer)} AND ${sql.literal(point.latitude + degreeBuffer)} AND
+        lon BETWEEN ${sql.literal(point.longitude - degreeBuffer)} AND ${sql.literal(point.longitude + degreeBuffer)}
+      )`;
+    }
+  }
+
+  // Optimized bounds transformation with better error handling
+  private transformBoundsOptimized(
+    boundsData: any,
+  ): { latitude: number; longitude: number }[] {
+    try {
+      if (!boundsData?.geometry || !Array.isArray(boundsData.geometry)) {
+        return [];
+      }
+
+      return boundsData.geometry.map((g: any) => ({
+        latitude: g.lat,
+        longitude: g.lon,
+      }));
+    } catch (error) {
+      return [];
+    }
   }
 
   private buildAddress(row: any) {
@@ -467,5 +570,108 @@ export class LocationsService {
       postalCode: row.postal_code,
       // id and state (full name) will be resolved by AddressResolver
     } as any; // Cast to any since we're omitting id and state which will be resolved
+  }
+
+  // Smart search complexity analysis
+  private analyzeSearchComplexity(args: LocationsArgs): {
+    complexity: 'low' | 'medium' | 'high' | 'extreme';
+    areaSize: number;
+    hasFilters: boolean;
+    hasTextSearch: boolean;
+    estimatedResults: number;
+  } {
+    let areaSize = 0;
+    let complexity: 'low' | 'medium' | 'high' | 'extreme' = 'low';
+
+    // Calculate area size
+    if (args.region?.centerPoint) {
+      areaSize = Math.PI * Math.pow(args.region.centerPoint.radiusMiles, 2);
+    } else if (args.region?.boundingBox) {
+      const { northEast, southWest } = args.region.boundingBox;
+      const latDiff = Math.abs(northEast.latitude - southWest.latitude);
+      const lngDiff = Math.abs(northEast.longitude - southWest.longitude);
+      // Approximate area in square miles (rough conversion: 1 degree ≈ 69 miles)
+      areaSize = latDiff * lngDiff * 69 * 69;
+    } else {
+      // No region filter = entire dataset
+      areaSize = Infinity;
+    }
+
+    const hasFilters = !!(args.requiredSports?.length || args.query?.trim());
+    const hasTextSearch = Boolean(args.query?.trim());
+
+    // Complexity classification based on multiple factors
+    if (areaSize === Infinity && !hasFilters) {
+      complexity = 'extreme'; // Entire dataset, no filters
+    } else if (areaSize > 500000 && !hasFilters) {
+      complexity = 'high'; // Very large area with no filters
+    } else if (areaSize > 100000) {
+      complexity = hasFilters ? 'medium' : 'high';
+    } else if (areaSize > 10000) {
+      complexity = hasFilters ? 'low' : 'medium';
+    } else {
+      complexity = 'low'; // Small area searches are always fast
+    }
+
+    // Estimate potential results based on area size and filters
+    let estimatedResults = Math.min(Math.floor(areaSize / 100), 10000); // Rough estimate
+    if (hasFilters) estimatedResults = Math.floor(estimatedResults / 3);
+    if (hasTextSearch) estimatedResults = Math.floor(estimatedResults / 2);
+
+    return {
+      complexity,
+      areaSize,
+      hasFilters,
+      hasTextSearch,
+      estimatedResults: Math.max(estimatedResults, 20), // Minimum estimate
+    };
+  }
+
+  // Apply optimizations based on search complexity
+  private applySearchOptimizations(
+    args: LocationsArgs,
+    optimization: ReturnType<typeof this.analyzeSearchComplexity>,
+  ): void {
+    // Only reject truly unreasonable requests
+    if (optimization.complexity === 'extreme' && !optimization.hasFilters) {
+      throw new Error(
+        'Please specify a geographic region or search filters to narrow your search.',
+      );
+    }
+
+    // For very large searches without specific location, require some filtering
+    if (
+      optimization.areaSize > 1000000 &&
+      !optimization.hasTextSearch &&
+      !args.requiredSports?.length
+    ) {
+      throw new Error(
+        'For very large geographic searches, please add sport filters or a search term to improve performance.',
+      );
+    }
+  }
+
+  // Calculate optimal result limit based on search complexity
+  private calculateOptimalLimit(
+    args: LocationsArgs,
+    optimization: ReturnType<typeof this.analyzeSearchComplexity>,
+  ): number {
+    const requestedLimit = args.first ?? 20;
+
+    // Base limits by complexity
+    const maxLimits = {
+      low: 100, // Small areas can handle larger result sets
+      medium: 75, // Medium areas get reasonable limits
+      high: 50, // Large areas get smaller limits for performance
+      extreme: 25, // Extreme complexity gets minimal results
+    };
+
+    // Text search and filters allow higher limits due to better selectivity
+    let adjustedMax = maxLimits[optimization.complexity];
+    if (optimization.hasTextSearch)
+      adjustedMax = Math.min(adjustedMax * 2, 100);
+    if (optimization.hasFilters) adjustedMax = Math.min(adjustedMax * 1.5, 100);
+
+    return Math.min(requestedLimit, adjustedMax);
   }
 }
