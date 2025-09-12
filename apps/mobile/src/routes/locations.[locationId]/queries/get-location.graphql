@@ -27,6 +27,10 @@ query GetLocation($id: String!) {
         latitude
         longitude
       }
+      bounds {
+        latitude
+        longitude
+      }
     }
   }
 }

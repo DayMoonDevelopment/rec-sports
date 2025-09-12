@@ -26,6 +26,12 @@ interface MapMarker {
   displayType: "location" | Sport;
 }
 
+export interface MapPolygon {
+  id: string;
+  coordinates: { latitude: number; longitude: number }[];
+  variant: "default" | Sport;
+}
+
 interface MapContextType {
   mapRef: React.RefObject<MapView | null>;
   markerRefs: React.MutableRefObject<MarkerRef[]>;
@@ -35,13 +41,14 @@ interface MapContextType {
   hideMarkerCallout: (id: string) => void;
   animateToLocation: (latitude: number, longitude: number) => void;
   animateToBounds: (bounds: { latitude: number; longitude: number }[]) => void;
+  animateToPolygons: (polygons: MapPolygon[]) => void;
   zoomOut: (multiplier?: number) => void;
   currentRegion: Region | null;
   onRegionChange: (region: Region) => void;
   markers: MapMarker[];
   setMarkers: (markers: MapMarker[]) => void;
-  bounds: { latitude: number; longitude: number }[] | null;
-  setBounds: (bounds: { latitude: number; longitude: number }[] | null) => void;
+  polygons: MapPolygon[];
+  setPolygons: (polygons: MapPolygon[]) => void;
 }
 
 interface MapProviderProps {
@@ -64,13 +71,7 @@ export function MapProvider({
   const markerRefs = useRef<MarkerRef[]>([]);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
-  const [bounds, setBounds] = useState<
-    | {
-        latitude: number;
-        longitude: number;
-      }[]
-    | null
-  >(null);
+  const [polygons, setPolygons] = useState<MapPolygon[]>([]);
 
   const addMarkerRef = useCallback((id: string, ref: React.RefObject<any>) => {
     // Remove existing ref if it exists
@@ -147,6 +148,41 @@ export function MapProvider({
     [],
   );
 
+  const animateToPolygons = useCallback((polygons: MapPolygon[]) => {
+    if (mapRef.current && polygons.length > 0) {
+      // Get all coordinates from all polygons
+      const allCoordinates = polygons.flatMap((polygon) => polygon.coordinates);
+
+      if (allCoordinates.length > 0) {
+        // Calculate bounding box
+        const latitudes = allCoordinates.map((point) => point.latitude);
+        const longitudes = allCoordinates.map((point) => point.longitude);
+
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+
+        // Calculate center point
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+
+        const latDelta = maxLat - minLat + marginDegrees;
+        const lngDelta = maxLng - minLng + marginDegrees;
+
+        mapRef.current.animateToRegion(
+          {
+            latitude: centerLat,
+            longitude: centerLng,
+            latitudeDelta: latDelta,
+            longitudeDelta: lngDelta,
+          },
+          1000,
+        );
+      }
+    }
+  }, []);
+
   const onRegionChange = useCallback(
     (region: Region) => {
       const roundedRegion = roundRegionForCaching(region);
@@ -194,8 +230,6 @@ export function MapProvider({
     }
   }, []);
 
-  console.log("🗺️", markers);
-
   return (
     <MapContext.Provider
       value={{
@@ -207,13 +241,14 @@ export function MapProvider({
         hideMarkerCallout,
         animateToLocation,
         animateToBounds,
+        animateToPolygons,
         zoomOut,
         currentRegion,
         onRegionChange,
         markers,
         setMarkers,
-        bounds,
-        setBounds,
+        polygons,
+        setPolygons,
       }}
     >
       {children}

@@ -1,9 +1,12 @@
 import { StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, { Polygon } from "react-native-maps";
-import { router } from "expo-router";
+import { cva } from "class-variance-authority";
+
+import { Sport } from "~/gql/types";
 
 import { useMap } from "~/components/map.context";
+
 import { MapMarker } from "./_map-marker";
 
 import type { Region } from "react-native-maps";
@@ -16,19 +19,34 @@ const US_INITIAL_REGION = {
   longitudeDelta: 40, // Covers from eastern Maine (~66.9°W) to western Washington (~124.7°W)
 };
 
+const polygonStyles = cva("", {
+  variants: {
+    variant: {
+      default: "text-primary",
+      [Sport.Baseball]: "text-sport-baseball",
+      [Sport.Kickball]: "text-sport-kickball",
+      [Sport.Basketball]: "text-sport-basketball",
+      [Sport.Pickleball]: "text-sport-pickleball",
+      [Sport.Tennis]: "text-sport-tennis",
+      [Sport.Golf]: "text-sport-golf",
+      [Sport.DiscGolf]: "text-sport-disc-golf",
+      [Sport.Hockey]: "text-sport-hockey",
+      [Sport.Softball]: "text-sport-softball",
+      [Sport.Soccer]: "text-sport-soccer",
+      [Sport.Football]: "text-sport-football",
+      [Sport.Volleyball]: "text-sport-volleyball",
+      [Sport.Ultimate]: "text-sport-ultimate",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
 export function MapViewComponent() {
   const { height: screenHeight } = useWindowDimensions();
   const { top: topInset, bottom: bottomInset } = useSafeAreaInsets();
-  const {
-    mapRef,
-    focusedMarkerId,
-    setFocusedMarkerId,
-    hideMarkerCallout,
-    zoomOut,
-    onRegionChange,
-    markers,
-    bounds,
-  } = useMap();
+  const { mapRef, onRegionChange, markers, polygons } = useMap();
 
   const mapBottomPadding =
     Platform.OS === "ios"
@@ -40,27 +58,9 @@ export function MapViewComponent() {
     onRegionChange(region);
   };
 
-  // Handle map press - unfocus any focused location and navigate back
-  const handleMapPress = () => {
-    if (focusedMarkerId) {
-      hideMarkerCallout(focusedMarkerId);
-      setFocusedMarkerId(null);
-      zoomOut(2);
-
-      // Check if there are screens in the navigation stack to go back to
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        // If no screens in stack, reset to the index route
-        router.replace("/");
-      }
-    }
-  };
-
   return (
     <MapView
       ref={mapRef}
-      mapType={Platform.OS === "android" ? "satellite" : "standard"}
       style={StyleSheet.absoluteFillObject}
       initialRegion={US_INITIAL_REGION}
       mapPadding={{
@@ -70,7 +70,6 @@ export function MapViewComponent() {
         right: 0,
       }}
       onRegionChangeComplete={handleRegionChange}
-      onPress={handleMapPress}
       rotateEnabled={false}
       pitchEnabled={false}
     >
@@ -85,14 +84,14 @@ export function MapViewComponent() {
         );
       })}
 
-      {bounds && bounds.length > 0 && (
+      {polygons.map((polygon) => (
         <Polygon
-          coordinates={bounds}
-          fillColor="rgba(0, 0, 0, 0.1)"
-          strokeColor="rgba(0, 0, 0, 1)"
+          className={polygonStyles({ variant: polygon.variant })}
+          key={polygon.id}
+          coordinates={polygon.coordinates}
           strokeWidth={2}
         />
-      )}
+      ))}
     </MapView>
   );
 }

@@ -16,6 +16,9 @@ import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
 import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
+import { Sport } from "~/gql/types";
+
+import type { MapPolygon } from "~/components/map.context";
 
 export function Component() {
   const { locationId } = useLocalSearchParams<{
@@ -23,8 +26,13 @@ export function Component() {
     lat?: string;
     lng?: string;
   }>();
-  const { hideMarkerCallout, zoomOut, animateToBounds, setMarkers, setBounds } =
-    useMap();
+  const {
+    hideMarkerCallout,
+    zoomOut,
+    animateToBounds,
+    setMarkers,
+    setPolygons,
+  } = useMap();
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GetLocationDocument, {
@@ -34,21 +42,34 @@ export function Component() {
     onCompleted: (data) => {
       if (data.location) {
         // Create facility markers for individual sports fields/courts within the location
-        const facilityMarkers =
-          data.location.facilities?.map((facility) => ({
-            id: facility.id,
-            geo: facility.geo,
-            displayType: facility.sport,
-          })) || [];
+        const facilities = data.location.facilities || [];
+        const facilityMarkers = facilities.map((facility) => ({
+          id: facility.id,
+          geo: facility.geo,
+          displayType: facility.sport,
+        }));
 
         // Set only the facility markers on the map (not the location itself)
         setMarkers(facilityMarkers);
+        let bounds: MapPolygon[] = facilities
+          .filter((facility) => facility.bounds.length)
+          .map((facility) => ({
+            id: facility.id,
+            coordinates: facility.bounds,
+            variant: facility.sport,
+          }));
 
         // Set bounds if location has bounds
         if (data.location.bounds && data.location.bounds.length > 0) {
-          setBounds(data.location.bounds);
+          bounds.push({
+            variant: "default",
+            coordinates: data.location.bounds,
+            id: locationId,
+          });
           animateToBounds(data.location.bounds);
         }
+
+        setPolygons(bounds);
       }
     },
   });
@@ -58,7 +79,7 @@ export function Component() {
   function handleClose() {
     hideMarkerCallout(locationId);
 
-    setBounds(null); // Clear polygon bounds
+    setPolygons([]); // Clear polygon bounds
     setMarkers([]); // Clear markers
     zoomOut(2);
 
