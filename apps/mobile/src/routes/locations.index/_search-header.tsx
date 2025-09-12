@@ -37,9 +37,7 @@ export function SearchHeader({
 
   function handleBlur() {
     setFocused(false);
-    // Only exit search mode if there's no query
     if (!searchQuery.trim()) {
-      onSearchModeChange(false);
       snapToIndex(0); // Return to original position
     }
   }

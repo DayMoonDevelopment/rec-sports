@@ -5,7 +5,6 @@ import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { GetRelatedLocationsDocument } from "./queries/get-related-locations.generated";
 import { RelatedLocationItem } from "./_related-locations-item";
-import { useMap } from "~/components/map.context";
 
 import type { LocationNodeFragment } from "./queries/get-related-locations.generated";
 
@@ -24,8 +23,6 @@ interface RelatedLocationsProps {
 export function RelatedLocations({
   reference: currentLocation,
 }: RelatedLocationsProps) {
-  const { animateToLocation, showMarkerCallout, setLocations } = useMap();
-
   const { data, loading, error } = useQuery(GetRelatedLocationsDocument, {
     fetchPolicy: "cache-and-network",
     variables: {
@@ -35,15 +32,6 @@ export function RelatedLocations({
       after: null,
     },
     skip: !currentLocation.geo?.latitude || !currentLocation.geo?.longitude,
-    onCompleted: (data) => {
-      if (data?.relatedLocations.edges) {
-        // Include both current location and related locations on the map
-        const relatedLocations = data.relatedLocations.edges
-          .map((edge) => edge.node)
-          .filter(({ id }) => id !== currentLocation.id);
-        setLocations([currentLocation, ...relatedLocations]);
-      }
-    },
   });
 
   const relatedLocations =
@@ -52,18 +40,8 @@ export function RelatedLocations({
       .filter(({ id }) => id !== currentLocation.id) || [];
 
   const handleLocationPress = (location: LocationNodeFragment) => {
-    // Animate to the location on the map
-    if (location.geo?.latitude && location.geo?.longitude) {
-      animateToLocation(location.geo.latitude, location.geo.longitude);
-    }
-
-    // Show the marker callout on the map
-    showMarkerCallout(location.id);
-
-    // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(
-      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
-    );
+    // Simply navigate to the location detail route
+    router.push(`/locations/${location.id}`);
   };
 
   if (!currentLocation.geo?.latitude || !currentLocation.geo?.longitude) {
@@ -89,11 +67,12 @@ export function RelatedLocations({
 
   return (
     <View className="py-4">
-      <Text className="text-lg font-semibold text-foreground mb-2 px-4">
+      <Text className="text-lg font-semibold text-foreground mb-2 pl-5">
         Nearby locations
       </Text>
 
       <BottomSheetFlatList
+        contentContainerClassName="px-4"
         horizontal
         data={relatedLocations}
         keyExtractor={(item) => item.id}
@@ -104,9 +83,6 @@ export function RelatedLocations({
         showsHorizontalScrollIndicator={false}
         snapToInterval={CARD_WIDTH + CARD_MARGIN}
         snapToAlignment="start"
-        contentContainerStyle={{
-          paddingHorizontal: 14,
-        }}
       />
     </View>
   );

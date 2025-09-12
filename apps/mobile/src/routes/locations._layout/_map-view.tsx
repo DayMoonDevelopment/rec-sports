@@ -26,7 +26,7 @@ export function MapViewComponent() {
     hideMarkerCallout,
     zoomOut,
     onRegionChange,
-    locations,
+    markers,
     bounds,
   } = useMap();
 
@@ -60,7 +60,7 @@ export function MapViewComponent() {
   return (
     <MapView
       ref={mapRef}
-      mapType="satellite"
+      mapType={Platform.OS === "android" ? "satellite" : "standard"}
       style={StyleSheet.absoluteFillObject}
       initialRegion={US_INITIAL_REGION}
       mapPadding={{
@@ -74,8 +74,15 @@ export function MapViewComponent() {
       rotateEnabled={false}
       pitchEnabled={false}
     >
-      {locations.map((location) => {
-        return <MapMarker key={location.id} location={location} />;
+      {markers.map((marker) => {
+        return (
+          <MapMarker
+            key={marker.id}
+            id={marker.id}
+            geo={marker.geo}
+            displayType={marker.displayType}
+          />
+        );
       })}
 
       {bounds && bounds.length > 0 && (

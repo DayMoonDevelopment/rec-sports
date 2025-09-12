@@ -1,79 +1,67 @@
 import { useRef, useEffect } from "react";
-import { Marker } from "react-native-maps";
 import { router } from "expo-router";
 import { useMap } from "~/components/map.context";
+import { SportMarker } from "./_sport-marker";
+import { LocationMarker } from "./_location-marker";
 
-interface LocationData {
-  id: string;
-  name: string;
+import type { Sport } from "~/gql/types";
+
+interface MapMarkerProps {
+  id?: string;
   geo: {
     latitude: number;
     longitude: number;
   };
-  address?: {
-    id: string;
-    street: string;
-    city: string;
-    state: string;
-    stateCode: string;
-    postalCode: string;
-  } | null;
-  sports: Array<string>;
+  displayType: "location" | Sport;
 }
 
-interface MapMarkerProps {
-  location: LocationData;
-}
-
-export function MapMarker({ location }: MapMarkerProps) {
-  const markerRef = useRef<typeof Marker>(null);
-  const { addMarkerRef, removeMarkerRef, focusedMarkerId } = useMap();
-
-  const title = location.name;
-  const description = location.address
-    ? `${location.address.street}, ${location.address.city} ${location.address.stateCode} ${location.address.postalCode}`
-    : undefined;
-
-  // Hide this marker if another marker is focused
-  const isHidden = focusedMarkerId && focusedMarkerId !== location.id;
-
-  // Check if this marker is currently focused
-  const isFocused = focusedMarkerId === location.id;
+export function MapMarker({ id, geo, displayType }: MapMarkerProps) {
+  const markerRef = useRef<any>(null);
+  const { addMarkerRef, removeMarkerRef } = useMap();
 
   const handleMarkerPress = () => {
-    if (!isFocused) {
-      // If not focused, navigate to the location detail route with lat/lng for immediate animation
-      router.push(
-        `/locations//${location.id}?lat=${location.geo?.latitude}&lng=${location.geo?.longitude}`,
-      );
+    if (displayType === "location" && id) {
+      // If not focused and it's a location marker, navigate to the location detail route
+      router.push(`/locations/${id}`);
     }
+    // For facility markers, we don't navigate anywhere - they just show the callout
   };
 
   useEffect(() => {
-    // Add the ref when component mounts
-    addMarkerRef(location.id, markerRef);
+    // Add the ref when component mounts (only if id is provided)
+    if (id) {
+      addMarkerRef(id, markerRef);
 
-    // Remove the ref when component unmounts
-    return () => {
-      removeMarkerRef(location.id);
-    };
-  }, [location.id, addMarkerRef, removeMarkerRef]);
+      // Remove the ref when component unmounts
+      return () => {
+        removeMarkerRef(id);
+      };
+    }
+  }, [id, addMarkerRef, removeMarkerRef]);
 
-  // Don't render the marker if it should be hidden
-  if (isHidden) {
-    return null;
+  const coordinate = {
+    latitude: geo?.latitude || 0,
+    longitude: geo?.longitude || 0,
+  };
+
+  // Render different marker types based on displayType
+  if (displayType === "location") {
+    return (
+      <LocationMarker
+        id={id}
+        coordinate={coordinate}
+        markerRef={markerRef}
+        onPress={handleMarkerPress}
+      />
+    );
+  } else {
+    return (
+      <SportMarker
+        id={id}
+        sport={displayType}
+        coordinate={coordinate}
+        markerRef={markerRef}
+      />
+    );
   }
-
-  return (
-    <Marker
-      ref={markerRef}
-      coordinate={{
-        latitude: location.geo?.latitude || 0,
-        longitude: location.geo?.longitude || 0,
-      }}
-      title={title}
-      description={description}
-      onPress={handleMarkerPress}
-    />
-  );
 }

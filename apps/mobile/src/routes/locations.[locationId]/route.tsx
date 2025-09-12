@@ -2,7 +2,6 @@ import { View, Text, Pressable } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@apollo/client";
-import { useEffect } from "react";
 
 import { sportLabel } from "~/lib/utils";
 
@@ -19,20 +18,13 @@ import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
 
 export function Component() {
-  const { locationId, lat, lng } = useLocalSearchParams<{
+  const { locationId } = useLocalSearchParams<{
     locationId: string;
     lat?: string;
     lng?: string;
   }>();
-  const {
-    setFocusedMarkerId,
-    hideMarkerCallout,
-    zoomOut,
-    animateToLocation,
-    animateToBounds,
-    setLocations,
-    setBounds,
-  } = useMap();
+  const { hideMarkerCallout, zoomOut, animateToBounds, setMarkers, setBounds } =
+    useMap();
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GetLocationDocument, {
@@ -45,32 +37,17 @@ export function Component() {
         const facilityMarkers =
           data.location.facilities?.map((facility) => ({
             id: facility.id,
-            name: `${facility.sport} facility`,
             geo: facility.geo,
-            sports: [facility.sport],
+            displayType: facility.sport,
           })) || [];
 
-        console.log("FACILITY MARKERS:", facilityMarkers);
-
         // Set only the facility markers on the map (not the location itself)
-        setLocations(facilityMarkers);
+        setMarkers(facilityMarkers);
 
         // Set bounds if location has bounds
         if (data.location.bounds && data.location.bounds.length > 0) {
           setBounds(data.location.bounds);
-
-          // Only animate from query if no lat/lng provided via params
-          if (!lat && !lng) {
-            animateToBounds(data.location.bounds);
-          }
-        } else {
-          // Fallback to point-based animation if no bounds
-          if (!lat && !lng) {
-            animateToLocation(
-              data.location.geo.latitude,
-              data.location.geo.longitude,
-            );
-          }
+          animateToBounds(data.location.bounds);
         }
       }
     },
@@ -78,42 +55,12 @@ export function Component() {
 
   const location = data?.location;
 
-  // Focus on the location when it loads
-  useEffect(() => {
-    if (locationId) {
-      setFocusedMarkerId(locationId);
-
-      // If lat/lng provided via params, animate immediately
-      if (lat && lng) {
-        if (location?.bounds && location.bounds.length > 0) {
-          animateToBounds(location.bounds);
-        } else {
-          animateToLocation(parseFloat(lat), parseFloat(lng));
-        }
-      } else if (location) {
-        // Otherwise use location data from query
-        if (location.bounds && location.bounds.length > 0) {
-          animateToBounds(location.bounds);
-        } else {
-          animateToLocation(location.geo.latitude, location.geo.longitude);
-        }
-      }
-    }
-  }, [
-    location,
-    locationId,
-    lat,
-    lng,
-    setFocusedMarkerId,
-    animateToLocation,
-    animateToBounds,
-  ]);
-
   function handleClose() {
     hideMarkerCallout(locationId);
-    setFocusedMarkerId(null);
+
     setBounds(null); // Clear polygon bounds
-    zoomOut(5);
+    setMarkers([]); // Clear markers
+    zoomOut(2);
 
     // Check if there are screens in the navigation stack to go back to
     if (router.canGoBack()) {

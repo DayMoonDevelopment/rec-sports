@@ -5,51 +5,41 @@ import {
   useCallback,
   useState,
 } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView from "react-native-maps";
 import { roundRegionForCaching } from "~/lib/region-utils";
 
 import type { ReactNode } from "react";
 import type { Region } from "react-native-maps";
+import type { Sport } from "~/gql/types";
 
 interface MarkerRef {
   id: string;
-  ref: React.RefObject<typeof Marker>;
+  ref: React.RefObject<any>;
 }
 
-interface LocationData {
+interface MapMarker {
   id: string;
-  name: string;
   geo: {
     latitude: number;
     longitude: number;
   };
-  address?: {
-    id: string;
-    street: string;
-    city: string;
-    state: string;
-    stateCode: string;
-    postalCode: string;
-  } | null;
-  sports: string[];
+  displayType: "location" | Sport;
 }
 
 interface MapContextType {
-  mapRef: React.RefObject<MapView>;
+  mapRef: React.RefObject<MapView | null>;
   markerRefs: React.MutableRefObject<MarkerRef[]>;
-  addMarkerRef: (id: string, ref: React.RefObject<typeof Marker>) => void;
+  addMarkerRef: (id: string, ref: React.RefObject<any>) => void;
   removeMarkerRef: (id: string) => void;
   showMarkerCallout: (id: string) => void;
   hideMarkerCallout: (id: string) => void;
   animateToLocation: (latitude: number, longitude: number) => void;
   animateToBounds: (bounds: { latitude: number; longitude: number }[]) => void;
   zoomOut: (multiplier?: number) => void;
-  focusedMarkerId: string | null;
-  setFocusedMarkerId: (id: string | null) => void;
   currentRegion: Region | null;
   onRegionChange: (region: Region) => void;
-  locations: LocationData[];
-  setLocations: (locations: LocationData[]) => void;
+  markers: MapMarker[];
+  setMarkers: (markers: MapMarker[]) => void;
   bounds: { latitude: number; longitude: number }[] | null;
   setBounds: (bounds: { latitude: number; longitude: number }[] | null) => void;
 }
@@ -72,9 +62,8 @@ export function MapProvider({
 }: MapProviderProps) {
   const mapRef = useRef<MapView>(null);
   const markerRefs = useRef<MarkerRef[]>([]);
-  const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
-  const [locations, setLocations] = useState<LocationData[]>([]);
+  const [markers, setMarkers] = useState<MapMarker[]>([]);
   const [bounds, setBounds] = useState<
     | {
         latitude: number;
@@ -83,15 +72,12 @@ export function MapProvider({
     | null
   >(null);
 
-  const addMarkerRef = useCallback(
-    (id: string, ref: React.RefObject<typeof Marker>) => {
-      // Remove existing ref if it exists
-      markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
-      // Add new ref
-      markerRefs.current.push({ id, ref });
-    },
-    [],
-  );
+  const addMarkerRef = useCallback((id: string, ref: React.RefObject<any>) => {
+    // Remove existing ref if it exists
+    markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
+    // Add new ref
+    markerRefs.current.push({ id, ref });
+  }, []);
 
   const removeMarkerRef = useCallback((id: string) => {
     markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
@@ -208,6 +194,8 @@ export function MapProvider({
     }
   }, []);
 
+  console.log("🗺️", markers);
+
   return (
     <MapContext.Provider
       value={{
@@ -220,12 +208,10 @@ export function MapProvider({
         animateToLocation,
         animateToBounds,
         zoomOut,
-        focusedMarkerId,
-        setFocusedMarkerId,
         currentRegion,
         onRegionChange,
-        locations,
-        setLocations,
+        markers,
+        setMarkers,
         bounds,
         setBounds,
       }}

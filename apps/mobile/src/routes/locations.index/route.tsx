@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
+import { useIsFocused } from "@react-navigation/native";
 
 import { SearchHeader } from "./_search-header";
 import { Feed } from "./_feed";
@@ -13,7 +14,10 @@ export function Component() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
 
-  const { currentRegion, setLocations } = useMap();
+  const { currentRegion, setMarkers } = useMap();
+  const isFocused = useIsFocused();
+
+  console.log({ isFocused });
 
   // Query for search locations
   const {
@@ -31,9 +35,18 @@ export function Component() {
         : undefined,
       first: 100,
     },
+    skip: !isFocused, // Skip query if route is not focused or no search query
     onCompleted: (data) => {
+      // Only manipulate map if route is focused
+      if (!isFocused) return;
+
       const locations = data?.locations.edges?.map((edge) => edge.node) || [];
-      setLocations(locations);
+      const markers = locations.map((location) => ({
+        id: location.id,
+        geo: location.geo,
+        displayType: "location" as const,
+      }));
+      setMarkers(markers);
     },
   });
 
@@ -47,9 +60,19 @@ export function Component() {
   const handleSearchModeChange = (searchMode: boolean) => {
     setIsSearchMode(searchMode);
 
-    // Update map with appropriate data when mode changes
-    if (searchMode && searchQuery.trim() && searchResults.length > 0) {
-      setLocations(searchResults);
+    // Update map with appropriate data when mode changes, but only if route is focused
+    if (
+      isFocused &&
+      searchMode &&
+      searchQuery.trim() &&
+      searchResults.length > 0
+    ) {
+      const markers = searchResults.map((location) => ({
+        id: location.id,
+        geo: location.geo,
+        displayType: "location" as const,
+      }));
+      setMarkers(markers);
     }
   };
 

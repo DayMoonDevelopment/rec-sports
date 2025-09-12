@@ -14,7 +14,7 @@ function HorizontalItemSeparatorComponent() {
 }
 
 export function RecommendedLocations() {
-  const { currentRegion, setLocations } = useMap();
+  const { currentRegion } = useMap();
 
   // Convert current map region to API region format
   const apiRegion: Region | undefined = currentRegion
