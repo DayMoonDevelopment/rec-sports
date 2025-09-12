@@ -19,6 +19,7 @@ fragment LocationNode on Location {
 query GetRelatedLocations(
   $latitude: Float!
   $longitude: Float!
+  $radiusMiles: Float!
   $first: Int
   $after: String
 ) {
@@ -26,7 +27,7 @@ query GetRelatedLocations(
     region: {
       centerPoint: {
         point: { latitude: $latitude, longitude: $longitude }
-        radiusMiles: 5
+        radiusMiles: $radiusMiles
       }
     }
     first: $first

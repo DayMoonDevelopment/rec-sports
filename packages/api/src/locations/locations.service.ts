@@ -62,8 +62,8 @@ export class LocationsService {
     if (hasTextSearch) {
       const searchRank = this.buildSearchRankExpression(
         args.query!,
-        args.searchMode || 'combined',
-        args.similarityThreshold || 0.3,
+        'combined',
+        0.3,
       );
       query = query.select([sql<number>`(${searchRank})`.as('search_rank')]);
     }
@@ -165,17 +165,13 @@ export class LocationsService {
   private buildFilterExpressions(args: LocationsArgs): Expression<SqlBool>[] {
     const expressions: Expression<SqlBool>[] = [];
 
-    if (args.sports?.length) {
-      expressions.push(this.createSportsFilter(args.sports));
+    if (args.requiredSports?.length) {
+      expressions.push(this.createSportsFilter(args.requiredSports));
     }
 
     if (args.query) {
       expressions.push(
-        this.createTextSearchFilter(
-          args.query,
-          args.searchMode,
-          args.similarityThreshold,
-        ),
+        this.createTextSearchFilter(args.query, 'combined', 0.3),
       );
     }
 
@@ -193,7 +189,7 @@ export class LocationsService {
 
   private createSportsFilter(sports: Sport[]): Expression<SqlBool> {
     const sportTags = sports.map((sport) => sport.toLowerCase());
-    return sql<boolean>`sport_tags && ${JSON.stringify(sportTags)}::text[]`;
+    return sql<boolean>`sport_tags && ${sportTags}`;
   }
 
   private createTextSearchFilter(
@@ -404,7 +400,7 @@ export class LocationsService {
     if (args.query) {
       this.logSearchPerformance(
         args.query,
-        args.searchMode || 'combined',
+        'combined',
         result.totalCount,
         executionTime,
       );
@@ -417,7 +413,7 @@ export class LocationsService {
         searchMetrics: {
           executionTime,
           query: args.query,
-          searchMode: args.searchMode,
+          searchMode: 'combined',
           totalResults: result.totalCount,
           hasTextSearch: Boolean(args.query),
         },
