@@ -23,7 +23,6 @@ export class FacilitiesService {
 
     return {
       id: result.id,
-      locationId: result.location_id,
       sport: result.sport.toUpperCase() as Sport,
       geo: {
         latitude: result.lat,
@@ -46,7 +45,6 @@ export class FacilitiesService {
 
     return results.map((result) => ({
       id: result.id,
-      locationId: result.location_id,
       sport: result.sport.toUpperCase() as Sport,
       geo: {
         latitude: result.lat,

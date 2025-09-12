@@ -1,57 +1,84 @@
-import { createContext, useContext, useRef, useCallback, useState } from "react";
-import MapView, { Marker } from "react-native-maps";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useCallback,
+  useState,
+} from "react";
+import MapView from "react-native-maps";
 import { roundRegionForCaching } from "~/lib/region-utils";
 
 import type { ReactNode } from "react";
 import type { Region } from "react-native-maps";
+import type { Sport } from "~/gql/types";
 
 interface MarkerRef {
   id: string;
-  ref: React.RefObject<typeof Marker>;
+  ref: React.RefObject<any>;
+}
+
+interface MapMarker {
+  id: string;
+  geo: {
+    latitude: number;
+    longitude: number;
+  };
+  displayType: "location" | Sport;
+}
+
+export interface MapPolygon {
+  id: string;
+  coordinates: { latitude: number; longitude: number }[];
+  variant: "default" | Sport;
 }
 
 interface MapContextType {
-  mapRef: React.RefObject<MapView>;
+  mapRef: React.RefObject<MapView | null>;
   markerRefs: React.MutableRefObject<MarkerRef[]>;
-  addMarkerRef: (id: string, ref: React.RefObject<typeof Marker>) => void;
+  addMarkerRef: (id: string, ref: React.RefObject<any>) => void;
   removeMarkerRef: (id: string) => void;
   showMarkerCallout: (id: string) => void;
   hideMarkerCallout: (id: string) => void;
   animateToLocation: (latitude: number, longitude: number) => void;
+  animateToBounds: (bounds: { latitude: number; longitude: number }[]) => void;
+  animateToPolygons: (polygons: MapPolygon[]) => void;
   zoomOut: (multiplier?: number) => void;
-  focusedMarkerId: string | null;
-  setFocusedMarkerId: (id: string | null) => void;
   currentRegion: Region | null;
   onRegionChange: (region: Region) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  isSearchMode: boolean;
-  setIsSearchMode: (isSearchMode: boolean) => void;
+  markers: MapMarker[];
+  setMarkers: (markers: MapMarker[]) => void;
+  polygons: MapPolygon[];
+  setPolygons: (polygons: MapPolygon[]) => void;
+}
+
+interface MapProviderProps {
+  children: ReactNode;
+  onRegionChange?: (region: Region) => void;
 }
 
 const MapContext = createContext<MapContextType | null>(null);
 
-interface MapProviderProps {
-  children: ReactNode;
-}
+// Add fixed margin of roughly 100 meters
+// 1 degree latitude ≈ 111,000 meters, so 100m ≈ 0.0009 degrees
+const one_hundreds_meters = 0.0009;
+const marginDegrees = one_hundreds_meters / 4;
 
-export function MapProvider({ children }: MapProviderProps) {
+export function MapProvider({
+  children,
+  onRegionChange: onRegionChangeCallback,
+}: MapProviderProps) {
   const mapRef = useRef<MapView>(null);
   const markerRefs = useRef<MarkerRef[]>([]);
-  const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
+  const [markers, setMarkers] = useState<MapMarker[]>([]);
+  const [polygons, setPolygons] = useState<MapPolygon[]>([]);
 
-  const addMarkerRef = useCallback(
-    (id: string, ref: React.RefObject<typeof Marker>) => {
-      // Remove existing ref if it exists
-      markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
-      // Add new ref
-      markerRefs.current.push({ id, ref });
-    },
-    [],
-  );
+  const addMarkerRef = useCallback((id: string, ref: React.RefObject<any>) => {
+    // Remove existing ref if it exists
+    markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
+    // Add new ref
+    markerRefs.current.push({ id, ref });
+  }, []);
 
   const removeMarkerRef = useCallback((id: string) => {
     markerRefs.current = markerRefs.current.filter((m) => m.id !== id);
@@ -60,45 +87,122 @@ export function MapProvider({ children }: MapProviderProps) {
   const showMarkerCallout = useCallback((id: string) => {
     const markerRef = markerRefs.current.find((m) => m.id === id);
     if (markerRef?.ref.current) {
-      markerRef.ref.current.showCallout();
+      (markerRef.ref.current as any).showCallout();
     }
   }, []);
 
   const hideMarkerCallout = useCallback((id: string) => {
     const markerRef = markerRefs.current.find((m) => m.id === id);
     if (markerRef?.ref.current) {
-      markerRef.ref.current.hideCallout();
+      (markerRef.ref.current as any).hideCallout();
     }
   }, []);
 
-  const animateToLocation = useCallback((latitude: number, longitude: number) => {
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000,
-      );
+  const animateToLocation = useCallback(
+    (latitude: number, longitude: number) => {
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          1000,
+        );
+      }
+    },
+    [],
+  );
+
+  const animateToBounds = useCallback(
+    (bounds: { latitude: number; longitude: number }[]) => {
+      if (mapRef.current && bounds.length > 0) {
+        // Calculate bounding box
+        const latitudes = bounds.map((point) => point.latitude);
+        const longitudes = bounds.map((point) => point.longitude);
+
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+
+        // Calculate center point
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+
+        const latDelta = maxLat - minLat + marginDegrees;
+        const lngDelta = maxLng - minLng + marginDegrees;
+
+        mapRef.current.animateToRegion(
+          {
+            latitude: centerLat,
+            longitude: centerLng,
+            latitudeDelta: latDelta,
+            longitudeDelta: lngDelta,
+          },
+          1000,
+        );
+      }
+    },
+    [],
+  );
+
+  const animateToPolygons = useCallback((polygons: MapPolygon[]) => {
+    if (mapRef.current && polygons.length > 0) {
+      // Get all coordinates from all polygons
+      const allCoordinates = polygons.flatMap((polygon) => polygon.coordinates);
+
+      if (allCoordinates.length > 0) {
+        // Calculate bounding box
+        const latitudes = allCoordinates.map((point) => point.latitude);
+        const longitudes = allCoordinates.map((point) => point.longitude);
+
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+
+        // Calculate center point
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+
+        const latDelta = maxLat - minLat + marginDegrees;
+        const lngDelta = maxLng - minLng + marginDegrees;
+
+        mapRef.current.animateToRegion(
+          {
+            latitude: centerLat,
+            longitude: centerLng,
+            latitudeDelta: latDelta,
+            longitudeDelta: lngDelta,
+          },
+          1000,
+        );
+      }
     }
   }, []);
 
-  const onRegionChange = useCallback((region: Region) => {
-    const roundedRegion = roundRegionForCaching(region);
-    setCurrentRegion(roundedRegion);
-  }, []);
+  const onRegionChange = useCallback(
+    (region: Region) => {
+      const roundedRegion = roundRegionForCaching(region);
+      setCurrentRegion(roundedRegion);
+      onRegionChangeCallback?.(roundedRegion);
+    },
+    [onRegionChangeCallback],
+  );
 
   const zoomOut = useCallback(async (multiplier: number = 5) => {
     if (mapRef.current) {
       try {
         // Get the current region
         const currentRegion = await mapRef.current.getCamera();
-        
+
         // Calculate new deltas (zoom out by multiplying deltas)
-        const newLatitudeDelta = (currentRegion.zoom ? 
-          0.01 * Math.pow(2, 20 - currentRegion.zoom) : 0.01) * multiplier;
+        const newLatitudeDelta =
+          (currentRegion.zoom
+            ? 0.01 * Math.pow(2, 20 - currentRegion.zoom)
+            : 0.01) * multiplier;
         const newLongitudeDelta = newLatitudeDelta;
 
         mapRef.current.animateToRegion(
@@ -136,15 +240,15 @@ export function MapProvider({ children }: MapProviderProps) {
         showMarkerCallout,
         hideMarkerCallout,
         animateToLocation,
+        animateToBounds,
+        animateToPolygons,
         zoomOut,
-        focusedMarkerId,
-        setFocusedMarkerId,
         currentRegion,
         onRegionChange,
-        searchQuery,
-        setSearchQuery,
-        isSearchMode,
-        setIsSearchMode,
+        markers,
+        setMarkers,
+        polygons,
+        setPolygons,
       }}
     >
       {children}

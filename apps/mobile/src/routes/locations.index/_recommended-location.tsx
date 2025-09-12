@@ -1,5 +1,5 @@
 import { Pressable } from "react-native";
-import { router } from "expo-router";
+import { Link } from "expo-router";
 import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
 import { useMap } from "~/components/map.context";
 
@@ -9,13 +9,9 @@ import type { LocationNodeFragment } from "./queries/get-recommended-locations.g
 
 interface RecommendedLocationProps {
   location: LocationNodeFragment;
-  onPress?: (location: LocationNodeFragment) => void;
 }
 
-export function RecommendedLocation({
-  location,
-  onPress,
-}: RecommendedLocationProps) {
+export function RecommendedLocation({ location }: RecommendedLocationProps) {
   const { showMarkerCallout, animateToLocation } = useMap();
 
   const handlePress = () => {
@@ -26,25 +22,21 @@ export function RecommendedLocation({
 
     // Show the marker callout on the map
     showMarkerCallout(location.id);
-
-    // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(
-      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
-    );
-
-    // Call the optional onPress callback
-    onPress?.(location);
   };
 
+  const locationUrl = `/locations/${location.id}?lat=${location.geo?.latitude}&lng=${location.geo?.longitude}`;
+
   return (
-    <Pressable
-      onPress={handlePress}
-      className="active:bg-opacity/50 transition-opacity"
-    >
-      <Badge variant="secondary" size="default">
-        <BadgeIcon Icon={PinIcon} />
-        <BadgeText>{location.name}</BadgeText>
-      </Badge>
-    </Pressable>
+    <Link href={locationUrl} asChild>
+      <Pressable
+        onPress={handlePress}
+        className="active:bg-opacity/50 transition-opacity"
+      >
+        <Badge variant="secondary" size="default">
+          <BadgeIcon Icon={PinIcon} />
+          <BadgeText>{location.name}</BadgeText>
+        </Badge>
+      </Pressable>
+    </Link>
   );
 }

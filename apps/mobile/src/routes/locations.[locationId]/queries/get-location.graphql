@@ -5,6 +5,7 @@ query GetLocation($id: String!) {
     address {
       id
       street
+      street2
       city
       state
       stateCode
@@ -15,5 +16,21 @@ query GetLocation($id: String!) {
       longitude
     }
     sports
+    bounds {
+      latitude
+      longitude
+    }
+    facilities {
+      id
+      sport
+      geo {
+        latitude
+        longitude
+      }
+      bounds {
+        latitude
+        longitude
+      }
+    }
   }
 }

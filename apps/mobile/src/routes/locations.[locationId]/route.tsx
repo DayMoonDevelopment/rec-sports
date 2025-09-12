@@ -2,7 +2,6 @@ import { View, Text, Pressable } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@apollo/client";
-import { useEffect } from "react";
 
 import { sportLabel } from "~/lib/utils";
 
@@ -17,15 +16,23 @@ import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
 import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
+import { Sport } from "~/gql/types";
+
+import type { MapPolygon } from "~/components/map.context";
 
 export function Component() {
-  const { locationId, lat, lng } = useLocalSearchParams<{
+  const { locationId } = useLocalSearchParams<{
     locationId: string;
     lat?: string;
     lng?: string;
   }>();
-  const { setFocusedMarkerId, hideMarkerCallout, zoomOut, animateToLocation } =
-    useMap();
+  const {
+    hideMarkerCallout,
+    zoomOut,
+    animateToBounds,
+    setMarkers,
+    setPolygons,
+  } = useMap();
 
   // Use Apollo query to fetch location by ID
   const { data, loading, error } = useQuery(GetLocationDocument, {
@@ -33,44 +40,55 @@ export function Component() {
     variables: { id: locationId },
     skip: !locationId,
     onCompleted: (data) => {
-      // Only animate from query if no lat/lng provided via params
-      if (data.location && !lat && !lng) {
-        animateToLocation(
-          data.location.geo.latitude,
-          data.location.geo.longitude,
-        );
+      if (data.location) {
+        // Create facility markers for individual sports fields/courts within the location
+        const facilities = data.location.facilities || [];
+        const facilityMarkers = facilities.map((facility) => ({
+          id: facility.id,
+          geo: facility.geo,
+          displayType: facility.sport,
+        }));
+
+        // Set only the facility markers on the map (not the location itself)
+        setMarkers(facilityMarkers);
+        let bounds: MapPolygon[] = facilities
+          .filter((facility) => facility.bounds.length)
+          .map((facility) => ({
+            id: facility.id,
+            coordinates: facility.bounds,
+            variant: facility.sport,
+          }));
+
+        // Set bounds if location has bounds
+        if (data.location.bounds && data.location.bounds.length > 0) {
+          bounds.push({
+            variant: "default",
+            coordinates: data.location.bounds,
+            id: locationId,
+          });
+          animateToBounds(data.location.bounds);
+        }
+
+        setPolygons(bounds);
       }
     },
   });
 
   const location = data?.location;
 
-  // Focus on the location when it loads
-  useEffect(() => {
-    if (locationId) {
-      setFocusedMarkerId(locationId);
-
-      // If lat/lng provided via params, animate immediately
-      if (lat && lng) {
-        animateToLocation(parseFloat(lat), parseFloat(lng));
-      } else if (location) {
-        // Otherwise use location data from query
-        animateToLocation(location.geo.latitude, location.geo.longitude);
-      }
-    }
-  }, [location, locationId, lat, lng, setFocusedMarkerId, animateToLocation]);
-
   function handleClose() {
     hideMarkerCallout(locationId);
-    setFocusedMarkerId(null);
-    zoomOut(5);
+
+    setPolygons([]); // Clear polygon bounds
+    setMarkers([]); // Clear markers
+    zoomOut(2);
 
     // Check if there are screens in the navigation stack to go back to
     if (router.canGoBack()) {
       router.back();
     } else {
       // If no screens in stack, reset to the index route
-      router.replace("/(map)");
+      router.replace("/locations");
     }
   }
 
@@ -118,14 +136,20 @@ export function Component() {
 
         {location.address ? (
           <View className="flex-1 mb-4">
-            <Text className="text-muted-foreground text-base">
-              {location.address.street}
-            </Text>
-            {location.address ? (
-              <Text className="text-muted-foreground text-base">
-                {`${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`}
-              </Text>
-            ) : null}
+            {[
+              location.address.street,
+              location.address.street2,
+              `${location.address.city}, ${location.address.stateCode} ${location.address.postalCode}`,
+            ]
+              .filter(Boolean)
+              .map((addressPart, index) => (
+                <Text
+                  className="text-muted-foreground text-base"
+                  key={`address-part-${index}`}
+                >
+                  {addressPart}
+                </Text>
+              ))}
           </View>
         ) : null}
 

@@ -1,16 +1,23 @@
-import { Text, View, Pressable, TextInput } from "react-native";
+import { View, Pressable, TextInput } from "react-native";
 import { useBottomSheet, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { useState, useRef, useEffect, useCallback } from "react";
-import { router } from "expo-router";
+import { useState, useRef, useEffect } from "react";
 
 import { SearchIcon } from "~/icons/search";
-import { CrossSmallIcon } from "~/icons/cross-small";
-import { useMap } from "~/components/map.context";
-import { CrossIcon } from "../../icons/cross";
+import { CrossIcon } from "~/icons/cross";
 
-export function SearchHeader() {
+interface SearchHeaderProps {
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  isSearchMode: boolean;
+  onSearchModeChange: (isSearchMode: boolean) => void;
+}
+
+export function SearchHeader({
+  searchQuery,
+  onSearchQueryChange,
+  onSearchModeChange,
+}: SearchHeaderProps) {
   const inputRef = useRef<TextInput>(null);
-  const { searchQuery, setSearchQuery, setIsSearchMode } = useMap();
   const { snapToIndex } = useBottomSheet();
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState(searchQuery);
@@ -21,56 +28,49 @@ export function SearchHeader() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (inputValue !== searchQuery) {
-        setSearchQuery(inputValue);
+        onSearchQueryChange(inputValue);
       }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [inputValue, searchQuery, setSearchQuery]);
+  }, [inputValue, searchQuery, onSearchQueryChange]);
 
-  const handleBlur = useCallback(() => {
+  function handleBlur() {
     setFocused(false);
-    // Only exit search mode if there's no query
     if (!searchQuery.trim()) {
-      setIsSearchMode(false);
       snapToIndex(0); // Return to original position
     }
-  }, [searchQuery, setIsSearchMode, snapToIndex]);
+  }
 
-  const handleSubmit = useCallback(() => {
+  function handleSubmit() {
     inputRef.current?.blur();
-  }, []);
+  }
 
-  const handleClear = useCallback(() => {
+  function handleClear() {
     setInputValue("");
-    setSearchQuery("");
-    setIsSearchMode(false);
-    snapToIndex(0); // Return to original position
-  }, [setSearchQuery, setIsSearchMode, snapToIndex]);
+    onSearchQueryChange("");
+    onSearchModeChange(false);
+  }
 
-  const handleCancel = useCallback(() => {
+  function handleCancel() {
     inputRef.current?.blur();
     handleClear();
-  }, [handleClear]);
+  }
 
-  const handleFocus = useCallback(async () => {
+  function handleFocus() {
     setFocused(true);
-    setIsSearchMode(true);
+    onSearchModeChange(true);
     snapToIndex(1); // Expand bottom sheet
-  }, [setIsSearchMode, snapToIndex]);
+  }
 
-  const handleChangeText = useCallback((text: string) => {
+  function handleChangeText(text: string) {
     setInputValue(text);
-  }, []);
-
-  function handleProfilePress() {
-    router.push("/profile");
   }
 
   return (
     <View className="flex flex-row items-center gap-2 p-4">
       <View className="flex-1 flex flex-row gap-1 items-center justify-start bg-card border border-border rounded-full px-4 h-14">
-        <SearchIcon height={16} width={16} />
+        <SearchIcon className="size-4" />
         <BottomSheetTextInput
           ref={inputRef}
           value={inputValue}
@@ -84,13 +84,13 @@ export function SearchHeader() {
           autoCapitalize="none"
           autoCorrect={false}
         />
-        {isQuerying ? (
+        {inputValue ? (
           <Pressable
-            className="bg-secondary p-1 rounded-full active:opacity-50 transition-opacity"
+            className="active:opacity-50 transition-opacity"
             hitSlop={4}
             onPress={handleClear}
           >
-            <CrossSmallIcon height={12} width={12} />
+            <CrossIcon className="size-3 text-muted-foreground" />
           </Pressable>
         ) : null}
       </View>
@@ -100,18 +100,9 @@ export function SearchHeader() {
           className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
           onPress={handleCancel}
         >
-          <CrossIcon height={22} width={22} />
+          <CrossIcon className="size-6" />
         </Pressable>
-      ) : (
-        <Pressable
-          onPress={handleProfilePress}
-          className="size-14 bg-primary rounded-full items-center justify-center active:opacity-50 transition-opacity"
-        >
-          <Text className="text-primary-foreground font-semibold text-lg">
-            RS
-          </Text>
-        </Pressable>
-      )}
+      ) : null}
     </View>
   );
 }

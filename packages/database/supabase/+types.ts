@@ -418,6 +418,7 @@ export type Database = {
           created_at: string | null
           created_up: string | null
           id: string
+          invite_code: string | null
           name: string | null
           sport_tags: string[] | null
           team_type: string
@@ -428,6 +429,7 @@ export type Database = {
           created_at?: string | null
           created_up?: string | null
           id?: string
+          invite_code?: string | null
           name?: string | null
           sport_tags?: string[] | null
           team_type: string
@@ -438,6 +440,7 @@ export type Database = {
           created_at?: string | null
           created_up?: string | null
           id?: string
+          invite_code?: string | null
           name?: string | null
           sport_tags?: string[] | null
           team_type?: string

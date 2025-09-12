@@ -1,11 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsNotEmpty,
-  IsOptional,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 
 import { Sport } from '../../../common/enums/sport.enum';
 import { Point } from '../../models/point.model';
@@ -15,10 +10,6 @@ export class Facility {
   @Field(() => ID)
   @IsNotEmpty()
   id: string;
-
-  @Field(() => ID)
-  @IsNotEmpty()
-  locationId: string;
 
   @Field(() => Sport)
   @IsNotEmpty()

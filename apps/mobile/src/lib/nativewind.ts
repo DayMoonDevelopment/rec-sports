@@ -1,4 +1,5 @@
 import { cssInterop } from "nativewind";
+import { Polygon } from "react-native-maps";
 import Svg, { Path } from "react-native-svg";
 
 import "../../global.css";
@@ -14,5 +15,14 @@ cssInterop(Path, {
   className: {
     target: false,
     nativeStyleToProp: { color: "fill" },
+  },
+});
+
+cssInterop(Polygon, {
+  className: {
+    target: false,
+    nativeStyleToProp: {
+      color: "strokeColor",
+    },
   },
 });

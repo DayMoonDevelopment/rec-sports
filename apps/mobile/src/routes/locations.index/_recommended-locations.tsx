@@ -1,7 +1,6 @@
 import { View, Text } from "react-native";
 import { useQuery } from "@apollo/client";
-import { router } from "expo-router";
-import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { FlatList } from "react-native-gesture-handler";
 
 import { RecommendedLocation } from "./_recommended-location";
 import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locations.generated";
@@ -9,7 +8,6 @@ import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
 import type { Region } from "~/gql/types";
-import type { LocationNodeFragment } from "./queries/get-recommended-locations.generated";
 
 function HorizontalItemSeparatorComponent() {
   return <View className="w-2" />;
@@ -35,33 +33,25 @@ export function RecommendedLocations() {
     skip: !currentRegion, // Skip query until we have a region
   });
 
-  const suggestedItems = data?.locations.edges?.map((edge) => edge.node) || [];
-
-  const handleLocationPress = (location: LocationNodeFragment) => {
-    // Navigate to the location detail route with lat/lng for immediate animation
-    router.push(
-      `/locations/${location.id}?lat=${location.geo.latitude}&lng=${location.geo.longitude}`,
-    );
-  };
+  const locations = data?.locations.edges?.map((edge) => edge.node) || [];
 
   // Don't render if no data and not loading, or if we don't have a region yet
-  if (!currentRegion || (!loading && suggestedItems.length === 0)) {
+  if (!currentRegion || (!loading && locations.length === 0)) {
     return null;
   }
 
   return (
     <View>
-      <Text className="text-lg font-semibold text-foreground pb-2">
+      <Text className="text-lg font-semibold text-foreground pb-2 px-5">
         Recommended
       </Text>
 
-      <BottomSheetFlatList
+      <FlatList
+        contentContainerClassName="px-4"
         horizontal
-        data={suggestedItems}
+        data={locations}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <RecommendedLocation location={item} onPress={handleLocationPress} />
-        )}
+        renderItem={({ item }) => <RecommendedLocation location={item} />}
         ItemSeparatorComponent={HorizontalItemSeparatorComponent}
         showsHorizontalScrollIndicator={false}
       />

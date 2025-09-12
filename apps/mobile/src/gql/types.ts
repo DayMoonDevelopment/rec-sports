@@ -70,6 +70,14 @@ export type CreateTeamPayload = {
   team: Team;
 };
 
+export type Facility = {
+  __typename: 'Facility';
+  bounds: Array<Point>;
+  geo: Point;
+  id: Scalars['ID']['output'];
+  sport: Sport;
+};
+
 export type Game = {
   __typename: 'Game';
   actions: GameActionsConnection;
@@ -162,6 +170,8 @@ export type Image = Media & {
 export type Location = {
   __typename: 'Location';
   address: Maybe<Address>;
+  bounds: Array<Point>;
+  facilities: Maybe<Array<Facility>>;
   geo: Point;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -288,11 +298,17 @@ export type PointInput = {
 
 export type Query = {
   __typename: 'Query';
+  facility: Maybe<Facility>;
   game: Maybe<Game>;
   location: Maybe<Location>;
   locations: LocationsConnection;
   suggestedTeams: TeamsConnection;
   team: Maybe<Team>;
+};
+
+
+export type QueryFacilityArgs = {
+  id: Scalars['String']['input'];
 };
 
 
