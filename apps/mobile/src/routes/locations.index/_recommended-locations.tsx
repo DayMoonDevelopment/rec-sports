@@ -1,17 +1,12 @@
 import { View, Text } from "react-native";
 import { useQuery } from "@apollo/client";
-import { FlatList } from "react-native-gesture-handler";
 
-import { RecommendedLocation } from "./_recommended-location";
+import { LocationItem } from "./_location-item";
 import { GetRecommendedLocationsDocument } from "./queries/get-recommended-locations.generated";
 import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
 import type { Region } from "~/gql/types";
-
-function HorizontalItemSeparatorComponent() {
-  return <View className="w-2" />;
-}
 
 export function RecommendedLocations() {
   const { currentRegion } = useMap();
@@ -19,7 +14,7 @@ export function RecommendedLocations() {
   // Convert current map region to API region format
   const apiRegion: Region | undefined = currentRegion
     ? {
-        boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.2), // 20% buffer for better UX
+        boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 1), // 20% buffer for better UX
       }
     : undefined;
 
@@ -41,20 +36,10 @@ export function RecommendedLocations() {
   }
 
   return (
-    <View>
-      <Text className="text-lg font-semibold text-foreground pb-2 px-5">
-        Recommended
-      </Text>
-
-      <FlatList
-        contentContainerClassName="px-4"
-        horizontal
-        data={locations}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <RecommendedLocation location={item} />}
-        ItemSeparatorComponent={HorizontalItemSeparatorComponent}
-        showsHorizontalScrollIndicator={false}
-      />
+    <View className="flex flex-col">
+      {locations.map((location) => (
+        <LocationItem key={location.id} location={location} />
+      ))}
     </View>
   );
 }

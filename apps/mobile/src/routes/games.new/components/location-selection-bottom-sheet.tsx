@@ -1,19 +1,16 @@
 import { View, Text, Pressable, TextInput } from "react-native";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useQuery } from "@apollo/client";
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetFlatList,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 
 import { SportIcon } from "~/components/sport-icon";
 import { TreeIcon } from "~/icons/tree";
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 import { SearchInput } from "~/ui/search-input";
 import { sportLabel } from "~/lib/utils";
-import { GetSearchLocationsDocument } from "../queries/get-search-locations.generated";
+import { GetGameLocationsDocument } from "../queries/get-game-locations.generated";
 
-import type { LocationNodeFragment } from "../queries/get-search-locations.generated";
+import type { LocationNodeFragment } from "../queries/get-game-locations.generated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { remapProps } from "nativewind";
 
@@ -152,7 +149,7 @@ export function LocationSelectionBottomSheet({
     return () => clearTimeout(timeoutId);
   }, [inputValue, searchQuery]);
 
-  const { data, loading, error } = useQuery(GetSearchLocationsDocument, {
+  const { data, loading, error } = useQuery(GetGameLocationsDocument, {
     variables: {
       query: searchQuery,
       first: 20,

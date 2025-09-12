@@ -7,7 +7,6 @@ import { SportIcon } from "~/components/sport-icon";
 
 import { TreeIcon } from "~/icons/tree";
 import { CrossIcon } from "~/icons/cross";
-import { SearchIcon } from "~/icons/search";
 
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 

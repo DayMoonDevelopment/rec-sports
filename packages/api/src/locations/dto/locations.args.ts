@@ -35,28 +35,15 @@ export class LocationsArgs {
   @IsOptional()
   region?: Region;
 
-  // Filter by sports
+  // Filter by required sports
   @Field(() => [Sport], { nullable: true })
   @IsOptional()
   @IsArray()
-  sports?: Sport[];
+  requiredSports?: Sport[];
 
   // Text search query
   @Field({ nullable: true })
   @IsOptional()
   @IsString()
   query?: string;
-
-  // Search mode for different query types
-  @Field({ nullable: true, defaultValue: 'combined' })
-  @IsOptional()
-  @IsString()
-  searchMode?: 'exact' | 'fuzzy' | 'phrase' | 'combined' = 'combined';
-
-  // Minimum similarity threshold for fuzzy search (0.0 to 1.0)
-  @Field({ nullable: true, defaultValue: 0.3 })
-  @IsOptional()
-  @Min(0)
-  @Max(1)
-  similarityThreshold?: number = 0.3;
 }
