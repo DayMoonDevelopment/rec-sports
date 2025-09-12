@@ -48,28 +48,62 @@ export class LocationsService {
   }
 
   async findLocations(args: LocationsArgs): Promise<LocationsConnection> {
+    // Early termination for potentially expensive queries
+    if (
+      args.region?.centerPoint?.radiusMiles &&
+      args.region.centerPoint.radiusMiles > 1000
+    ) {
+      throw new Error(
+        'Search radius too large. Please use a smaller search area.',
+      );
+    }
+
+    if (args.region?.boundingBox) {
+      const latDiff = Math.abs(
+        args.region.boundingBox.northEast.latitude -
+          args.region.boundingBox.southWest.latitude,
+      );
+      const lngDiff = Math.abs(
+        args.region.boundingBox.northEast.longitude -
+          args.region.boundingBox.southWest.longitude,
+      );
+      if (latDiff > 50 || lngDiff > 50) {
+        throw new Error(
+          'Search area too large. Please use a smaller bounding box.',
+        );
+      }
+    }
+
     const { client } = this.databaseService;
 
-    const limit = args.first ?? 20;
+    // Enforce reasonable limits to prevent server overload
+    const limit = Math.min(args.first ?? 20, 100); // Cap at 100 results
     const hasTextSearch = Boolean(args.query?.trim());
 
-    let query = client
-      .selectFrom('locations')
-      .selectAll()
-      .select(['created_at']);
+    // Use more efficient base query - only select needed fields initially
+    let query = client.selectFrom('locations').select([
+      'id',
+      'name',
+      'lat',
+      'lon',
+      'created_at',
+      'street',
+      'city',
+      'state',
+      'postal_code',
+      'sport_tags',
+      'bounds', // Still need bounds but we'll optimize the transformation
+    ]);
 
-    // Add search ranking if there's a text query
+    // Simplified search ranking for better performance on large datasets
     if (hasTextSearch) {
-      const searchRank = this.buildSearchRankExpression(
-        args.query!,
-        'combined',
-        0.3,
-      );
+      const searchRank = this.buildSimpleSearchRankExpression(args.query!);
       query = query.select([sql<number>`(${searchRank})`.as('search_rank')]);
     }
 
     // Apply filters using composable approach
     const filterExpressions = this.buildFilterExpressions(args);
+
     if (filterExpressions.length > 0) {
       query = query.where((eb) => eb.and(filterExpressions));
     }
@@ -106,39 +140,47 @@ export class LocationsService {
     // Get one extra result to check if there are more pages
     query = query.limit(limit + 1);
 
-    // Get total count with a separate simpler query
-    let countQuery = client
-      .selectFrom('locations')
-      .select((eb) => eb.fn.count('id').as('count'));
+    // Execute only the main query - skip expensive count query for better performance
+    // Add query timeout to prevent hanging queries
+    const queryPromise = query.execute();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(new Error('Query timeout: Request took too long to execute')),
+        30000,
+      ); // 30 second timeout
+    });
 
-    // Apply the same filters to count query
-    if (filterExpressions.length > 0) {
-      countQuery = countQuery.where((eb) => eb.and(filterExpressions));
-    }
+    const results = (await Promise.race([
+      queryPromise,
+      timeoutPromise,
+    ])) as any[];
 
-    const [results, countResult] = await Promise.all([
-      query.execute(),
-      countQuery.executeTakeFirst(),
-    ]);
-
-    const totalCount = Number(countResult?.count ?? 0);
+    // For large datasets, we skip total count to improve performance
+    // Clients should use cursor-based pagination instead
+    const totalCount = -1; // Indicate unknown count
     const hasNextPage = results.length > limit;
     const nodes = results.slice(0, limit);
 
-    // Transform database results to GraphQL types and create edges
+    // Optimized data transformation for better performance
     const edges: LocationEdge[] = nodes.map((row) => {
+      // Pre-calculate expensive operations
+      const sports = (row.sport_tags || []).map(
+        (tag) => tag.toUpperCase() as Sport,
+      );
+      const bounds = this.transformBoundsOptimized(row.bounds);
+      const address = this.buildAddress(row);
+
       const location: Location = {
         id: row.id,
         name: row.name || 'Unknown Location',
-        address: this.buildAddress(row),
+        address,
         geo: {
           latitude: row.lat,
           longitude: row.lon,
         },
-        sports: (row.sport_tags || []).map((tag) => tag.toUpperCase() as Sport),
-        bounds: (
-          row.bounds as { geometry: { lat: number; lon: number }[] }
-        ).geometry.map((g) => ({ latitude: g.lat, longitude: g.lon })),
+        sports,
+        bounds,
       };
 
       return {
@@ -281,6 +323,32 @@ export class LocationsService {
       .toLowerCase();
   }
 
+  // Simplified, high-performance search ranking for large datasets
+  private buildSimpleSearchRankExpression(query: string): string {
+    const cleanQuery = this.prepareSearchQuery(query);
+
+    // Use only the most essential ranking factors to avoid expensive calculations
+    return `
+      CASE
+        -- Exact name match gets highest priority
+        WHEN LOWER(name) = '${cleanQuery}' THEN 100
+        -- Name prefix match (very fast with index)
+        WHEN LOWER(name) LIKE '${cleanQuery}%' THEN 80
+        -- City exact match
+        WHEN LOWER(city) = '${cleanQuery}' THEN 70
+        -- City prefix match
+        WHEN LOWER(city) LIKE '${cleanQuery}%' THEN 60
+        -- Sport tag exact match
+        WHEN '${cleanQuery}' = ANY(sport_tags) THEN 90
+        -- Full-text search using built-in index (most efficient for text search)
+        WHEN search_vector @@ plainto_tsquery('english', '${cleanQuery}') THEN
+          ts_rank_cd(search_vector, plainto_tsquery('english', '${cleanQuery}')) * 50
+        ELSE 0
+      END
+    `;
+  }
+
+  // Keep original complex function for reference but mark as deprecated
   private buildSearchRankExpression(
     query: string,
     searchMode: string,
@@ -428,6 +496,20 @@ export class LocationsService {
     southWest: { latitude: number; longitude: number };
   }): Expression<SqlBool> {
     const { northEast, southWest } = boundingBox;
+
+    // For very large bounding boxes, use simple lat/lng comparisons which are much faster
+    const latDiff = Math.abs(northEast.latitude - southWest.latitude);
+    const lngDiff = Math.abs(northEast.longitude - southWest.longitude);
+
+    // If bounding box is huge (covering significant portion of earth), use simple bounds
+    if (latDiff > 10 || lngDiff > 10) {
+      return sql<boolean>`(
+        lat BETWEEN ${sql.literal(southWest.latitude)} AND ${sql.literal(northEast.latitude)} AND
+        lon BETWEEN ${sql.literal(southWest.longitude)} AND ${sql.literal(northEast.longitude)}
+      )`;
+    }
+
+    // For smaller areas, use precise PostGIS functions
     return sql<boolean>`gis.ST_Within(
       geo::gis.geometry,
       gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
@@ -439,6 +521,18 @@ export class LocationsService {
     radiusMiles: number;
   }): Expression<SqlBool> {
     const { point, radiusMiles } = centerPoint;
+
+    // For very large radius searches, use approximate bounding box first for performance
+    if (radiusMiles > 50) {
+      // Rough approximation: 1 degree ≈ 69 miles
+      const degreeBuffer = radiusMiles / 69;
+      return sql<boolean>`(
+        lat BETWEEN ${sql.literal(point.latitude - degreeBuffer)} AND ${sql.literal(point.latitude + degreeBuffer)} AND
+        lon BETWEEN ${sql.literal(point.longitude - degreeBuffer)} AND ${sql.literal(point.longitude + degreeBuffer)}
+      )`;
+    }
+
+    // For smaller radius, use precise PostGIS distance functions
     // Convert miles to meters: 1 mile = 1609.344 meters
     const radiusMeters = radiusMiles * 1609.344;
     return sql<boolean>`gis.ST_DWithin(
@@ -446,6 +540,24 @@ export class LocationsService {
       gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
       ${sql.literal(radiusMeters)}
     )`;
+  }
+
+  // Optimized bounds transformation with better error handling
+  private transformBoundsOptimized(
+    boundsData: any,
+  ): { latitude: number; longitude: number }[] {
+    try {
+      if (!boundsData?.geometry || !Array.isArray(boundsData.geometry)) {
+        return [];
+      }
+
+      return boundsData.geometry.map((g: any) => ({
+        latitude: g.lat,
+        longitude: g.lon,
+      }));
+    } catch (error) {
+      return [];
+    }
   }
 
   private buildAddress(row: any) {
