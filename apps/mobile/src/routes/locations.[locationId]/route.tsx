@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Linking, Platform } from "react-native";
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@apollo/client";
@@ -9,14 +9,12 @@ import { useMap } from "~/components/map.context";
 import { SportIcon } from "~/components/sport-icon";
 
 import { CrossIcon } from "~/icons/cross";
-import { TreeIcon } from "~/icons/tree";
 import { LoaderIcon } from "~/icons/loader";
 
 import { Badge, BadgeText, BadgeIcon } from "~/ui/badge";
 
 import { GetLocationDocument } from "./queries/get-location.generated";
 import { RelatedLocations } from "./_related-locations";
-import { Sport } from "~/gql/types";
 
 import type { MapPolygon } from "~/components/map.context";
 
@@ -76,6 +74,51 @@ export function Component() {
 
   const location = data?.location;
 
+  async function handleGetDirections() {
+    if (!location?.address) return;
+
+    const { street, street2, city, stateCode, postalCode } = location.address;
+    const addressParts = [street, street2, city, stateCode, postalCode].filter(
+      Boolean,
+    );
+    const fullAddress = addressParts.join(", ");
+    const encodedAddress = encodeURIComponent(fullAddress);
+
+    // Try different URL schemes in order of preference
+    const urlsToTry = [
+      // Universal geo: URI that works across platforms and respects user's default map app
+      `geo:0,0?q=${encodedAddress}`,
+      // Platform-specific fallbacks
+      Platform.OS === "ios"
+        ? `maps://?q=${encodedAddress}`
+        : `geo:${encodedAddress}`,
+      // Google Maps as backup (works on both platforms)
+      `comgooglemaps://?q=${encodedAddress}`,
+      // Web fallback
+      `https://maps.google.com/?q=${encodedAddress}`,
+    ];
+
+    // Try each URL scheme until one works
+    for (const url of urlsToTry) {
+      try {
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+          return; // Success, exit early
+        }
+      } catch (error) {
+        // Continue to next URL scheme
+        continue;
+      }
+    }
+
+    // If all else fails, open in browser
+    const webUrl = `https://maps.google.com/?q=${encodedAddress}`;
+    Linking.openURL(webUrl).catch(() => {
+      console.warn("Failed to open maps application");
+    });
+  }
+
   function handleClose() {
     hideMarkerCallout(locationId);
 
@@ -117,10 +160,6 @@ export function Component() {
       <View className="py-4 px-4">
         <View className="flex flex-row items-start justify-between gap-2">
           <View className="flex-1 flex flex-col gap-1">
-            <View className="bg-green-100 dark:bg-green-800 p-2 rounded-xl self-start">
-              <TreeIcon className="size-8 text-green-700 dark:text-green-500" />
-            </View>
-
             <Text className="flex-1 text-3xl font-bold text-foreground pt-3">
               {location.name}
             </Text>
@@ -135,7 +174,10 @@ export function Component() {
         </View>
 
         {location.address ? (
-          <View className="flex-1 mb-4">
+          <Pressable
+            className="flex-1 mb-4 active:opacity-50 transition-opacity"
+            onPress={handleGetDirections}
+          >
             {[
               location.address.street,
               location.address.street2,
@@ -150,7 +192,7 @@ export function Component() {
                   {addressPart}
                 </Text>
               ))}
-          </View>
+          </Pressable>
         ) : null}
 
         {location.sports && location.sports.length > 0 && (
