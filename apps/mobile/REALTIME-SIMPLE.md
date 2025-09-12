@@ -69,7 +69,7 @@ const { data } = useQuery(GetGameDocument, {
 Add to your `.env` file:
 
 ```bash
-EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=http://localhost:54321
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
