@@ -48,36 +48,16 @@ export class LocationsService {
   }
 
   async findLocations(args: LocationsArgs): Promise<LocationsConnection> {
-    // Early termination for potentially expensive queries
-    if (
-      args.region?.centerPoint?.radiusMiles &&
-      args.region.centerPoint.radiusMiles > 1000
-    ) {
-      throw new Error(
-        'Search radius too large. Please use a smaller search area.',
-      );
-    }
+    // Smart query optimization based on search parameters
+    const searchOptimization = this.analyzeSearchComplexity(args);
 
-    if (args.region?.boundingBox) {
-      const latDiff = Math.abs(
-        args.region.boundingBox.northEast.latitude -
-          args.region.boundingBox.southWest.latitude,
-      );
-      const lngDiff = Math.abs(
-        args.region.boundingBox.northEast.longitude -
-          args.region.boundingBox.southWest.longitude,
-      );
-      if (latDiff > 50 || lngDiff > 50) {
-        throw new Error(
-          'Search area too large. Please use a smaller bounding box.',
-        );
-      }
-    }
+    // Apply intelligent optimizations instead of hard rejections
+    this.applySearchOptimizations(args, searchOptimization);
 
     const { client } = this.databaseService;
 
-    // Enforce reasonable limits to prevent server overload
-    const limit = Math.min(args.first ?? 20, 100); // Cap at 100 results
+    // Apply intelligent result limiting based on search complexity
+    const limit = this.calculateOptimalLimit(args, searchOptimization);
     const hasTextSearch = Boolean(args.query?.trim());
 
     // Use more efficient base query - only select needed fields initially
@@ -497,23 +477,29 @@ export class LocationsService {
   }): Expression<SqlBool> {
     const { northEast, southWest } = boundingBox;
 
-    // For very large bounding boxes, use simple lat/lng comparisons which are much faster
+    // Smart optimization based on bounding box size
     const latDiff = Math.abs(northEast.latitude - southWest.latitude);
     const lngDiff = Math.abs(northEast.longitude - southWest.longitude);
 
-    // If bounding box is huge (covering significant portion of earth), use simple bounds
-    if (latDiff > 10 || lngDiff > 10) {
+    // Progressive optimization strategy:
+    // - Small areas (< 5°): Use precise PostGIS for accuracy
+    // - Medium areas (5°-20°): Use simple bounds for speed
+    // - Large areas (20°+): Use simple bounds + early termination hints
+
+    if (latDiff <= 5 && lngDiff <= 5) {
+      // Small area: Use precise PostGIS for best accuracy
+      return sql<boolean>`gis.ST_Within(
+        geo::gis.geometry,
+        gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
+      )`;
+    } else {
+      // Medium to large areas: Use fast index-friendly bounds
+      // This works well for multi-state or country-wide searches
       return sql<boolean>`(
         lat BETWEEN ${sql.literal(southWest.latitude)} AND ${sql.literal(northEast.latitude)} AND
         lon BETWEEN ${sql.literal(southWest.longitude)} AND ${sql.literal(northEast.longitude)}
       )`;
     }
-
-    // For smaller areas, use precise PostGIS functions
-    return sql<boolean>`gis.ST_Within(
-      geo::gis.geometry,
-      gis.ST_MakeEnvelope(${sql.literal(southWest.longitude)}, ${sql.literal(southWest.latitude)}, ${sql.literal(northEast.longitude)}, ${sql.literal(northEast.latitude)}, 4326)
-    )`;
   }
 
   private createRadiusFilter(centerPoint: {
@@ -522,24 +508,29 @@ export class LocationsService {
   }): Expression<SqlBool> {
     const { point, radiusMiles } = centerPoint;
 
-    // For very large radius searches, use approximate bounding box first for performance
-    if (radiusMiles > 50) {
+    // Progressive optimization for radius searches
+    // - Small radius (≤100 miles): Use precise PostGIS distance
+    // - Medium radius (100-500 miles): Use bounding box approximation
+    // - Large radius (500+ miles): Use bounding box (good for multi-state searches)
+
+    if (radiusMiles <= 100) {
+      // Small radius: Use precise PostGIS distance functions for accuracy
+      const radiusMeters = radiusMiles * 1609.344;
+      return sql<boolean>`gis.ST_DWithin(
+        geo::gis.geography,
+        gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
+        ${sql.literal(radiusMeters)}
+      )`;
+    } else {
+      // Medium to large radius: Use fast bounding box approximation
       // Rough approximation: 1 degree ≈ 69 miles
-      const degreeBuffer = radiusMiles / 69;
+      // Add small buffer to account for approximation errors
+      const degreeBuffer = (radiusMiles * 1.1) / 69;
       return sql<boolean>`(
         lat BETWEEN ${sql.literal(point.latitude - degreeBuffer)} AND ${sql.literal(point.latitude + degreeBuffer)} AND
         lon BETWEEN ${sql.literal(point.longitude - degreeBuffer)} AND ${sql.literal(point.longitude + degreeBuffer)}
       )`;
     }
-
-    // For smaller radius, use precise PostGIS distance functions
-    // Convert miles to meters: 1 mile = 1609.344 meters
-    const radiusMeters = radiusMiles * 1609.344;
-    return sql<boolean>`gis.ST_DWithin(
-      geo::gis.geography,
-      gis.ST_SetSRID(gis.ST_MakePoint(${sql.literal(point.longitude)}, ${sql.literal(point.latitude)}), 4326)::gis.geography,
-      ${sql.literal(radiusMeters)}
-    )`;
   }
 
   // Optimized bounds transformation with better error handling
@@ -579,5 +570,108 @@ export class LocationsService {
       postalCode: row.postal_code,
       // id and state (full name) will be resolved by AddressResolver
     } as any; // Cast to any since we're omitting id and state which will be resolved
+  }
+
+  // Smart search complexity analysis
+  private analyzeSearchComplexity(args: LocationsArgs): {
+    complexity: 'low' | 'medium' | 'high' | 'extreme';
+    areaSize: number;
+    hasFilters: boolean;
+    hasTextSearch: boolean;
+    estimatedResults: number;
+  } {
+    let areaSize = 0;
+    let complexity: 'low' | 'medium' | 'high' | 'extreme' = 'low';
+
+    // Calculate area size
+    if (args.region?.centerPoint) {
+      areaSize = Math.PI * Math.pow(args.region.centerPoint.radiusMiles, 2);
+    } else if (args.region?.boundingBox) {
+      const { northEast, southWest } = args.region.boundingBox;
+      const latDiff = Math.abs(northEast.latitude - southWest.latitude);
+      const lngDiff = Math.abs(northEast.longitude - southWest.longitude);
+      // Approximate area in square miles (rough conversion: 1 degree ≈ 69 miles)
+      areaSize = latDiff * lngDiff * 69 * 69;
+    } else {
+      // No region filter = entire dataset
+      areaSize = Infinity;
+    }
+
+    const hasFilters = !!(args.requiredSports?.length || args.query?.trim());
+    const hasTextSearch = Boolean(args.query?.trim());
+
+    // Complexity classification based on multiple factors
+    if (areaSize === Infinity && !hasFilters) {
+      complexity = 'extreme'; // Entire dataset, no filters
+    } else if (areaSize > 500000 && !hasFilters) {
+      complexity = 'high'; // Very large area with no filters
+    } else if (areaSize > 100000) {
+      complexity = hasFilters ? 'medium' : 'high';
+    } else if (areaSize > 10000) {
+      complexity = hasFilters ? 'low' : 'medium';
+    } else {
+      complexity = 'low'; // Small area searches are always fast
+    }
+
+    // Estimate potential results based on area size and filters
+    let estimatedResults = Math.min(Math.floor(areaSize / 100), 10000); // Rough estimate
+    if (hasFilters) estimatedResults = Math.floor(estimatedResults / 3);
+    if (hasTextSearch) estimatedResults = Math.floor(estimatedResults / 2);
+
+    return {
+      complexity,
+      areaSize,
+      hasFilters,
+      hasTextSearch,
+      estimatedResults: Math.max(estimatedResults, 20), // Minimum estimate
+    };
+  }
+
+  // Apply optimizations based on search complexity
+  private applySearchOptimizations(
+    args: LocationsArgs,
+    optimization: ReturnType<typeof this.analyzeSearchComplexity>,
+  ): void {
+    // Only reject truly unreasonable requests
+    if (optimization.complexity === 'extreme' && !optimization.hasFilters) {
+      throw new Error(
+        'Please specify a geographic region or search filters to narrow your search.',
+      );
+    }
+
+    // For very large searches without specific location, require some filtering
+    if (
+      optimization.areaSize > 1000000 &&
+      !optimization.hasTextSearch &&
+      !args.requiredSports?.length
+    ) {
+      throw new Error(
+        'For very large geographic searches, please add sport filters or a search term to improve performance.',
+      );
+    }
+  }
+
+  // Calculate optimal result limit based on search complexity
+  private calculateOptimalLimit(
+    args: LocationsArgs,
+    optimization: ReturnType<typeof this.analyzeSearchComplexity>,
+  ): number {
+    const requestedLimit = args.first ?? 20;
+
+    // Base limits by complexity
+    const maxLimits = {
+      low: 100, // Small areas can handle larger result sets
+      medium: 75, // Medium areas get reasonable limits
+      high: 50, // Large areas get smaller limits for performance
+      extreme: 25, // Extreme complexity gets minimal results
+    };
+
+    // Text search and filters allow higher limits due to better selectivity
+    let adjustedMax = maxLimits[optimization.complexity];
+    if (optimization.hasTextSearch)
+      adjustedMax = Math.min(adjustedMax * 2, 100);
+    if (optimization.hasFilters) adjustedMax = Math.min(adjustedMax * 1.5, 100);
+
+    return Math.min(requestedLimit, adjustedMax);
   }
 }
