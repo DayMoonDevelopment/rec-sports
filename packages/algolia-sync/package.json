@@ -1,0 +1,35 @@
+{
+  "name": "@rec-sports/algolia-sync",
+  "version": "0.1.0",
+  "description": "Sync locations data from Supabase to Algolia",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "sync": "tsx src/index.ts",
+    "sync:full": "tsx src/index.ts --full",
+    "sync:incremental": "tsx src/index.ts --incremental"
+  },
+  "dependencies": {
+    "algoliasearch": "^5.37.0",
+    "kysely": "^0.28.5",
+    "kysely-supabase": "^0.2.0",
+    "pg": "^8.16.3",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "algolia",
+    "sync",
+    "supabase",
+    "locations"
+  ],
+  "author": "Day Moon Development",
+  "license": "MIT"
+}
