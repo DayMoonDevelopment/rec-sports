@@ -1,33 +1,43 @@
-import { View, Pressable, TextInput } from "react-native";
+import { View, Pressable, TextInput, Text } from "react-native";
 import { useBottomSheet, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { useState, useRef, useEffect } from "react";
+import { useRefinementList } from "react-instantsearch-core";
 
 import { SearchIcon } from "~/icons/search";
 import { CrossIcon } from "~/icons/cross";
 import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
+import { SportIcon } from "~/components/sport-icon";
 import { sportLabel } from "~/lib/utils";
 import { Sport } from "~/gql/types";
 
 interface SearchHeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  isSearchMode: boolean;
-  onSearchModeChange: (isSearchMode: boolean) => void;
-  sportFilters: Sport[];
-  onSportFilterChange: (sport: Sport) => void;
 }
 
 export function SearchHeader({
   searchQuery,
   onSearchQueryChange,
-  onSearchModeChange,
-  isSearchMode,
-  sportFilters,
-  onSportFilterChange,
 }: SearchHeaderProps) {
   const inputRef = useRef<TextInput>(null);
   const { snapToIndex } = useBottomSheet();
   const [inputValue, setInputValue] = useState(searchQuery);
+
+  // Get the selected sports from Algolia facets
+  const { items: sportFacetItems, refine } = useRefinementList({
+    attribute: "sports",
+  });
+
+  // Get currently selected sports
+  const selectedSportFacets = sportFacetItems.filter((item) => item.isRefined);
+
+  // Helper to convert facet value back to Sport enum (reverse of uppercase)
+  const facetValueToSport = (facetValue: string): Sport | null => {
+    const sportValues = Object.values(Sport);
+    return (
+      sportValues.find((sport) => sport.toUpperCase() === facetValue) || null
+    );
+  };
 
   // Debounce search query updates
   useEffect(() => {
@@ -41,7 +51,7 @@ export function SearchHeader({
   }, [inputValue, searchQuery, onSearchQueryChange]);
 
   function handleBlur() {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && selectedSportFacets.length === 0) {
       snapToIndex(0); // Return to original position
     }
   }
@@ -59,13 +69,16 @@ export function SearchHeader({
   function handleCancel() {
     inputRef.current?.blur();
     handleClear();
-    onSearchModeChange(false);
+
+    // Clear all sport filters
+    selectedSportFacets.forEach((facetItem) => {
+      refine(facetItem.value);
+    });
+
     snapToIndex(0);
-    sportFilters.forEach(onSportFilterChange);
   }
 
   function handleFocus() {
-    onSearchModeChange(true);
     snapToIndex(1); // Expand bottom sheet
   }
 
@@ -103,7 +116,7 @@ export function SearchHeader({
           ) : null}
         </View>
 
-        {isSearchMode ? (
+        {searchQuery.trim().length > 0 || selectedSportFacets.length > 0 ? (
           <Pressable
             className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
             onPress={handleCancel}
@@ -113,16 +126,28 @@ export function SearchHeader({
         ) : null}
       </View>
 
-      {sportFilters.length > 0 && (
+      {selectedSportFacets.length > 0 && (
         <View className="px-4 pb-4">
-          {sportFilters.map((sport) => (
-            <Badge key={sport} variant={sport}>
-              <BadgeText>{sportLabel(sport)}</BadgeText>
-              <Pressable onPress={() => onSportFilterChange(sport)} hitSlop={8}>
-                <BadgeIcon Icon={CrossIcon} />
-              </Pressable>
-            </Badge>
-          ))}
+          <View className="flex-row flex-wrap gap-1">
+            {selectedSportFacets.map((facetItem) => {
+              const sport = facetValueToSport(facetItem.value);
+              if (!sport) return null;
+
+              return (
+                <Badge key={facetItem.value} variant={sport as any}>
+                  <BadgeIcon Icon={SportIcon} sport={sport as any} />
+                  <BadgeText>{sportLabel(sport as any)}</BadgeText>
+                  <Pressable
+                    onPress={() => refine(facetItem.value)}
+                    hitSlop={8}
+                    className="ml-1"
+                  >
+                    <BadgeIcon Icon={CrossIcon} />
+                  </Pressable>
+                </Badge>
+              );
+            })}
+          </View>
         </View>
       )}
     </View>

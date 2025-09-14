@@ -1,6 +1,7 @@
 import { Pressable, View, Text } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { cva } from "class-variance-authority";
+import { useRefinementList } from "react-instantsearch-core";
 
 import { Sport } from "~/gql/types";
 
@@ -34,60 +35,62 @@ function ItemSeparatorComponent() {
   return <View className="size-4" />;
 }
 
-const sports = [
-  {
-    sport: Sport.Pickleball,
-  },
-  {
-    sport: Sport.Basketball,
-  },
-  {
-    sport: Sport.Soccer,
-  },
-  {
-    sport: Sport.Tennis,
-  },
-  {
-    sport: Sport.Baseball,
-  },
-  {
-    sport: Sport.Softball,
-  },
-  {
-    sport: Sport.Ultimate,
-  },
-  {
-    sport: Sport.Football,
-  },
-  {
-    sport: Sport.Hockey,
-  },
-];
+export function SportFilters() {
+  // Use Algolia refinement list for the "sports" facet
+  const { items, refine } = useRefinementList({
+    attribute: "sports",
+    limit: 100, // Ensure we get all available sports
+    sortBy: ["count:desc", "name:asc"], // Sort by count descending, then name ascending
+  });
 
-interface SportFiltersProps {
-  onSportFilterChange: (sport: Sport) => void;
-}
+  // Helper function to convert Algolia facet value back to Sport enum
+  const facetValueToSport = (facetValue: string): Sport | null => {
+    const sportValues = Object.values(Sport);
+    return (
+      sportValues.find((sport) => sport.toUpperCase() === facetValue) || null
+    );
+  };
 
-export function SportFilters({ onSportFilterChange }: SportFiltersProps) {
+  // Filter items to only include valid Sport enum values
+  const validSportItems = items.filter((item) => {
+    const sport = facetValueToSport(item.value);
+    return sport !== null;
+  });
+
   return (
     <FlatList
-      contentContainerClassName="px-4"
+      contentContainerClassName="px-4 pb-4"
       horizontal
       showsHorizontalScrollIndicator={false}
-      data={sports}
-      renderItem={({ item }) => (
-        <Pressable
-          onPress={() => onSportFilterChange(item.sport)}
-          className="w-18 flex flex-col gap-1 items-center opacity-100 active:opacity-50 transition-opacity"
-        >
-          <View className={sportStyles({ sport: item.sport })}>
-            <SportIcon sport={item.sport} className="text-white size-10" />
-          </View>
-          <Text className="text-sm text-center font-semibold text-foreground">
-            {sportLabel(item.sport)}
-          </Text>
-        </Pressable>
-      )}
+      data={validSportItems}
+      keyExtractor={(item) => item.value}
+      renderItem={({ item }) => {
+        const sport = facetValueToSport(item.value);
+        if (!sport) return null;
+
+        return (
+          <Pressable
+            onPress={() => refine(item.value)}
+            className="w-18 flex flex-col gap-1 items-center opacity-100 active:opacity-50 transition-opacity"
+          >
+            <View
+              className={`${sportStyles({ sport })} ${
+                item.isRefined ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
+            >
+              <SportIcon sport={sport} className="text-white size-10" />
+            </View>
+            <View className="items-center">
+              <Text className="text-sm text-center font-semibold text-foreground">
+                {sportLabel(sport)}
+              </Text>
+              <Text className="text-xs text-muted-foreground">
+                {item.count}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      }}
       ItemSeparatorComponent={ItemSeparatorComponent}
     />
   );

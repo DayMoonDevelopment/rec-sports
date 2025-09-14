@@ -1,101 +1,145 @@
-import { View } from "react-native";
-import { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { View, Text, ActivityIndicator } from "react-native";
+import { useState, useEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { useBottomSheet } from "@gorhom/bottom-sheet";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import {
+  useSearchBox,
+  useGeoSearch,
+  useInstantSearch,
+} from "react-instantsearch-core";
 
-import { SearchHeader } from "./_search-header";
-import { Feed } from "./_feed";
-import { SearchFeed } from "./_search-feed";
-import { useMap } from "~/components/map.context";
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
-import { GetSearchLocationsDocument } from "./queries/get-search-locations.generated";
+
 import { Sport } from "~/gql/types";
+
+import { useMap } from "~/components/map.context";
+
+import { SearchHeader } from "./components/search-header";
+import { LocationItem } from "./components/location-item";
+import { SportFilters } from "./components/sport-filters";
+
+function SearchEmptyComponent({
+  searchQuery,
+  loading,
+  error,
+  hasFilters,
+}: {
+  searchQuery: string;
+  loading: boolean;
+  error: Error | undefined;
+  hasFilters: boolean;
+}) {
+  // Show welcome message when no search query or filters
+  if (!searchQuery.trim() && !hasFilters) {
+    return (
+      <View className="flex-1 items-center justify-center p-8">
+        <Text className="text-muted-foreground text-center text-lg">
+          Search for locations or select a sport to get started
+        </Text>
+      </View>
+    );
+  }
+
+  // No search query entered yet
+  if (!searchQuery.trim()) {
+    return (
+      <View className="flex-1 items-center justify-center p-8">
+        <Text className="text-muted-foreground text-center">
+          Start typing to search for locations
+        </Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center p-8">
+        <Text className="text-muted-foreground text-center mb-4">
+          Unable to search locations. Please try again.
+        </Text>
+      </View>
+    );
+  }
+
+  // Loading state (when no results yet)
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center p-8">
+        <ActivityIndicator size="large" className="text-primary mb-4" />
+        <Text className="text-muted-foreground text-center">
+          {`Searching for "${searchQuery}"...`}
+        </Text>
+      </View>
+    );
+  }
+
+  // No results found
+  return (
+    <View className="flex-1 items-center justify-center p-8">
+      <Text className="text-foreground font-semibold text-lg mb-2">
+        No results found
+      </Text>
+      <Text className="text-muted-foreground text-center mb-4">
+        {`We couldn't find any locations matching "${searchQuery}" in this area.`}
+      </Text>
+      <Text className="text-muted-foreground text-center mb-4">
+        Try adjusting your search or zoom out on the map.
+      </Text>
+    </View>
+  );
+}
 
 export function Component() {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isSearchMode, setIsSearchMode] = useState<boolean>(false);
-  const [sportFilters, setSportFilters] = useState<Sport[]>([]);
-  const { snapToIndex } = useBottomSheet();
 
   const { currentRegion, setMarkers } = useMap();
   const isFocused = useIsFocused();
 
-  // Query for search locations
+  // Algolia hooks
+  const { query, refine: refineQuery } = useSearchBox();
   const {
-    data: searchData,
-    loading: searchLoading,
-    error: searchError,
-    refetch: refetchSearch,
-  } = useQuery(GetSearchLocationsDocument, {
-    variables: {
-      requiredSports: sportFilters,
-      query: searchQuery,
-      region: currentRegion
-        ? {
-            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.05), // Add buffer
-          }
-        : undefined,
-      first: 25,
-    },
-    skip: !isFocused, // Skip query if route is not focused or no search query
-    onCompleted: (data) => {
-      // Only manipulate map if route is focused
-      if (!isFocused) return;
+    items: searchResults,
+    sendEvent,
+    refine: refineGeoSearch,
+  } = useGeoSearch();
+  const { status } = useInstantSearch();
 
-      const locations = data?.locations.edges?.map((edge) => edge.node) || [];
-      const markers = locations.map((location) => ({
-        id: location.id,
-        geo: location.geo,
-        displayType: "location" as const,
-      }));
-      setMarkers(markers);
-    },
-  });
+  // Get loading state from InstantSearch status (replacing deprecated isSearchStalled)
+  const searchLoading = status === "loading" || status === "stalled";
 
-  const searchResults =
-    searchData?.locations.edges?.map((edge) => edge.node) || [];
+  // Update geo bounds when region changes
+  useEffect(() => {
+    if (currentRegion) {
+      const boundingBox = regionToBoundingBoxWithBuffer(currentRegion, 0.05);
+      refineGeoSearch({
+        northEast: {
+          lat: boundingBox.northEast.latitude,
+          lng: boundingBox.northEast.longitude,
+        },
+        southWest: {
+          lat: boundingBox.southWest.latitude,
+          lng: boundingBox.southWest.longitude,
+        },
+      });
+    }
+  }, [currentRegion]);
+
+  // Update map markers when search results change
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const markers = searchResults.map((location: any) => ({
+      id: location.objectID,
+      geo: { latitude: location._geoloc.lat, longitude: location._geoloc.lng },
+      displayType: "location" as const,
+    }));
+    setMarkers(markers);
+  }, [searchResults, isFocused, setMarkers]);
 
   const handleSearchQueryChange = (query: string) => {
     setSearchQuery(query);
-  };
-
-  const handleSearchModeChange = (searchMode: boolean) => {
-    setIsSearchMode(searchMode);
-
-    // Update map with appropriate data when mode changes, but only if route is focused
-    if (
-      isFocused &&
-      searchMode &&
-      searchQuery.trim() &&
-      searchResults.length > 0
-    ) {
-      const markers = searchResults.map((location) => ({
-        id: location.id,
-        geo: location.geo,
-        displayType: "location" as const,
-      }));
-      setMarkers(markers);
-    }
-  };
-
-  const handleSportFilterChange = (sport: Sport) => {
-    setSportFilters((existingSports) => {
-      if (existingSports.includes(sport)) {
-        if (isSearchMode && !searchQuery.length) {
-          setIsSearchMode(false);
-          snapToIndex(0);
-        }
-
-        return existingSports.filter((s) => s !== sport);
-      }
-
-      if (!isSearchMode) {
-        setIsSearchMode(true);
-      }
-
-      return [...existingSports, sport];
-    });
+    refineQuery(searchQuery);
   };
 
   return (
@@ -103,23 +147,45 @@ export function Component() {
       <SearchHeader
         searchQuery={searchQuery}
         onSearchQueryChange={handleSearchQueryChange}
-        isSearchMode={isSearchMode}
-        onSearchModeChange={handleSearchModeChange}
-        sportFilters={sportFilters}
-        onSportFilterChange={handleSportFilterChange}
       />
 
-      {isSearchMode ? (
-        <SearchFeed
-          searchQuery={searchQuery}
-          searchResults={searchResults}
-          loading={searchLoading}
-          error={searchError}
-          onRefetch={refetchSearch}
-        />
-      ) : (
-        <Feed onSportFilterChange={handleSportFilterChange} />
-      )}
+      <BottomSheetFlatList
+        className="border-t border-border bg-muted"
+        contentContainerClassName="pt-4 pb-safe-offset-4"
+        data={searchResults}
+        keyExtractor={(item: any) => item.objectID}
+        renderItem={({ item }) => <LocationItem location={item as any} />}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={<SportFilters />}
+        ListEmptyComponent={
+          <SearchEmptyComponent
+            searchQuery={searchQuery}
+            loading={searchLoading}
+            error={undefined}
+            hasFilters={false} // Filters are now managed by Algolia
+          />
+        }
+        refreshing={searchLoading && searchResults.length > 0}
+        onRefresh={() => {
+          // Trigger a re-search by refining with current parameters
+          if (currentRegion) {
+            const boundingBox = regionToBoundingBoxWithBuffer(
+              currentRegion,
+              0.05,
+            );
+            refineGeoSearch({
+              northEast: {
+                lat: boundingBox.northEast.latitude,
+                lng: boundingBox.northEast.longitude,
+              },
+              southWest: {
+                lat: boundingBox.southWest.latitude,
+                lng: boundingBox.southWest.longitude,
+              },
+            });
+          }
+        }}
+      />
     </View>
   );
 }
