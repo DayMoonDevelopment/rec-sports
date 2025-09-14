@@ -11,8 +11,6 @@ import { Sport } from "~/gql/types";
 interface SearchHeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  isSearchMode: boolean;
-  onSearchModeChange: (isSearchMode: boolean) => void;
   sportFilters: Sport[];
   onSportFilterChange: (sport: Sport) => void;
 }
@@ -20,8 +18,6 @@ interface SearchHeaderProps {
 export function SearchHeader({
   searchQuery,
   onSearchQueryChange,
-  onSearchModeChange,
-  isSearchMode,
   sportFilters,
   onSportFilterChange,
 }: SearchHeaderProps) {
@@ -41,7 +37,7 @@ export function SearchHeader({
   }, [inputValue, searchQuery, onSearchQueryChange]);
 
   function handleBlur() {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && sportFilters.length === 0) {
       snapToIndex(0); // Return to original position
     }
   }
@@ -59,13 +55,11 @@ export function SearchHeader({
   function handleCancel() {
     inputRef.current?.blur();
     handleClear();
-    onSearchModeChange(false);
     snapToIndex(0);
     sportFilters.forEach(onSportFilterChange);
   }
 
   function handleFocus() {
-    onSearchModeChange(true);
     snapToIndex(1); // Expand bottom sheet
   }
 
@@ -103,7 +97,7 @@ export function SearchHeader({
           ) : null}
         </View>
 
-        {isSearchMode ? (
+        {searchQuery.trim().length > 0 || sportFilters.length > 0 ? (
           <Pressable
             className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
             onPress={handleCancel}
