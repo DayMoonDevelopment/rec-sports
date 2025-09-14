@@ -4,22 +4,15 @@ import { useState, useRef, useEffect } from "react";
 
 import { SearchIcon } from "~/icons/search";
 import { CrossIcon } from "~/icons/cross";
-import { Badge, BadgeIcon, BadgeText } from "~/ui/badge";
-import { sportLabel } from "~/lib/utils";
-import { Sport } from "~/gql/types";
 
 interface SearchHeaderProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  sportFilters: Sport[];
-  onSportFilterChange: (sport: Sport) => void;
 }
 
 export function SearchHeader({
   searchQuery,
   onSearchQueryChange,
-  sportFilters,
-  onSportFilterChange,
 }: SearchHeaderProps) {
   const inputRef = useRef<TextInput>(null);
   const { snapToIndex } = useBottomSheet();
@@ -37,7 +30,7 @@ export function SearchHeader({
   }, [inputValue, searchQuery, onSearchQueryChange]);
 
   function handleBlur() {
-    if (!searchQuery.trim() && sportFilters.length === 0) {
+    if (!searchQuery.trim()) {
       snapToIndex(0); // Return to original position
     }
   }
@@ -56,7 +49,6 @@ export function SearchHeader({
     inputRef.current?.blur();
     handleClear();
     snapToIndex(0);
-    sportFilters.forEach(onSportFilterChange);
   }
 
   function handleFocus() {
@@ -97,7 +89,7 @@ export function SearchHeader({
           ) : null}
         </View>
 
-        {searchQuery.trim().length > 0 || sportFilters.length > 0 ? (
+        {searchQuery.trim().length > 0 ? (
           <Pressable
             className="size-14 bg-secondary rounded-full items-center justify-center active:opacity-50 transition-opacity"
             onPress={handleCancel}
@@ -106,19 +98,6 @@ export function SearchHeader({
           </Pressable>
         ) : null}
       </View>
-
-      {sportFilters.length > 0 && (
-        <View className="px-4 pb-4">
-          {sportFilters.map((sport) => (
-            <Badge key={sport} variant={sport}>
-              <BadgeText>{sportLabel(sport)}</BadgeText>
-              <Pressable onPress={() => onSportFilterChange(sport)} hitSlop={8}>
-                <BadgeIcon Icon={CrossIcon} />
-              </Pressable>
-            </Badge>
-          ))}
-        </View>
-      )}
     </View>
   );
 }

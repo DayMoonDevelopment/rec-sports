@@ -1,6 +1,7 @@
 import { Pressable, View, Text } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { cva } from "class-variance-authority";
+import { useRefinementList } from "react-instantsearch-core";
 
 import { Sport } from "~/gql/types";
 
@@ -64,30 +65,55 @@ const sports = [
   },
 ];
 
-interface SportFiltersProps {
-  onSportFilterChange: (sport: Sport) => void;
-}
+export function SportFilters() {
+  // Use Algolia refinement list for the "sports" facet
+  const { items, refine } = useRefinementList({
+    attribute: "sports",
+  });
 
-export function SportFilters({ onSportFilterChange }: SportFiltersProps) {
+  // Helper function to convert Sport enum to uppercase string for Algolia facet
+  const getSportFacetValue = (sport: Sport): string => {
+    return sport.toUpperCase();
+  };
+
+  // Check if a sport is currently selected
+  const isSportSelected = (sport: Sport): boolean => {
+    const facetValue = getSportFacetValue(sport);
+    return items.some((item) => item.value === facetValue && item.isRefined);
+  };
+
+  // Handle sport selection
+  const handleSportPress = (sport: Sport) => {
+    const facetValue = getSportFacetValue(sport);
+    refine(facetValue);
+  };
+
   return (
     <FlatList
-      contentContainerClassName="px-4"
+      contentContainerClassName="px-4 pb-4"
       horizontal
       showsHorizontalScrollIndicator={false}
       data={sports}
-      renderItem={({ item }) => (
-        <Pressable
-          onPress={() => onSportFilterChange(item.sport)}
-          className="w-18 flex flex-col gap-1 items-center opacity-100 active:opacity-50 transition-opacity"
-        >
-          <View className={sportStyles({ sport: item.sport })}>
-            <SportIcon sport={item.sport} className="text-white size-10" />
-          </View>
-          <Text className="text-sm text-center font-semibold text-foreground">
-            {sportLabel(item.sport)}
-          </Text>
-        </Pressable>
-      )}
+      renderItem={({ item }) => {
+        const isSelected = isSportSelected(item.sport);
+        return (
+          <Pressable
+            onPress={() => handleSportPress(item.sport)}
+            className="w-18 flex flex-col gap-1 items-center opacity-100 active:opacity-50 transition-opacity"
+          >
+            <View
+              className={`${sportStyles({ sport: item.sport })} ${
+                isSelected ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
+            >
+              <SportIcon sport={item.sport} className="text-white size-10" />
+            </View>
+            <Text className="text-sm text-center font-semibold text-foreground">
+              {sportLabel(item.sport)}
+            </Text>
+          </Pressable>
+        );
+      }}
       ItemSeparatorComponent={ItemSeparatorComponent}
     />
   );

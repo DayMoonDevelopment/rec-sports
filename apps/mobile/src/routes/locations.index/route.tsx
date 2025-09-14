@@ -1,8 +1,12 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useState, useEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { useBottomSheet, BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import {
+  useSearchBox,
+  useGeoSearch,
+  useInstantSearch,
+} from "react-instantsearch-core";
 
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
@@ -14,10 +18,6 @@ import { SearchHeader } from "./components/search-header";
 import { LocationItem } from "./components/location-item";
 import { SportFilters } from "./components/sport-filters";
 
-import { GetSearchLocationsDocument } from "./queries/get-search-locations.generated";
-
-import type { ApolloError } from "@apollo/client";
-
 function SearchEmptyComponent({
   searchQuery,
   loading,
@@ -26,7 +26,7 @@ function SearchEmptyComponent({
 }: {
   searchQuery: string;
   loading: boolean;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   hasFilters: boolean;
 }) {
   // Show welcome message when no search query or filters
@@ -92,55 +92,54 @@ function SearchEmptyComponent({
 
 export function Component() {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [sportFilters, setSportFilters] = useState<Sport[]>([]);
 
   const { currentRegion, setMarkers } = useMap();
   const isFocused = useIsFocused();
 
+  // Algolia hooks
+  const { query, refine: refineQuery } = useSearchBox();
   const {
-    data: searchData,
-    loading: searchLoading,
-    error: searchError,
-    refetch: refetchSearch,
-  } = useQuery(GetSearchLocationsDocument, {
-    variables: {
-      requiredSports: sportFilters,
-      query: searchQuery || "", // Provide empty string when no search query but have sport filters
-      region: currentRegion
-        ? {
-            boundingBox: regionToBoundingBoxWithBuffer(currentRegion, 0.05), // Add buffer
-          }
-        : undefined,
-      first: 25,
-    },
-    onCompleted: (data) => {
-      // Only manipulate map if route is focused
-      if (!isFocused) return;
+    items: searchResults,
+    sendEvent,
+    refine: refineGeoSearch,
+  } = useGeoSearch();
+  const { status } = useInstantSearch();
 
-      const locations = data?.locations.edges?.map((edge) => edge.node) || [];
-      const markers = locations.map((location) => ({
-        id: location.id,
-        geo: location.geo,
-        displayType: "location" as const,
-      }));
-      setMarkers(markers);
-    },
-  });
+  // Get loading state from InstantSearch status (replacing deprecated isSearchStalled)
+  const searchLoading = status === "loading" || status === "stalled";
 
-  const searchResults =
-    searchData?.locations.edges?.map((edge) => edge.node) || [];
+  // Update geo bounds when region changes
+  useEffect(() => {
+    if (currentRegion) {
+      const boundingBox = regionToBoundingBoxWithBuffer(currentRegion, 0.05);
+      refineGeoSearch({
+        northEast: {
+          lat: boundingBox.northEast.latitude,
+          lng: boundingBox.northEast.longitude,
+        },
+        southWest: {
+          lat: boundingBox.southWest.latitude,
+          lng: boundingBox.southWest.longitude,
+        },
+      });
+    }
+  }, [currentRegion]);
+
+  // Update map markers when search results change
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const markers = searchResults.map((location: any) => ({
+      id: location.objectID,
+      geo: { latitude: location._geoloc.lat, longitude: location._geoloc.lng },
+      displayType: "location" as const,
+    }));
+    setMarkers(markers);
+  }, [searchResults, isFocused, setMarkers]);
 
   const handleSearchQueryChange = (query: string) => {
     setSearchQuery(query);
-  };
-
-  const handleSportFilterChange = (sport: Sport) => {
-    setSportFilters((existingSports) => {
-      if (existingSports.includes(sport)) {
-        return existingSports.filter((s) => s !== sport);
-      }
-      return [...existingSports, sport];
-    });
+    refineQuery(searchQuery);
   };
 
   return (
@@ -148,32 +147,44 @@ export function Component() {
       <SearchHeader
         searchQuery={searchQuery}
         onSearchQueryChange={handleSearchQueryChange}
-        sportFilters={sportFilters}
-        onSportFilterChange={handleSportFilterChange}
       />
 
       <BottomSheetFlatList
         className="border-t border-border bg-muted"
         contentContainerClassName="pt-4 pb-safe-offset-4"
         data={searchResults}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <LocationItem location={item} />}
+        keyExtractor={(item: any) => item.objectID}
+        renderItem={({ item }) => <LocationItem location={item as any} />}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          sportFilters.length > 0 ? null : (
-            <SportFilters onSportFilterChange={handleSportFilterChange} />
-          )
-        }
+        ListHeaderComponent={<SportFilters />}
         ListEmptyComponent={
           <SearchEmptyComponent
             searchQuery={searchQuery}
             loading={searchLoading}
-            error={searchError}
-            hasFilters={sportFilters.length > 0}
+            error={undefined}
+            hasFilters={false} // Filters are now managed by Algolia
           />
         }
         refreshing={searchLoading && searchResults.length > 0}
-        onRefresh={refetchSearch}
+        onRefresh={() => {
+          // Trigger a re-search by refining with current parameters
+          if (currentRegion) {
+            const boundingBox = regionToBoundingBoxWithBuffer(
+              currentRegion,
+              0.05,
+            );
+            refineGeoSearch({
+              northEast: {
+                lat: boundingBox.northEast.latitude,
+                lng: boundingBox.northEast.longitude,
+              },
+              southWest: {
+                lat: boundingBox.southWest.latitude,
+                lng: boundingBox.southWest.longitude,
+              },
+            });
+          }
+        }}
       />
     </View>
   );
