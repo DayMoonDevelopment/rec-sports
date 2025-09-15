@@ -1,4 +1,0 @@
-[install]
-linker = "isolated"
-auto = "fallback"
-exact = true
