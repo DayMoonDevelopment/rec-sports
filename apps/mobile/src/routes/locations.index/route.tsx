@@ -95,12 +95,8 @@ export function Component() {
   const isFocused = useIsFocused();
 
   // Algolia hooks
-  const { query, refine: refineQuery } = useSearchBox();
-  const {
-    items: searchResults,
-    sendEvent,
-    refine: refineGeoSearch,
-  } = useGeoSearch();
+  const { refine: refineQuery } = useSearchBox();
+  const { items: searchResults, refine: refineGeoSearch } = useGeoSearch();
   const { status } = useInstantSearch();
 
   // Get loading state from InstantSearch status (replacing deprecated isSearchStalled)
