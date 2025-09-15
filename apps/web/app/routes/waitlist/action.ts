@@ -1,18 +1,51 @@
-import { LoopsClient, RateLimitExceededError } from "loops";
-
 import {
   handlePreflightRequest,
   validateAndGetCorsHeaders,
   validateRequiredHeaders,
 } from "~/lib/action-utils.server";
 
-const loops = new LoopsClient(process.env.LOOPS_API_KEY || "");
+if (!process.env.LOOPS_API_KEY) {
+  throw new Error("LOOPS_API_KEY is not set");
+}
+
+async function createLoopsContact(
+  email: string,
+  properties: Record<string, any>,
+  mailingLists: Record<string, boolean>,
+) {
+  const response = await fetch("https://app.loops.so/api/v1/contacts/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.LOOPS_API_KEY}`,
+    },
+    body: JSON.stringify({
+      email,
+      ...properties,
+      mailingLists,
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
+    if (response.status === 409) {
+      throw new Error("USER_ALREADY_EXISTS");
+    }
+    throw new Error(
+      `Loops API error: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}
 
 export async function action({ request }: { request: Request }) {
   const formData = await request.formData();
-  const email = formData.get("email")?.toString();
-  const firstName = formData.get("firstName")?.toString();
-  const lastName = formData.get("lastName")?.toString();
+  const email = formData.get("email")?.toString()?.trim();
+  const firstName = formData.get("firstName")?.toString().trim();
+  const lastName = formData.get("lastName")?.toString().trim();
   const honeyPot = formData.get("from_email")?.toString();
 
   // Validate required headers
@@ -67,14 +100,28 @@ export async function action({ request }: { request: Request }) {
   };
 
   try {
-    await loops.createContact(email, properties, mailingLists);
+    await createLoopsContact(email, properties, mailingLists);
   } catch (error) {
-    if (error instanceof RateLimitExceededError) {
+    if (error instanceof Error && error.message === "USER_ALREADY_EXISTS") {
+      return {
+        success: true,
+        errors: null,
+        message: "You're already on the waitlist and will get updates",
+        formData: {
+          firstName,
+          lastName,
+          email,
+        },
+      };
+    } else if (
+      error instanceof Error &&
+      error.message === "RATE_LIMIT_EXCEEDED"
+    ) {
       // Wait 2 seconds and retry once
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       try {
-        await loops.createContact(email, properties, mailingLists);
+        await createLoopsContact(email, properties, mailingLists);
       } catch (retryError) {
         console.error("Loops API retry failed:", retryError);
         return {
