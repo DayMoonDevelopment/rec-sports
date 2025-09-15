@@ -80,14 +80,9 @@ export function SportFilters() {
             >
               <SportIcon sport={sport} className="text-white size-10" />
             </View>
-            <View className="items-center">
-              <Text className="text-sm text-center font-semibold text-foreground">
-                {sportLabel(sport)}
-              </Text>
-              <Text className="text-xs text-muted-foreground">
-                {item.count}
-              </Text>
-            </View>
+            <Text className="text-sm text-center font-semibold text-foreground">
+              {sportLabel(sport)}
+            </Text>
           </Pressable>
         );
       }}

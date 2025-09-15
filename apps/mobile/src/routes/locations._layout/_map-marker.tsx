@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { router } from "expo-router";
 import { SportMarker } from "./_sport-marker";
 import { LocationMarker } from "./_location-marker";
@@ -15,8 +14,6 @@ interface MapMarkerProps {
 }
 
 export function MapMarker({ id, geo, displayType }: MapMarkerProps) {
-  const markerRef = useRef<any>(null);
-
   const handleMarkerPress = () => {
     if (displayType === "location" && id) {
       // If not focused and it's a location marker, navigate to the location detail route
@@ -36,18 +33,10 @@ export function MapMarker({ id, geo, displayType }: MapMarkerProps) {
       <LocationMarker
         id={id}
         coordinate={coordinate}
-        markerRef={markerRef}
         onPress={handleMarkerPress}
       />
     );
   } else {
-    return (
-      <SportMarker
-        id={id}
-        sport={displayType}
-        coordinate={coordinate}
-        markerRef={markerRef}
-      />
-    );
+    return <SportMarker id={id} sport={displayType} coordinate={coordinate} />;
   }
 }

@@ -10,8 +10,6 @@ import {
 
 import { regionToBoundingBoxWithBuffer } from "~/lib/region-utils";
 
-import { Sport } from "~/gql/types";
-
 import { useMap } from "~/components/map.context";
 
 import { SearchHeader } from "./components/search-header";
