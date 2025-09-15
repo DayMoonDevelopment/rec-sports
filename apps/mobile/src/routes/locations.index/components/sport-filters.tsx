@@ -9,7 +9,7 @@ import { SportIcon } from "~/components/sport-icon";
 import { sportLabel } from "~/lib/utils";
 
 const sportStyles = cva(
-  "size-14 rounded-full flex justify-center items-center",
+  "size-14 rounded-full flex justify-center items-center border-background border-2 shadow",
   {
     variants: {
       sport: {
@@ -57,6 +57,11 @@ export function SportFilters() {
     return sport !== null;
   });
 
+  // hide the sport filters if all sports are selected
+  if (items.find((item) => item.isRefined)) {
+    return null;
+  }
+
   return (
     <FlatList
       contentContainerClassName="px-4 pb-4"
@@ -73,21 +78,12 @@ export function SportFilters() {
             onPress={() => refine(item.value)}
             className="w-18 flex flex-col gap-1 items-center opacity-100 active:opacity-50 transition-opacity"
           >
-            <View
-              className={`${sportStyles({ sport })} ${
-                item.isRefined ? "ring-2 ring-primary ring-offset-2" : ""
-              }`}
-            >
-              <SportIcon sport={sport} className="text-white size-10" />
+            <View className={sportStyles({ sport })}>
+              <SportIcon sport={sport} className="text-background size-10" />
             </View>
-            <View className="items-center">
-              <Text className="text-sm text-center font-semibold text-foreground">
-                {sportLabel(sport)}
-              </Text>
-              <Text className="text-xs text-muted-foreground">
-                {item.count}
-              </Text>
-            </View>
+            <Text className="text-sm text-center font-semibold text-foreground">
+              {sportLabel(sport)}
+            </Text>
           </Pressable>
         );
       }}

@@ -1,4 +1,4 @@
-import { View, Text, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import { useQuery } from "@apollo/client";
 import { router } from "expo-router";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
@@ -42,24 +42,11 @@ export function RelatedLocations({
 
   const handleLocationPress = (location: LocationNodeFragment) => {
     // Simply navigate to the location detail route
-    router.push(`/locations/${location.id}`);
+    router.replace(`/locations/${location.id}`);
   };
 
   if (!currentLocation.geo?.latitude || !currentLocation.geo?.longitude) {
     return null;
-  }
-
-  if (loading && relatedLocations.length === 0) {
-    return (
-      <View className="py-4">
-        <Text className="text-lg font-semibold text-foreground mb-4">
-          Related Locations
-        </Text>
-        <View className="items-center py-8">
-          <ActivityIndicator size="small" className="text-muted-foreground" />
-        </View>
-      </View>
-    );
   }
 
   if (error || (!loading && relatedLocations.length === 0)) {

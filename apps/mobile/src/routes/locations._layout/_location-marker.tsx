@@ -6,21 +6,9 @@ interface LocationMarkerProps {
     latitude: number;
     longitude: number;
   };
-  markerRef: React.RefObject<any>;
   onPress: () => void;
 }
 
-export function LocationMarker({
-  coordinate,
-  markerRef,
-  onPress,
-}: LocationMarkerProps) {
-  return (
-    <Marker
-      ref={markerRef}
-      coordinate={coordinate}
-      title="Location"
-      onPress={onPress}
-    />
-  );
+export function LocationMarker({ coordinate, onPress }: LocationMarkerProps) {
+  return <Marker coordinate={coordinate} title="Location" onPress={onPress} />;
 }
