@@ -53,10 +53,6 @@ export function SportMarker({
   const title = `${sportLabel(sport)} facility`;
 
   return (
-    <Marker ref={markerRef} coordinate={coordinate} title={title}>
-      <View className={markerStyles({ sport })}>
-        <SportIcon sport={sport} className="text-background size-6" />
-      </View>
-    </Marker>
+    <Marker ref={markerRef} coordinate={coordinate} title={title} />
   );
 }

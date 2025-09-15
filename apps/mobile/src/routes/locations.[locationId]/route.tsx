@@ -25,7 +25,6 @@ export function Component() {
     lng?: string;
   }>();
   const {
-    hideMarkerCallout,
     zoomOut,
     animateToBounds,
     setMarkers,
@@ -49,13 +48,6 @@ export function Component() {
 
         // Set only the facility markers on the map (not the location itself)
         setMarkers(facilityMarkers);
-        let bounds: MapPolygon[] = facilities
-          .filter((facility) => facility.bounds.length)
-          .map((facility) => ({
-            id: facility.id,
-            coordinates: facility.bounds,
-            variant: facility.sport,
-          }));
 
         // Set bounds if location has bounds
         if (data.location.bounds && data.location.bounds.length > 0) {
@@ -66,6 +58,15 @@ export function Component() {
           });
           animateToBounds(data.location.bounds);
         }
+
+        // add facility bounds after so they render on top of location bounds
+        let bounds: MapPolygon[] = facilities
+          .filter((facility) => facility.bounds.length)
+          .map((facility) => ({
+            id: facility.id,
+            coordinates: facility.bounds,
+            variant: facility.sport,
+          }));
 
         setPolygons(bounds);
       }
@@ -120,8 +121,6 @@ export function Component() {
   }
 
   function handleClose() {
-    hideMarkerCallout(locationId);
-
     setPolygons([]); // Clear polygon bounds
     setMarkers([]); // Clear markers
     zoomOut(2);
