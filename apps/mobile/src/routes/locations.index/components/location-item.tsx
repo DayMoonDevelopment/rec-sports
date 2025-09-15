@@ -74,17 +74,12 @@ export function LocationItem({ location }: LocationItemProps) {
               {/* Sport Badges */}
               {locationSports && locationSports.length > 0 && (
                 <View className="flex-row flex-wrap gap-1">
-                  {locationSports.slice(0, 2).map((sport) => (
+                  {locationSports.map((sport) => (
                     <Badge key={sport} variant={sport as any} size="sm">
                       <BadgeIcon Icon={SportIcon} sport={sport as any} />
                       <BadgeText>{sportLabel(sport as any)}</BadgeText>
                     </Badge>
                   ))}
-                  {locationSports.length > 2 && (
-                    <Badge variant="secondary" size="sm">
-                      <BadgeText>+{locationSports.length - 2}</BadgeText>
-                    </Badge>
-                  )}
                 </View>
               )}
             </View>
